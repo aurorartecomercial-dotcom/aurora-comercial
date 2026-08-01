@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="paginaTitulo">Detalhes - Aurora</title>
+    <meta name="description" id="metaDesc" content="Detalhes do produto" />
+    <meta property="og:title" id="ogTitulo" content="Aurora - Detalhes" />
+    <meta property="og:description" id="ogDesc" content="Detalhes do produto" />
+    <meta property="og:image" id="ogImagem" content="" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div id="toast-notificacao" role="alert" aria-live="polite">
+        <span id="toastMensagem">Adicionado ao carrinho!</span>
+        <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
+    </div>
+    <div class="carrinho-overlay" id="carrinhoOverlay"></div>
+
+    <!-- HEADER -->
+    <header class="header-principal" role="banner">
+        <div class="header-top">
+            <div class="logo">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </div>
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
+                <button type="submit" aria-label="Pesquisar">🔍</button>
+            </form>
+            <div class="header-icones">
+                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
+            </div>
+        </div>
+        <nav class="menu-categorias" aria-label="Categorias">
+            <ul id="menuCategorias">
+                <li><a href="index.html" data-categoria="todos">Todos</a></li>
+                <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="index.html#?cat=consolas">Consolas</a></li>
+                <li><a href="index.html#?cat=beleza">Beleza</a></li>
+                <li><a href="index.html#?cat=cozinha">Cozinha</a></li>
+                <li><a href="index.html#?cat=colunas">Colunas</a></li>
+                <li><a href="index.html#?cat=ferramentas">Ferramentas</a></li>
+                <li><a href="index.html#?cat=casa">Casa</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="index.html#?cat=feminino" role="menuitem">Feminino</a></li>
+                        <li><a href="index.html#?cat=masculino" role="menuitem">Masculino</a></li>
+                        <li><a href="index.html#?cat=calcados" role="menuitem">Sapatos</a></li>
+                        <li><a href="index.html#?cat=joias" role="menuitem">Pulseiras</a></li>
+                    </ul>
+                </li>
+                <li><a href="index.html#?cat=automoveis">Carros</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- CONTEÚDO (com breadcrumb) -->
+    <div class="container-detalhe">
+        <div class="breadcrumb">
+            <a href="index.html">Home</a> &gt; 
+            <a href="index.html#?cat=eletronicos" id="breadcrumbCat">Eletrônicos</a> &gt; 
+            <span id="breadcrumbProd">Produto</span>
+        </div>
+
+        <div id="detalhesConteudo">
+            <div class="carregando-msg">⏳ Carregando produto...</div>
+        </div>
+    </div>
+
+    <!-- CARRINHO LATERAL -->
+    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
+        <div class="carrinho-header">
+            <h2>🛒 Minha Sacola</h2>
+            <button class="btn-fechar-carrinho" id="btnFecharCarrinho" aria-label="Fechar sacola">&times;</button>
+        </div>
+        <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
+        <div class="carrinho-footer">
+            <div class="total-linha">
+                <span>Total:</span>
+                <span><span id="totalCarrinhoLoja">0</span> Kz</span>
+            </div>
+            <button id="btnFinalizarWhatsApp" class="btn-finalizar">Enviar Pedido ao WhatsApp</button>
+        </div>
+    </aside>
+
+    <!-- MODAL DO CLIENTE -->
+    <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
+        <div>
+            <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
+            <h2>Dados do Cliente</h2>
+            <label for="inputNome">Nome do Cliente *</label>
+            <input type="text" id="inputNome" placeholder="Ex: João Silva" required aria-required="true" />
+            <span class="erro-validacao" id="erroNome"></span>
+            <label for="inputTelefone">Telefone *</label>
+            <input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required aria-required="true" />
+            <span class="erro-validacao" id="erroTelefone"></span>
+            <label for="inputNif">NIF *</label>
+            <input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required aria-required="true" />
+            <span class="erro-validacao" id="erroNif"></span>
+            <label for="inputMorada">Morada</label>
+            <input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, Castilhos, s/n" />
+            <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura</button>
+        </div>
+    </div>
+
+    <footer class="rodape-profissional" style="margin-top:40px;">
+        <div class="rodape-grid">
+            <div class="rodape-coluna">
+                <h3>Aurora Comercial</h3>
+                <p>Marketplace angolano com curadoria premium.</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Contacto</h4>
+                <p>📞 +244 925 328 181</p>
+                <p>✉️ contacto@aurorarte.ao</p>
+            </div>
+        </div>
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
+
+    <script type="module" src="js/detalhe-app.js"></script>
+</body>
+</html>

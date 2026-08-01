@@ -1,0 +1,147 @@
+import { CONFIG } from './config.js';
+import { extrairValorNumerico, debounce } from './utils.js';
+
+export async function carregarCatalogo() {
+    const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+    if (cached) {
+        try {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < CONFIG.CACHE_TTL) {
+                return data;
+            }
+        } catch (e) {}
+    }
+
+    try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
+        });
+        if (!res.ok) throw new Error('JSONbin offline');
+        const data = await res.json();
+        const record = data.record;
+        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
+            data: record,
+            timestamp: Date.now()
+        }));
+        return record;
+    } catch (e) {
+        console.warn('Falha no JSONbin, usando fallback local');
+        const local = localStorage.getItem('aurora_produtos_admin');
+        if (local) {
+            try { return JSON.parse(local); } catch {}
+        }
+        const fallback = await fetch('produtos.json');
+        return fallback.json();
+    }
+}
+
+export function criarCardProduto(prod) {
+    const card = document.createElement('a');
+    card.className = 'produto-card';
+    card.href = `detalhe.html?id=${prod.id}`;
+    card.style.textDecoration = 'none';
+    card.style.color = 'inherit';
+
+    const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+
+    let html = `
+        <div class="produto-imagem">
+            <img src="${imgSrc}" alt="${prod.nome}" loading="lazy" decoding="async" onerror="this.src='placeholder.jpg'">
+        </div>
+        <div class="produto-info">
+            <span class="categoria-tag">${prod.tag || prod.categoria}</span>
+            <h3>${prod.nome}</h3>
+    `;
+
+    if (prod.precoAntigo) {
+        html += `<p class="preco"><span class="desconto">${prod.desconto || ''}</span> ${prod.preco}</p>`;
+        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.precoAntigo}</span>`;
+    } else {
+        html += `<p class="preco">${prod.preco}</p>`;
+    }
+
+    if (prod.parcelas) {
+        html += `<p class="parcelas">${prod.parcelas}</p>`;
+    }
+    if (prod.freteGratis) {
+        html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
+    }
+
+    const avaliacao = obterAvaliacao(prod.id);
+    if (avaliacao.media > 0) {
+        html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`;
+    }
+
+    html += `</div>`;
+    card.innerHTML = html;
+    return card;
+}
+
+function obterAvaliacao(prodId) {
+    const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
+    const prodAval = avaliacoes[prodId] || [];
+    if (prodAval.length === 0) return { media: 0, total: 0 };
+    const soma = prodAval.reduce((acc, a) => acc + a.nota, 0);
+    return { media: soma / prodAval.length, total: prodAval.length };
+}
+
+export function adicionarAvaliacao(prodId, nota) {
+    const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
+    if (!avaliacoes[prodId]) avaliacoes[prodId] = [];
+    avaliacoes[prodId].push({ nota, data: new Date().toISOString() });
+    localStorage.setItem('aurora_avaliacoes', JSON.stringify(avaliacoes));
+}
+
+export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao) {
+    let filtrados = produtos.filter(prod => {
+        const matchCategoria = categoria === 'todos' || prod.categoria === categoria;
+        const matchBusca = !busca ||
+            prod.nome.toLowerCase().includes(busca.toLowerCase()) ||
+            prod.tag.toLowerCase().includes(busca.toLowerCase()) ||
+            prod.categoria.toLowerCase().includes(busca.toLowerCase());
+        const precoNum = extrairValorNumerico(prod.preco);
+        const matchPreco = precoNum >= min && precoNum <= max;
+        return matchCategoria && matchBusca && matchPreco;
+    });
+
+    switch (ordenacao) {
+        case 'preco-asc': filtrados.sort((a, b) => extrairValorNumerico(a.preco) - extrairValorNumerico(b.preco)); break;
+        case 'preco-desc': filtrados.sort((a, b) => extrairValorNumerico(b.preco) - extrairValorNumerico(a.preco)); break;
+        case 'nome': filtrados.sort((a, b) => a.nome.localeCompare(b.nome)); break;
+        default: filtrados.sort((a, b) => (a.ordem || a.id) - (b.ordem || b.id));
+    }
+    return filtrados;
+}
+
+export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
+    if (!container) return;
+    const start = (pagina - 1) * itensPorPagina;
+    const end = start + itensPorPagina;
+    const paginaProdutos = produtosFiltrados.slice(start, end);
+
+    if (pagina === 1) container.innerHTML = '';
+    if (paginaProdutos.length === 0 && pagina === 1) {
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#999; font-size:16px;">Nenhum produto encontrado.</p>`;
+        return;
+    }
+
+    paginaProdutos.forEach(prod => {
+        const card = criarCardProduto(prod);
+        container.appendChild(card);
+    });
+
+    const totalPaginas = Math.ceil(produtosFiltrados.length / itensPorPagina);
+    const controles = document.getElementById('paginaControles');
+    if (controles) {
+        if (totalPaginas <= 1) {
+            controles.style.display = 'none';
+        } else {
+            controles.style.display = 'flex';
+            const btnCarregarMais = document.getElementById('carregarMais');
+            if (btnCarregarMais) {
+                btnCarregarMais.textContent = pagina < totalPaginas ? 'Carregar mais' : 'Todos carregados';
+                btnCarregarMais.disabled = pagina >= totalPaginas;
+            }
+        }
+    }
+}
