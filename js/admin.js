@@ -102,6 +102,7 @@ function iniciarAdmin() {
         setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
     }
 
+    // ===== LISTA DE PRODUTOS (CORRIGIDA COM A CLASSE CERTA) =====
     function renderizarLista() {
         contadorSpan.textContent = produtos.length;
         if (produtos.length === 0) {
@@ -116,8 +117,8 @@ function iniciarAdmin() {
                     <small style="color:#888; display:block;">${prod.categoria} | ${prod.preco}</small>
                 </div>
                 <div class="acoes">
-                    <button class="btn" onclick="window.editarProduto(${prod.id})">✏️ Editar</button>
-                    <button class="btn btn-excluir" onclick="window.excluirProduto(${prod.id})">🗑️ Excluir</button>
+                    <button class="btn-admin" onclick="window.editarProduto(${prod.id})">✏️ Editar</button>
+                    <button class="btn-admin btn-admin-excluir" onclick="window.excluirProduto(${prod.id})">🗑️ Excluir</button>
                 </div>
             </div>
         `).join('');
