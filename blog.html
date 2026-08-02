@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog - Aurora Comercial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+    <header class="header-principal" role="banner">
+        <div class="header-top">
+            <div class="logo">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </div>
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" />
+                <button type="submit">🔍</button>
+            </form>
+            <div class="header-icones">
+                <button class="btn-entrar" id="btnEntrar">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
+            </div>
+        </div>
+        <nav class="menu-categorias">
+            <ul id="menuCategorias">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="index.html#?cat=consolas">Consolas</a></li>
+                <li><a href="blog.html" class="ativo" style="color:var(--cor-ouro);">📖 Blog</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
+        <h1 style="color:var(--cor-esmeralda); margin-bottom:20px;">📖 Blog Aurora Comercial</h1>
+        <div id="blogGrid" class="grade-produtos"></div>
+    </main>
+
+    <footer class="rodape-profissional">
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
+
+    <script type="module" src="js/blog.js"></script>
+</body>
+</html>
