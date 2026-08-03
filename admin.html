@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=2" />
-    <!-- SortableJS para drag-and-drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
@@ -81,6 +80,10 @@
 
                         <label>Ordem (número, quanto menor, antes aparece)</label>
                         <input type="number" id="ordem" value="0" />
+
+                        <!-- CAMPO ESTOQUE ADICIONADO -->
+                        <label>Estoque (quantidade disponível) *</label>
+                        <input type="number" id="estoque" value="10" min="0" required />
 
                         <div style="margin-top:16px;">
                             <button type="submit" class="btn-admin" id="btnSalvar">💾 Salvar Produto</button>

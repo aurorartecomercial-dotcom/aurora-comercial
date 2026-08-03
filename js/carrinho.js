@@ -88,6 +88,46 @@ export function initCarrinho() {
     document.getElementById('toastFechar')?.addEventListener('click', () => {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
+
+    // ===== GPS (novo) =====
+    const btnGPS = document.getElementById('btnGPS');
+    if (btnGPS && inputMorada) {
+        btnGPS.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Seu navegador não suporta GPS.');
+                return;
+            }
+            btnGPS.textContent = '⏳ Buscando...';
+            btnGPS.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    try {
+                        const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                        const dados = await resposta.json();
+                        if (dados && dados.display_name) {
+                            inputMorada.value = dados.display_name;
+                        } else {
+                            inputMorada.value = `Lat: ${lat}, Lng: ${lng}`;
+                        }
+                        btnGPS.textContent = '✅ Localizado!';
+                        setTimeout(() => { btnGPS.textContent = '📍 GPS'; btnGPS.disabled = false; }, 3000);
+                    } catch (erro) {
+                        inputMorada.value = `Lat: ${lat}, Lng: ${lng}`;
+                        btnGPS.textContent = '✅ Coordenadas!';
+                        setTimeout(() => { btnGPS.textContent = '📍 GPS'; btnGPS.disabled = false; }, 3000);
+                    }
+                },
+                (erro) => {
+                    alert('Erro ao obter localização. Permita o GPS no navegador.');
+                    btnGPS.textContent = '📍 GPS';
+                    btnGPS.disabled = false;
+                }
+            );
+        });
+    }
 }
 
 function carregarCarrinho() {

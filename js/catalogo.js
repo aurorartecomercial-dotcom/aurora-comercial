@@ -67,6 +67,20 @@ export function criarCardProduto(prod) {
         html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
     }
 
+    // ===== ESTOQUE =====
+    let estoqueHtml = '';
+    if (prod.estoque !== undefined) {
+        if (prod.estoque <= 0) {
+            estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
+        } else if (prod.estoque <= 5) {
+            estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
+        } else {
+            estoqueHtml = `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
+        }
+    }
+    html += estoqueHtml;
+
+    // ===== AVALIAÇÃO =====
     const avaliacao = obterAvaliacao(prod.id);
     if (avaliacao.media > 0) {
         html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`;

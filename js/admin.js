@@ -54,6 +54,7 @@ function iniciarAdmin() {
     const descricao = document.getElementById('descricao');
     const imagens = document.getElementById('imagens');
     const ordem = document.getElementById('ordem');
+    const estoque = document.getElementById('estoque'); // NOVO
     const previewImagens = document.getElementById('previewImagens');
 
     // JSONbin
@@ -102,7 +103,7 @@ function iniciarAdmin() {
         setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
     }
 
-    // ===== LISTA DE PRODUTOS (CORRIGIDA COM A CLASSE CERTA) =====
+    // ===== LISTA DE PRODUTOS =====
     function renderizarLista() {
         contadorSpan.textContent = produtos.length;
         if (produtos.length === 0) {
@@ -114,7 +115,10 @@ function iniciarAdmin() {
             <div class="produto-item" data-id="${prod.id}">
                 <div>
                     <span>${prod.nome}</span>
-                    <small style="color:#888; display:block;">${prod.categoria} | ${prod.preco}</small>
+                    <small style="color:#888; display:block;">
+                        ${prod.categoria} | ${prod.preco} 
+                        ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
+                    </small>
                 </div>
                 <div class="acoes">
                     <button class="btn-admin" onclick="window.editarProduto(${prod.id})">✏️ Editar</button>
@@ -168,7 +172,8 @@ function iniciarAdmin() {
             freteGratis: freteGratis.checked,
             descricao: descricao.value.trim(),
             imagens: imagensArray.length > 0 ? imagensArray : ['placeholder.jpg'],
-            tag: tag.value.trim() || categoria.value
+            tag: tag.value.trim() || categoria.value,
+            estoque: parseInt(estoque.value) || 0
         };
 
         if (editandoId) {
@@ -203,6 +208,7 @@ function iniciarAdmin() {
         descricao.value = prod.descricao || '';
         imagens.value = Array.isArray(prod.imagens) ? prod.imagens.join(', ') : '';
         ordem.value = prod.ordem || 0;
+        estoque.value = prod.estoque || 0;
         atualizarPreview(imagens.value);
 
         formTitulo.textContent = '✏️ Editar Produto';
@@ -227,6 +233,7 @@ function iniciarAdmin() {
         form.reset();
         prodId.value = '';
         ordem.value = '0';
+        estoque.value = '10';
         formTitulo.textContent = '➕ Novo Produto';
         btnSalvar.textContent = '💾 Salvar Produto';
         btnCancelar.style.display = 'none';
