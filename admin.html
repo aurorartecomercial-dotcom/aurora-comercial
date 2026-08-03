@@ -81,9 +81,13 @@
                         <label>Ordem (número, quanto menor, antes aparece)</label>
                         <input type="number" id="ordem" value="0" />
 
-                        <!-- CAMPO ESTOQUE ADICIONADO -->
                         <label>Estoque (quantidade disponível) *</label>
                         <input type="number" id="estoque" value="10" min="0" required />
+
+                        <!-- CAMPO VÍDEO ADICIONADO -->
+                        <label>Vídeo de Demonstração (YouTube Embed)</label>
+                        <input type="text" id="video" placeholder="Ex: https://www.youtube.com/embed/ID_DO_VIDEO" />
+                        <small style="display:block; color:#888; margin-top:2px;">Cole o link de incorporação (src) do YouTube.</small>
 
                         <div style="margin-top:16px;">
                             <button type="submit" class="btn-admin" id="btnSalvar">💾 Salvar Produto</button>

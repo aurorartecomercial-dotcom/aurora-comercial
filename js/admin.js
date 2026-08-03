@@ -54,8 +54,8 @@ function iniciarAdmin() {
     const descricao = document.getElementById('descricao');
     const imagens = document.getElementById('imagens');
     const ordem = document.getElementById('ordem');
-    const estoque = document.getElementById('estoque'); // NOVO
-    const previewImagens = document.getElementById('previewImagens');
+    const estoque = document.getElementById('estoque');
+    const video = document.getElementById('video'); // <--- NOVO
 
     // JSONbin
     const jsonbinIdInput = document.getElementById('jsonbinId');
@@ -118,6 +118,7 @@ function iniciarAdmin() {
                     <small style="color:#888; display:block;">
                         ${prod.categoria} | ${prod.preco} 
                         ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
+                        ${prod.video ? '| 🎬 Vídeo' : ''}
                     </small>
                 </div>
                 <div class="acoes">
@@ -173,7 +174,8 @@ function iniciarAdmin() {
             descricao: descricao.value.trim(),
             imagens: imagensArray.length > 0 ? imagensArray : ['placeholder.jpg'],
             tag: tag.value.trim() || categoria.value,
-            estoque: parseInt(estoque.value) || 0
+            estoque: parseInt(estoque.value) || 0,
+            video: video.value.trim() // <--- NOVO
         };
 
         if (editandoId) {
@@ -209,6 +211,7 @@ function iniciarAdmin() {
         imagens.value = Array.isArray(prod.imagens) ? prod.imagens.join(', ') : '';
         ordem.value = prod.ordem || 0;
         estoque.value = prod.estoque || 0;
+        video.value = prod.video || ''; // <--- NOVO
         atualizarPreview(imagens.value);
 
         formTitulo.textContent = '✏️ Editar Produto';
@@ -234,6 +237,7 @@ function iniciarAdmin() {
         prodId.value = '';
         ordem.value = '0';
         estoque.value = '10';
+        video.value = ''; // <--- NOVO
         formTitulo.textContent = '➕ Novo Produto';
         btnSalvar.textContent = '💾 Salvar Produto';
         btnCancelar.style.display = 'none';

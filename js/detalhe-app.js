@@ -79,6 +79,16 @@ function renderizarDetalhes(prod) {
     // Avaliação
     const avaliacao = obterAvaliacao(prod.id);
 
+    // ===== GERA O HTML DO VÍDEO SE ELE EXISTIR =====
+    let videoHtml = '';
+    if (prod.video) {
+        videoHtml = `
+            <div class="video-container">
+                <iframe src="${prod.video}" frameborder="0" allowfullscreen></iframe>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         <div class="detalhes-grid">
             <div class="detalhes-imagem-principal">
@@ -96,6 +106,9 @@ function renderizarDetalhes(prod) {
                 ${prod.parcelas ? `<div class="parcelas">${prod.parcelas}</div>` : ''}
                 ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
                 <div class="descricao">${prod.descricao || 'Descrição não disponível.'}</div>
+                
+                ${videoHtml} <!-- <--- VÍDEO INSERIDO AQUI -->
+
                 <div class="avaliacao">
                     <span>⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total} avaliações)</span>
                     <div>
