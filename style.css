@@ -131,7 +131,7 @@ body {
 .selo-frete strong { color: var(--cor-ouro); }
 
 /* ============================================================
-   CARRINHO LATERAL (CORRIGIDO PARA NÃO FICAR "POR BAIXO")
+   CARRINHO LATERAL
    ============================================================ */
 .carrinho-overlay {
     display: none;
@@ -195,7 +195,7 @@ body {
 .btn-finalizar:hover { background: #1ebd58; }
 
 /* ============================================================
-   MODAL DO CLIENTE (CORRIGIDO)
+   MODAL DO CLIENTE
    ============================================================ */
 #modalCliente {
     display: none;
@@ -282,7 +282,6 @@ body {
 .btn-admin-jsonbin { background: #2c3e50; }
 .btn-admin-jsonbin:hover { background: #1a252f; }
 
-/* ---- PREVIEW DE IMAGENS NO ADMIN (CORREÇÃO ADICIONADA) ---- */
 #previewImagens img {
     width: 80px;
     height: 80px;
@@ -292,9 +291,7 @@ body {
     background: #f9f9f9;
     transition: transform 0.2s ease;
 }
-#previewImagens img:hover {
-    transform: scale(1.05);
-}
+#previewImagens img:hover { transform: scale(1.05); }
 
 /* ===== BALANÇO ===== */
 .secao-balanco { max-width: 1480px; margin: 40px auto; padding: 24px 32px; background: #FFF; border-radius: 24px; box-shadow: var(--sombra-card); border: 1px solid var(--cor-ouro); }
@@ -319,7 +316,6 @@ body {
 .rodape-coluna ul li a:hover { color: var(--cor-ouro); }
 .rodape-copyright { text-align: center; font-size: 12px; color: #AAA; border-top: 1px solid var(--cor-ouro); padding-top: 16px; max-width: 1480px; margin: 0 auto; }
 
-/* ===== BOTÃO CARREGAR MAIS (CORRIGIDO) ===== */
 #carregarMais {
     background: var(--cor-ouro);
     color: #000000;
@@ -357,4 +353,22 @@ body {
     .detalhes-imagem-principal img { max-height: 300px; }
     .grade-produtos { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .painel-admin { grid-template-columns: 1fr; }
+}
+
+/* ===== CORREÇÃO DO MENU NO CELULAR (ADICIONADO) ===== */
+@media (max-width: 768px) {
+    body {
+        padding-top: 160px !important; 
+    }
+    .menu-categorias ul {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        display: flex;
+        padding-bottom: 4px;
+    }
+    .carrossel-ofertas {
+        position: relative;
+        z-index: 1; 
+    }
 }
