@@ -210,8 +210,21 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(nome, preco) {
+// ===== FUNÇÃO DE ADICIONAR AO CARRINHO COM VALIDAÇÃO DE ESTOQUE =====
+export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
+    if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) {
+        mostrarToast('🚫 Produto esgotado!', 'info');
+        return;
+    }
+
     const existente = carrinho.find(i => i.nome === nome);
+    let quantidadeAtual = existente ? existente.quantidade : 0;
+
+    if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) {
+        mostrarToast('🚫 Estoque esgotado! Não é possível adicionar mais.', 'info');
+        return;
+    }
+
     if (existente) {
         existente.quantidade += 1;
     } else {

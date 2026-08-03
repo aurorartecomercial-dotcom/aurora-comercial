@@ -126,8 +126,9 @@ function renderizarDetalhes(prod) {
         });
     });
 
+    // ===== BOTÃO DE COMPRA COM ESTOQUE =====
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
-        adicionarProdutoCarrinho(prod.nome, prod.preco);
+        adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
     });
 
     // Avaliação
