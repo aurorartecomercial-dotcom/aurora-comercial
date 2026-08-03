@@ -68,7 +68,6 @@ body {
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
 #carrinhoTotalItens { font-size: 12px; color: var(--cor-ouro); }
 
-/* ===== MENU (Desktop) ===== */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; gap: 0; flex-wrap: wrap; }
 .menu-categorias ul li a {
@@ -81,15 +80,7 @@ body {
 .submenu li a { color: #FFF !important; }
 .submenu li a:hover { background: var(--cor-ouro); color: #000 !important; }
 
-/* ===== BOTÃO DE MENU (só aparece no mobile) ===== */
-#menuToggle {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    margin-right: 0;
-}
+#menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-right: 0; }
 
 .carrossel-ofertas { margin: 20px auto 0; max-width: 1480px; border-radius: var(--raio-borda); overflow: hidden; position: relative; box-shadow: var(--sombra-card); border: 2px solid var(--cor-ouro); }
 .carrossel-container { position: relative; width: 100%; background: var(--cor-esmeralda-escuro); overflow: hidden; }
@@ -222,7 +213,6 @@ body {
 #carregarMais:hover { background: var(--cor-ouro-escuro); transform: scale(1.02); }
 #carregarMais:disabled { background: #cccccc; color: #666666; cursor: not-allowed; transform: none; }
 
-/* ===== RESPONSIVO (CELULAR) ===== */
 @media (max-width: 1024px) {
     .vitrine-container { grid-template-columns: 1fr; }
     .filtros-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -237,7 +227,6 @@ body {
     .grade-produtos { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .painel-admin { grid-template-columns: 1fr; }
 
-    /* ===== MENU MOBILE COM BOTÃO DE 4 PONTINHOS ===== */
     #menuToggle { display: block; }
     .menu-categorias ul {
         display: none;
@@ -252,20 +241,14 @@ body {
         z-index: 999;
         border-bottom: 2px solid var(--cor-ouro);
     }
-    .menu-categorias ul.menu-aberto {
-        display: flex;
-    }
-    .menu-categorias ul li a {
-        padding: 10px 24px;
-        border-bottom: none;
-        text-align: left;
-    }
+    .menu-categorias ul.menu-aberto { display: flex; }
+    .menu-categorias ul li a { padding: 10px 24px; border-bottom: none; text-align: left; }
     .menu-categorias ul li a:hover, .menu-categorias ul li a.ativo {
         background: var(--cor-esmeralda);
         color: var(--cor-ouro);
         border-bottom: none;
     }
-    .dropdown:hover .submenu { display: none; } /* Desabilita hover no mobile */
+    .dropdown:hover .submenu { display: none; }
     .submenu {
         position: static;
         box-shadow: none;
@@ -274,8 +257,31 @@ body {
         padding-left: 20px;
         border: none;
     }
-    .menu-categorias ul li.dropdown.menu-aberto .submenu {
-        display: block;
-    }
+    .menu-categorias ul li.dropdown.menu-aberto .submenu { display: block; }
     .carrossel-ofertas { margin-top: 0; border-radius: 0; }
+}
+
+/* ✅ BOTÃO FLUTUANTE DO WHATSAPP */
+.whatsapp-float {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #25D366;
+    color: #fff;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 9999;
+    text-decoration: none;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #fff;
+}
+.whatsapp-float:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
 }
