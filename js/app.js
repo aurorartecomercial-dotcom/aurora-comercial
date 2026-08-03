@@ -92,6 +92,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderizarBalancoSemanal();
     aplicarFiltros();
+
+    // ===== MENU MOBILE (Ícone de 4 pontinhos) =====
+    const menuToggle = document.getElementById('menuToggle');
+    const menuLista = document.getElementById('menuCategorias');
+    if (menuToggle && menuLista) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuLista.classList.toggle('menu-aberto');
+            const isOpen = menuLista.classList.contains('menu-aberto');
+            menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+        });
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-categorias')) {
+                menuLista.classList.remove('menu-aberto');
+            }
+        });
+    }
 });
 
 function aplicarFiltros(resetPagina = true) {

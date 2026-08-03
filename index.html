@@ -46,7 +46,19 @@
                 </button>
             </div>
         </div>
+
+        <!-- MENU COM BOTÃO DE 4 PONTINHOS -->
         <nav class="menu-categorias" aria-label="Categorias">
+            <!-- Botão com 4 pontinhos (só aparece no celular) -->
+            <button id="menuToggle" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                    <rect x="4" y="4" width="6" height="6" rx="1" />
+                    <rect x="14" y="4" width="6" height="6" rx="1" />
+                    <rect x="4" y="14" width="6" height="6" rx="1" />
+                    <rect x="14" y="14" width="6" height="6" rx="1" />
+                </svg>
+            </button>
+
             <ul id="menuCategorias">
                 <li><a href="#" data-categoria="todos" class="ativo">Todos</a></li>
                 <li><a href="#" data-categoria="eletronicos">Eletrônicos</a></li>
@@ -172,7 +184,7 @@
         </div>
     </aside>
 
-    <!-- MODAL DO CLIENTE (com GPS) -->
+    <!-- MODAL DO CLIENTE -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
             <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
@@ -186,15 +198,12 @@
             <label for="inputNif">NIF *</label>
             <input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required aria-required="true" />
             <span class="erro-validacao" id="erroNif"></span>
-
-            <!-- GPS SECTION -->
             <label for="inputMorada">Morada</label>
             <div style="display:flex; gap:8px; align-items:center;">
                 <input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, Castilhos, s/n" style="flex:1;" />
                 <button type="button" id="btnGPS" style="background:var(--cor-ouro); border:none; padding:8px 14px; border-radius:40px; font-weight:600; cursor:pointer;">📍 GPS</button>
             </div>
             <small style="display:block; margin-top:4px; color:#888; font-size:12px;">Clique em GPS para preencher automaticamente sua localização.</small>
-
             <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura</button>
         </div>
     </div>

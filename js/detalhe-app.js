@@ -31,6 +31,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderizarDetalhes(prod);
     // Atualiza meta tags
     atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
+
+    // ===== MENU MOBILE (Ícone de 4 pontinhos) =====
+    const menuToggle = document.getElementById('menuToggle');
+    const menuLista = document.getElementById('menuCategorias');
+    if (menuToggle && menuLista) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuLista.classList.toggle('menu-aberto');
+            const isOpen = menuLista.classList.contains('menu-aberto');
+            menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-categorias')) {
+                menuLista.classList.remove('menu-aberto');
+            }
+        });
+    }
 });
 
 function mostrarErro(mensagem) {
