@@ -518,21 +518,51 @@ async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaC
     mostrarToast('Fatura descarregada. Anexe‑a ao WhatsApp!', 'sucesso');
 }
 
-function salvarVendaNoHistorico() {
-    const historico = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
+// ============================================================
+// FUNÇÃO DE SALVAR A VENDA NO JSONBIN (NUVEM)
+// ============================================================
+async function salvarVendaNoHistorico() {
+    // Montar os dados da venda
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    historico.push({
+    
+    const novaVenda = {
         dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
         totalItens: totalItensPedido
-    });
-    localStorage.setItem('aurora_historico_vendas', JSON.stringify(historico));
-    if (typeof renderizarBalancoSemanal === 'function') {
-        renderizarBalancoSemanal();
+    };
+
+    // Buscar histórico atual do JSONbin
+    try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
+            headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
+        });
+        const data = await res.json();
+        let historico = data.record || [];
+
+        // Adicionar nova venda
+        historico.push(novaVenda);
+
+        // Enviar histórico atualizado para o JSONbin
+        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': CONFIG.MASTER_KEY_VENDAS
+            },
+            body: JSON.stringify(historico)
+        });
+
+        console.log('Venda registrada com sucesso na nuvem!');
+    } catch (e) {
+        console.warn('Erro ao salvar venda no JSONbin. Venda salva localmente como fallback.');
+        // Fallback: salvar localmente se a internet falhar
+        const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
+        historicoLocal.push(novaVenda);
+        localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
     }
 }
