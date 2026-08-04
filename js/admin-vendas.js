@@ -51,7 +51,7 @@ async function carregarDados() {
 
         const dataVendas = await resVendas.json();
         
-        // CORREÇÃO CRÍTICA: Garantir que todasVendas seja um array
+        // CORREÇÃO: Garantir que todasVendas seja um array
         if (dataVendas && Array.isArray(dataVendas.record)) {
             todasVendas = dataVendas.record;
         } else {
@@ -207,6 +207,9 @@ async function limparHistorico() {
     }
 }
 
+// ============================================================
+// FUNÇÃO DE EXPORTAÇÃO DO PDF (CORRIGIDA E MELHORADA)
+// ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'mm', 'a4');
@@ -252,16 +255,16 @@ async function exportarPDF() {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(corEsmeralda);
-    doc.text('📊 Resumo do Período', 20, 60);
+    doc.text('Resumo do Período', 20, 60);
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(corTexto);
 
-    doc.text('💰 Faturamento Total', 20, 72);
-    doc.text('📦 Pedidos Realizados', 110, 72);
-    doc.text('🛒 Itens Vendidos', 20, 82);
-    doc.text('📦 Estoque Restante', 110, 82);
+    doc.text('Faturamento Total:', 20, 72);
+    doc.text('Pedidos Realizados:', 110, 72);
+    doc.text('Itens Vendidos:', 20, 82);
+    doc.text('Estoque Restante:', 110, 82);
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -271,6 +274,7 @@ async function exportarPDF() {
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
 
+    // Gráfico de barras desenhado
     const corpoTabela = document.getElementById('corpoTabelaRelatorio');
     const linhas = corpoTabela.querySelectorAll('tr');
     const produtosGrafico = [];
@@ -294,7 +298,7 @@ async function exportarPDF() {
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(corEsmeralda);
-        doc.text('📈 Top 5 Produtos Mais Vendidos', 20, 98);
+        doc.text('Top 5 Produtos Mais Vendidos', 20, 98);
 
         const yStart = 108;
         const maxWidth = 140;
@@ -324,6 +328,7 @@ async function exportarPDF() {
         var yGrafico = 98;
     }
 
+    // Tabela de produtos
     const body = [];
     linhas.forEach(tr => {
         const cols = tr.querySelectorAll('td');
@@ -361,6 +366,7 @@ async function exportarPDF() {
         margin: { left: 15, right: 15 }
     });
 
+    // Rodapé
     const finalY = doc.lastAutoTable.finalY + 15;
     const footerY = Math.min(finalY, 272);
 
