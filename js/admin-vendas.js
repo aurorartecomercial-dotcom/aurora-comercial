@@ -31,49 +31,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
     document.getElementById('btnRelatorioMensal').addEventListener('click', () => gerarRelatorio('mes'));
     document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
+    document.getElementById('btnExportarCSV').addEventListener('click', exportarCSV);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
 });
 
 async function carregarDados() {
-    // Limpa erros anteriores na tela
     const erroDiv = document.getElementById('erroMensagem');
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
-        // Carregar vendas do JSONbin
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
-
         if (!resVendas.ok) {
-            throw new Error(`Erro nas Vendas: ${resVendas.status} - ${resVendas.statusText}. Verifique se o BIN_ID_VENDAS está correto.`);
+            throw new Error(`Erro nas Vendas: ${resVendas.status} - ${resVendas.statusText}`);
         }
-
         const dataVendas = await resVendas.json();
-        
-        // CORREÇÃO: Garantir que todasVendas seja um array
-        if (dataVendas && Array.isArray(dataVendas.record)) {
-            todasVendas = dataVendas.record;
-        } else {
-            todasVendas = []; // Se não for um array, força a ser vazio
-        }
+        todasVendas = dataVendas && Array.isArray(dataVendas.record) ? dataVendas.record : [];
 
-        // Carregar catálogo do JSONbin
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
-
         if (!resProdutos.ok) {
-            throw new Error(`Erro nos Produtos: ${resProdutos.status} - ${resProdutos.statusText}. Verifique o BIN_ID.`);
+            throw new Error(`Erro nos Produtos: ${resProdutos.status} - ${resProdutos.statusText}`);
         }
-
         const dataProdutos = await resProdutos.json();
         catalogo = dataProdutos.record || [];
 
         gerarRelatorio('semana');
     } catch (e) {
         console.error('ERRO DETALHADO:', e);
-        // Mostra o erro na tela em vermelho
         if (erroDiv) {
             erroDiv.style.display = 'block';
             erroDiv.style.color = '#E74C3C';
@@ -111,11 +98,32 @@ function gerarRelatorio(periodo) {
     const pedidos = vendasFiltradas.length;
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + v.totalItens, 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
+    
+    // NOVO: Ticket Médio
+    const ticketMedio = pedidos > 0 ? faturamento / pedidos : 0;
+
+    // NOVO: Economia com Descontos
+    let economiaTotal = 0;
+    vendasFiltradas.forEach(venda => {
+        const produtos = venda.produtosResumo.split(', ');
+        produtos.forEach(item => {
+            const nome = item.split(' (x')[0];
+            const qtd = parseInt(item.split('(x')[1]) || 1;
+            const prod = catalogo.find(p => p.nome === nome);
+            if (prod && prod.precoAntigo) {
+                const precoAtual = extrairValorNumerico(prod.preco);
+                const precoAntigo = extrairValorNumerico(prod.precoAntigo);
+                economiaTotal += (precoAntigo - precoAtual) * qtd;
+            }
+        });
+    });
 
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
+    document.getElementById('kpiTicketMedio').textContent = ticketMedio.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiEconomia').textContent = economiaTotal.toLocaleString('pt-AO') + ' Kz';
 
     // Tabela de Produtos
     const vendasPorProduto = {};
@@ -208,7 +216,32 @@ async function limparHistorico() {
 }
 
 // ============================================================
-// FUNÇÃO DE EXPORTAÇÃO DO PDF (CORRIGIDA E MELHORADA)
+// NOVO: Exportar CSV (Excel)
+// ============================================================
+function exportarCSV() {
+    const linhas = document.querySelectorAll('#corpoTabelaRelatorio tr');
+    if (linhas.length === 0) {
+        alert('Não há dados para exportar.');
+        return;
+    }
+
+    let csv = 'Produto,Qtd Vendida,Total (Kz),Desconto,Estoque Restante\n';
+    linhas.forEach(tr => {
+        const cols = tr.querySelectorAll('td');
+        csv += `${cols[0].textContent},${cols[1].textContent},${cols[2].textContent},${cols[3].textContent},${cols[4].textContent}\n`;
+    });
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // \uFEFF para acentos no Excel
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Relatorio_Vendas_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ============================================================
+// EXPORTAÇÃO PDF (CORRIGIDA E MELHORADA)
 // ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
@@ -251,6 +284,8 @@ async function exportarPDF() {
     const pedidos = document.getElementById('kpiPedidos').textContent;
     const itens = document.getElementById('kpiItens').textContent;
     const estoque = document.getElementById('kpiEstoque').textContent;
+    const ticketMedio = document.getElementById('kpiTicketMedio').textContent;
+    const economia = document.getElementById('kpiEconomia').textContent;
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -261,79 +296,89 @@ async function exportarPDF() {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(corTexto);
 
-    doc.text('Faturamento Total:', 20, 72);
-    doc.text('Pedidos Realizados:', 110, 72);
+    doc.text('Faturamento:', 20, 72);
+    doc.text('Pedidos:', 110, 72);
     doc.text('Itens Vendidos:', 20, 82);
-    doc.text('Estoque Restante:', 110, 82);
+    doc.text('Estoque:', 110, 82);
+    doc.text('Ticket Médio:', 20, 92);
+    doc.text('Economia c/ Descontos:', 110, 92);
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(corEsmeralda);
     doc.text(faturamento, 70, 72, { align: 'right' });
     doc.text(pedidos, 160, 72, { align: 'right' });
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
+    doc.text(ticketMedio, 70, 92, { align: 'right' });
+    doc.text(economia, 160, 92, { align: 'right' });
 
-    // Gráfico de barras desenhado
-    const corpoTabela = document.getElementById('corpoTabelaRelatorio');
-    const linhas = corpoTabela.querySelectorAll('tr');
-    const produtosGrafico = [];
-    const vendasGrafico = [];
-
-    linhas.forEach(tr => {
-        const cols = tr.querySelectorAll('td');
-        const nome = cols[0].textContent;
-        const qtd = parseInt(cols[1].textContent);
-        if (qtd > 0) {
-            produtosGrafico.push(nome);
-            vendasGrafico.push(qtd);
-        }
-    });
-
-    const top5 = produtosGrafico.map((nome, i) => ({ nome, qtd: vendasGrafico[i] }))
-        .sort((a, b) => b.qtd - a.qtd)
-        .slice(0, 5);
-
-    if (top5.length > 0) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(corEsmeralda);
-        doc.text('Top 5 Produtos Mais Vendidos', 20, 98);
-
-        const yStart = 108;
-        const maxWidth = 140;
-        const maxQtd = top5[0]?.qtd || 1;
-        const barHeight = 6;
-        const rowHeight = 10;
-
-        top5.forEach((item, index) => {
-            const y = yStart + index * rowHeight;
-            const percent = (item.qtd / maxQtd) * maxWidth;
-
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(corTexto);
-            doc.text(item.nome, 20, y + 5);
-
-            doc.setFillColor(corOuro);
-            doc.rect(75, y, percent, barHeight, 'F');
-            
-            doc.setFontSize(8);
-            doc.setTextColor('#FFFFFF');
-            doc.text(item.qtd.toString(), 75 + percent - 5, y + 5, { align: 'right' });
-        });
-
-        var yGrafico = yStart + top5.length * rowHeight + 10;
-    } else {
-        var yGrafico = 98;
+    // --- GRÁFICOS EM IMAGEM (Item 2) ---
+    const canvasVendas = document.getElementById('graficoVendas');
+    const canvasProdutos = document.getElementById('graficoProdutos');
+    let imgDataVendas, imgDataProdutos;
+    
+    try {
+        imgDataVendas = canvasVendas.toDataURL('image/png', 1.0);
+        imgDataProdutos = canvasProdutos.toDataURL('image/png', 1.0);
+        
+        doc.addImage(imgDataVendas, 'PNG', 20, 100, 80, 45);
+        doc.addImage(imgDataProdutos, 'PNG', 105, 100, 80, 45);
+        var yGrafico = 160;
+    } catch (e) {
+        console.warn('Erro ao capturar gráficos. A caixa ficará vazia.');
+        var yGrafico = 100;
+        doc.text('Gráficos não disponíveis.', 105, 100, { align: 'center' });
     }
 
-    // Tabela de produtos
+    // --- ALERTA DE ESTOQUE CRÍTICO (Item 3) ---
+    const baixoEstoque = catalogo.filter(p => p.estoque < 5 && p.estoque > 0);
+    if (baixoEstoque.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor('#E74C3C'); // Vermelho
+        doc.setFont('helvetica', 'bold');
+        doc.text('⚠️ ALERTA: Produtos com Estoque Crítico', 20, yGrafico + 10);
+        doc.setTextColor(corTexto);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        
+        let yAlert = yGrafico + 18;
+        baixoEstoque.forEach(prod => {
+            doc.text(`- ${prod.nome} (Apenas ${prod.estoque} unidades)`, 25, yAlert);
+            yAlert += 6;
+        });
+        yGrafico = yAlert + 10;
+    } else {
+        yGrafico += 20;
+    }
+
+    // --- TABELA DE PRODUTOS ---
+    const corpoTabela = document.getElementById('corpoTabelaRelatorio');
+    const linhas = corpoTabela.querySelectorAll('tr');
+    const vendasPorProduto = {};
+    
+    // Precisa calcular o top 5 novamente para o campeão
+    todasVendas.forEach(venda => {
+        const produtos = venda.produtosResumo.split(', ');
+        produtos.forEach(item => {
+            const nome = item.split(' (x')[0];
+            const qtd = parseInt(item.split('(x')[1]) || 1;
+            vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+        });
+    });
+    const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]);
+    const campeaoNome = topProdutos.length > 0 ? topProdutos[0][0] : '';
+
     const body = [];
     linhas.forEach(tr => {
         const cols = tr.querySelectorAll('td');
+        let nomeProduto = cols[0].textContent;
+        // ITEM 6: Adicionar Troféu ao Campeão
+        if (nomeProduto === campeaoNome && topProdutos[0][1] > 0) {
+            nomeProduto = '🏆 ' + nomeProduto;
+        }
         body.push([
-            cols[0].textContent,
+            nomeProduto,
             cols[1].textContent,
             cols[2].textContent,
             cols[3].textContent,
@@ -342,7 +387,7 @@ async function exportarPDF() {
     });
 
     doc.autoTable({
-        startY: yGrafico + 10,
+        startY: yGrafico,
         head: [['Produto', 'Qtd', 'Total (Kz)', 'Desconto', 'Estoque']],
         body: body,
         theme: 'grid',
@@ -366,7 +411,7 @@ async function exportarPDF() {
         margin: { left: 15, right: 15 }
     });
 
-    // Rodapé
+    // --- RODAPÉ ---
     const finalY = doc.lastAutoTable.finalY + 15;
     const footerY = Math.min(finalY, 272);
 

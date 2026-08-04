@@ -31,13 +31,14 @@
         <!-- CONTEÚDO DO PAINEL -->
         <div id="conteudoVendas" style="display:none;">
             
-            <!-- ADICIONADO: Div para exibir o erro em vermelho -->
+            <!-- Div para exibir o erro em vermelho -->
             <div id="erroMensagem" style="display:none;"></div>
 
             <div style="margin: 20px 0;">
                 <button id="btnRelatorioSemanal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Esta Semana</button>
                 <button id="btnRelatorioMensal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Este Mês</button>
                 <button id="btnExportarPDF" class="btn-admin" style="background:#25D366; color:#FFF;">📄 Exportar PDF</button>
+                <button id="btnExportarCSV" class="btn-admin" style="background:#2c3e50; color:#FFF;">📁 Exportar CSV</button>
                 <button id="btnLimparHistorico" class="btn-admin" style="background:#E74C3C;">🗑️ Limpar Tudo</button>
             </div>
 
@@ -57,6 +58,15 @@
                 <div class="card-faturamento">
                     <p>Produtos em Estoque</p>
                     <h3 id="kpiEstoque">0</h3>
+                </div>
+                <!-- NOVOS KPIs -->
+                <div class="card-faturamento sucesso">
+                    <p>Ticket Médio</p>
+                    <h3 id="kpiTicketMedio">0 Kz</h3>
+                </div>
+                <div class="card-faturamento">
+                    <p>Economia Total (Descontos)</p>
+                    <h3 id="kpiEconomia">0 Kz</h3>
                 </div>
             </div>
 
