@@ -35,24 +35,57 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function carregarDados() {
+    // Limpa erros anteriores na tela
+    const erroDiv = document.getElementById('erroMensagem');
+    if (erroDiv) erroDiv.innerHTML = '';
+
     try {
         // Carregar vendas do JSONbin
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
-        const dataVendas = await resVendas.json();
-        todasVendas = dataVendas.record || [];
 
-        // Carregar catálogo do JSONbin (CORRIGIDO: BIN_ID em vez de BIN_ID_PRODUTOS)
+        if (!resVendas.ok) {
+            throw new Error(`Erro nas Vendas: ${resVendas.status} - ${resVendas.statusText}. Verifique se o BIN_ID_VENDAS está correto.`);
+        }
+
+        const dataVendas = await resVendas.json();
+        
+        // CORREÇÃO CRÍTICA: Garantir que todasVendas seja um array
+        if (dataVendas && Array.isArray(dataVendas.record)) {
+            todasVendas = dataVendas.record;
+        } else {
+            todasVendas = []; // Se não for um array, força a ser vazio
+        }
+
+        // Carregar catálogo do JSONbin
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
+
+        if (!resProdutos.ok) {
+            throw new Error(`Erro nos Produtos: ${resProdutos.status} - ${resProdutos.statusText}. Verifique o BIN_ID.`);
+        }
+
         const dataProdutos = await resProdutos.json();
         catalogo = dataProdutos.record || [];
 
         gerarRelatorio('semana');
     } catch (e) {
-        alert('Erro ao carregar dados. Verifique sua conexão.');
+        console.error('ERRO DETALHADO:', e);
+        // Mostra o erro na tela em vermelho
+        if (erroDiv) {
+            erroDiv.style.display = 'block';
+            erroDiv.style.color = '#E74C3C';
+            erroDiv.style.fontWeight = 'bold';
+            erroDiv.style.margin = '20px 0';
+            erroDiv.style.padding = '10px';
+            erroDiv.style.background = '#fde8e8';
+            erroDiv.style.borderRadius = '8px';
+            erroDiv.innerHTML = `❌ <strong>ERRO AO CARREGAR:</strong> ${e.message}`;
+        } else {
+            alert('Erro ao carregar dados. Abra o console (F12) para ver o erro real: ' + e.message);
+        }
     }
 }
 
