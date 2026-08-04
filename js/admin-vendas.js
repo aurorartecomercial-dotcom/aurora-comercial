@@ -36,14 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function carregarDados() {
     try {
-        // Carregar vendas do JSONbin (Novo bin de vendas)
+        // Carregar vendas do JSONbin
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
         const dataVendas = await resVendas.json();
         todasVendas = dataVendas.record || [];
 
-        // Carregar catálogo do JSONbin (Bin de produtos original)
+        // Carregar catálogo do JSONbin (CORRIGIDO: BIN_ID em vez de BIN_ID_PRODUTOS)
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
@@ -174,9 +174,6 @@ async function limparHistorico() {
     }
 }
 
-// ============================================================
-// FUNÇÃO DE EXPORTAÇÃO DO PDF
-// ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'mm', 'a4');
@@ -186,7 +183,6 @@ async function exportarPDF() {
     const corTexto = '#333333';
     const corCinza = '#999999';
 
-    // Logo
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
@@ -199,7 +195,6 @@ async function exportarPDF() {
         });
     } catch (e) {}
 
-    // Título principal
     doc.setFontSize(24);
     doc.setTextColor(corOuro);
     doc.setFont('helvetica', 'bold');
@@ -216,7 +211,6 @@ async function exportarPDF() {
     doc.setLineWidth(0.8);
     doc.line(20, 48, 190, 48);
 
-    // KPIs
     const faturamento = document.getElementById('kpiFaturamento').textContent;
     const pedidos = document.getElementById('kpiPedidos').textContent;
     const itens = document.getElementById('kpiItens').textContent;
@@ -244,7 +238,6 @@ async function exportarPDF() {
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
 
-    // Gráfico de barras
     const corpoTabela = document.getElementById('corpoTabelaRelatorio');
     const linhas = corpoTabela.querySelectorAll('tr');
     const produtosGrafico = [];
@@ -298,7 +291,6 @@ async function exportarPDF() {
         var yGrafico = 98;
     }
 
-    // Tabela
     const body = [];
     linhas.forEach(tr => {
         const cols = tr.querySelectorAll('td');
@@ -336,7 +328,6 @@ async function exportarPDF() {
         margin: { left: 15, right: 15 }
     });
 
-    // Rodapé
     const finalY = doc.lastAutoTable.finalY + 15;
     const footerY = Math.min(finalY, 272);
 
