@@ -101,10 +101,29 @@ function gerarRelatorio(periodo) {
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + v.totalItens, 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
 
+    // Cálculo do desconto total
+    let descontoTotal = 0;
+    vendasFiltradas.forEach(v => {
+        const produtos = v.produtosResumo.split(', ');
+        produtos.forEach(item => {
+            const nome = item.split(' (x')[0];
+            const qtd = parseInt(item.split('(x')[1]) || 1;
+            const prod = catalogo.find(p => p.nome === nome);
+            if (prod && prod.precoAntigo) {
+                const precoFinal = extrairValorNumerico(prod.preco);
+                const precoAntigo = extrairValorNumerico(prod.precoAntigo);
+                if (precoAntigo > precoFinal) {
+                    descontoTotal += (precoAntigo - precoFinal) * qtd;
+                }
+            }
+        });
+    });
+
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
+    document.getElementById('kpiDesconto').textContent = descontoTotal.toLocaleString('pt-AO') + ' Kz';
 
     // Tabela de Produtos
     const vendasPorProduto = {};
@@ -212,7 +231,7 @@ async function limparHistorico() {
 }
 
 // ============================================================
-// EXPORTAR PDF (AGORA COM AS DUAS TABELAS)
+// EXPORTAR PDF (COM DESCONTO TOTAL)
 // ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
@@ -256,6 +275,7 @@ async function exportarPDF() {
     const pedidos = document.getElementById('kpiPedidos').textContent;
     const itens = document.getElementById('kpiItens').textContent;
     const estoque = document.getElementById('kpiEstoque').textContent;
+    const desconto = document.getElementById('kpiDesconto').textContent;
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -270,6 +290,7 @@ async function exportarPDF() {
     doc.text('Pedidos Realizados:', 110, 72);
     doc.text('Itens Vendidos:', 20, 82);
     doc.text('Estoque Restante:', 110, 82);
+    doc.text('Desconto Total:', 20, 92);
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -278,8 +299,9 @@ async function exportarPDF() {
     doc.text(pedidos, 160, 72, { align: 'right' });
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
+    doc.text(desconto, 70, 92, { align: 'right' });
 
-    let yGrafico = 100; // Posição Y inicial dos gráficos
+    let yGrafico = 105; // Posição Y inicial dos gráficos
 
     const canvasVendas = document.getElementById('graficoVendas');
     if (canvasVendas) {
@@ -396,7 +418,7 @@ async function exportarPDF() {
 }
 
 // ============================================================
-// EXPORTAR EXCEL (AGORA COM 3 ABAS: Resumo, Produtos e Pedidos)
+// EXPORTAR EXCEL (COM DESCONTO TOTAL)
 // ============================================================
 function exportarExcel() {
     // Aba 1: Produtos
@@ -414,13 +436,14 @@ function exportarExcel() {
         ]);
     });
 
-    // Aba 2: KPIs
+    // Aba 2: KPIs (incluindo Desconto)
     const kpis = [
         ['Indicador', 'Valor'],
         ['Faturamento Total', document.getElementById('kpiFaturamento').textContent],
         ['Pedidos Realizados', document.getElementById('kpiPedidos').textContent],
         ['Itens Vendidos', document.getElementById('kpiItens').textContent],
-        ['Estoque Restante', document.getElementById('kpiEstoque').textContent]
+        ['Estoque Restante', document.getElementById('kpiEstoque').textContent],
+        ['Desconto Total', document.getElementById('kpiDesconto').textContent]
     ];
 
     // Aba 3: Pedidos com clientes
