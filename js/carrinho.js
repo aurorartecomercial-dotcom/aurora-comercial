@@ -466,7 +466,7 @@ function numeroPorExtensoSimples(n) {
 }
 
 async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
-    salvarVendaNoHistorico();
+    salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente);
 
     const pdfBlob = await gerarFaturaPDF(carrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente);
     const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
@@ -519,9 +519,9 @@ async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaC
 }
 
 // ============================================================
-// FUNÇÃO DE SALVAR A VENDA NO JSONBIN (NUVEM)
+// FUNÇÃO DE SALVAR A VENDA NO JSONBIN (COM DADOS DO CLIENTE)
 // ============================================================
-async function salvarVendaNoHistorico() {
+async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
     // Montar os dados da venda
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -533,7 +533,12 @@ async function salvarVendaNoHistorico() {
         dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
-        totalItens: totalItensPedido
+        totalItens: totalItensPedido,
+        // NOVOS CAMPOS COM DADOS DO CLIENTE
+        nomeCliente: nomeCliente,
+        telefoneCliente: telefoneCliente,
+        nifCliente: nifCliente,
+        moradaCliente: moradaCliente
     };
 
     // Buscar histórico atual do JSONbin
@@ -560,7 +565,6 @@ async function salvarVendaNoHistorico() {
         console.log('Venda registrada com sucesso na nuvem!');
     } catch (e) {
         console.warn('Erro ao salvar venda no JSONbin. Venda salva localmente como fallback.');
-        // Fallback: salvar localmente se a internet falhar
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));

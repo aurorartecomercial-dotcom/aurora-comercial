@@ -10,14 +10,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div style="max-width: 1100px; margin: 40px auto; padding: 0 24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-            <h1 style="color:var(--cor-esmeralda);">📊 Painel de Vendas (Administrador)</h1>
+            <h1 style="color:var(--cor-esmeralda);">📊 Painel de Vendas</h1>
             <a href="index.html" style="color:var(--cor-esmeralda); font-weight:600;">← Voltar</a>
         </div>
-        <p style="color:#999; margin-bottom:20px;">Acesso restrito apenas ao administrador.</p>
+        <p style="color:#999; margin-bottom:20px;">Acesso restrito ao administrador.</p>
 
         <!-- LOGIN -->
         <div id="loginVendas" style="max-width:400px; margin:40px auto; background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card);">
@@ -31,15 +32,14 @@
         <!-- CONTEÚDO DO PAINEL -->
         <div id="conteudoVendas" style="display:none;">
             
-            <!-- Div para exibir o erro em vermelho -->
             <div id="erroMensagem" style="display:none;"></div>
 
-            <div style="margin: 20px 0;">
+            <div style="margin: 20px 0; display:flex; flex-wrap:wrap; gap:10px;">
                 <button id="btnRelatorioSemanal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Esta Semana</button>
                 <button id="btnRelatorioMensal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Este Mês</button>
                 <button id="btnExportarPDF" class="btn-admin" style="background:#25D366; color:#FFF;">📄 Exportar PDF</button>
-                <button id="btnExportarCSV" class="btn-admin" style="background:#2c3e50; color:#FFF;">📁 Exportar CSV</button>
-                <button id="btnLimparHistorico" class="btn-admin" style="background:#E74C3C;">🗑️ Limpar Tudo</button>
+                <button id="btnExportarExcel" class="btn-admin" style="background:#005A4C; color:#FFF;">📊 Exportar Excel</button>
+                <button id="btnLimparHistorico" class="btn-admin" style="background:#E74C3C;">🗑️ Limpar</button>
             </div>
 
             <div class="painel-faturamento">
@@ -59,30 +59,21 @@
                     <p>Produtos em Estoque</p>
                     <h3 id="kpiEstoque">0</h3>
                 </div>
-                <!-- NOVOS KPIs -->
-                <div class="card-faturamento sucesso">
-                    <p>Ticket Médio</p>
-                    <h3 id="kpiTicketMedio">0 Kz</h3>
-                </div>
-                <div class="card-faturamento">
-                    <p>Economia Total (Descontos)</p>
-                    <h3 id="kpiEconomia">0 Kz</h3>
-                </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
                 <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
-                    <h3 style="color:var(--cor-esmeralda);">📈 Vendas por Dia</h3>
+                    <h3 style="color:var(--cor-esmeralda);">Vendas por Dia</h3>
                     <canvas id="graficoVendas" height="200"></canvas>
                 </div>
                 <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
-                    <h3 style="color:var(--cor-esmeralda);">🏷️ Produtos Mais Vendidos</h3>
+                    <h3 style="color:var(--cor-esmeralda);">Produtos Mais Vendidos</h3>
                     <canvas id="graficoProdutos" height="200"></canvas>
                 </div>
             </div>
 
-            <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
-                <h3 style="color:var(--cor-esmeralda);">📦 Detalhamento por Produto</h3>
+            <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); margin-bottom:30px;">
+                <h3 style="color:var(--cor-esmeralda);">Detalhamento por Produto</h3>
                 <table id="tabelaRelatorio" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                     <thead>
                         <tr style="background:var(--cor-esmeralda); color:#FFF;">
@@ -90,12 +81,32 @@
                             <th style="padding:8px;">Qtd Vendida</th>
                             <th style="padding:8px;">Total (Kz)</th>
                             <th style="padding:8px;">Desconto</th>
-                            <th style="padding:8px;">Estoque Restante</th>
+                            <th style="padding:8px;">Estoque</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabelaRelatorio"></tbody>
                 </table>
             </div>
+
+            <!-- NOVA TABELA: LISTA DE PEDIDOS COM DADOS DO CLIENTE -->
+            <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
+                <h3 style="color:var(--cor-esmeralda);">📦 Lista de Pedidos (Clientes)</h3>
+                <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                    <thead>
+                        <tr style="background:var(--cor-ouro); color:#000;">
+                            <th style="padding:8px;">Data/Hora</th>
+                            <th style="padding:8px;">Cliente</th>
+                            <th style="padding:8px;">Telefone</th>
+                            <th style="padding:8px;">NIF</th>
+                            <th style="padding:8px;">Morada</th>
+                            <th style="padding:8px;">Produtos</th>
+                            <th style="padding:8px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaPedidos"></tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 

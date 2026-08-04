@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
     document.getElementById('btnRelatorioMensal').addEventListener('click', () => gerarRelatorio('mes'));
     document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
-    document.getElementById('btnExportarCSV').addEventListener('click', exportarCSV);
+    document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
 });
 
@@ -43,18 +43,22 @@ async function carregarDados() {
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
+
         if (!resVendas.ok) {
             throw new Error(`Erro nas Vendas: ${resVendas.status} - ${resVendas.statusText}`);
         }
+
         const dataVendas = await resVendas.json();
-        todasVendas = dataVendas && Array.isArray(dataVendas.record) ? dataVendas.record : [];
+        todasVendas = (dataVendas && Array.isArray(dataVendas.record)) ? dataVendas.record : [];
 
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
+
         if (!resProdutos.ok) {
             throw new Error(`Erro nos Produtos: ${resProdutos.status} - ${resProdutos.statusText}`);
         }
+
         const dataProdutos = await resProdutos.json();
         catalogo = dataProdutos.record || [];
 
@@ -69,9 +73,7 @@ async function carregarDados() {
             erroDiv.style.padding = '10px';
             erroDiv.style.background = '#fde8e8';
             erroDiv.style.borderRadius = '8px';
-            erroDiv.innerHTML = `❌ <strong>ERRO AO CARREGAR:</strong> ${e.message}`;
-        } else {
-            alert('Erro ao carregar dados. Abra o console (F12) para ver o erro real: ' + e.message);
+            erroDiv.innerHTML = `❌ <strong>ERRO:</strong> ${e.message}`;
         }
     }
 }
@@ -98,32 +100,11 @@ function gerarRelatorio(periodo) {
     const pedidos = vendasFiltradas.length;
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + v.totalItens, 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
-    
-    // NOVO: Ticket Médio
-    const ticketMedio = pedidos > 0 ? faturamento / pedidos : 0;
-
-    // NOVO: Economia com Descontos
-    let economiaTotal = 0;
-    vendasFiltradas.forEach(venda => {
-        const produtos = venda.produtosResumo.split(', ');
-        produtos.forEach(item => {
-            const nome = item.split(' (x')[0];
-            const qtd = parseInt(item.split('(x')[1]) || 1;
-            const prod = catalogo.find(p => p.nome === nome);
-            if (prod && prod.precoAntigo) {
-                const precoAtual = extrairValorNumerico(prod.preco);
-                const precoAntigo = extrairValorNumerico(prod.precoAntigo);
-                economiaTotal += (precoAntigo - precoAtual) * qtd;
-            }
-        });
-    });
 
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
-    document.getElementById('kpiTicketMedio').textContent = ticketMedio.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiEconomia').textContent = economiaTotal.toLocaleString('pt-AO') + ' Kz';
 
     // Tabela de Produtos
     const vendasPorProduto = {};
@@ -153,6 +134,23 @@ function gerarRelatorio(periodo) {
             <td style="padding:8px; text-align:center;">${estoqueRestante}</td>
         `;
         corpoTabela.appendChild(tr);
+    });
+
+    // Tabela de Pedidos com Clientes
+    const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
+    corpoTabelaPedidos.innerHTML = '';
+    vendasFiltradas.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px;">${v.dataHora}</td>
+            <td style="padding:8px; font-weight:600;">${v.nomeCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.moradaCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.produtosResumo}</td>
+            <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
+        `;
+        corpoTabelaPedidos.appendChild(tr);
     });
 
     // Gráficos
@@ -195,8 +193,7 @@ function gerarRelatorio(periodo) {
 }
 
 async function limparHistorico() {
-    if (!confirm('Tem certeza que deseja apagar TODO o histórico de vendas?')) return;
-    
+    if (!confirm('Tem certeza que deseja apagar TODO o histórico?')) return;
     const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
         method: 'PUT',
         headers: {
@@ -205,43 +202,17 @@ async function limparHistorico() {
         },
         body: JSON.stringify([])
     });
-    
     if (res.ok) {
         todasVendas = [];
         gerarRelatorio('semana');
-        alert('Histórico limpo com sucesso!');
+        alert('Histórico limpo!');
     } else {
-        alert('Erro ao limpar histórico.');
+        alert('Erro ao limpar.');
     }
 }
 
 // ============================================================
-// NOVO: Exportar CSV (Excel)
-// ============================================================
-function exportarCSV() {
-    const linhas = document.querySelectorAll('#corpoTabelaRelatorio tr');
-    if (linhas.length === 0) {
-        alert('Não há dados para exportar.');
-        return;
-    }
-
-    let csv = 'Produto,Qtd Vendida,Total (Kz),Desconto,Estoque Restante\n';
-    linhas.forEach(tr => {
-        const cols = tr.querySelectorAll('td');
-        csv += `${cols[0].textContent},${cols[1].textContent},${cols[2].textContent},${cols[3].textContent},${cols[4].textContent}\n`;
-    });
-
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // \uFEFF para acentos no Excel
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Relatorio_Vendas_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// ============================================================
-// EXPORTAÇÃO PDF (CORRIGIDA E MELHORADA)
+// EXPORTAR PDF (AGORA COM AS DUAS TABELAS)
 // ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
@@ -252,6 +223,7 @@ async function exportarPDF() {
     const corTexto = '#333333';
     const corCinza = '#999999';
 
+    // Logo
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
@@ -273,7 +245,7 @@ async function exportarPDF() {
     doc.setTextColor('#555555');
     doc.setFont('helvetica', 'normal');
     doc.text('NIF: 5000048151  |  Telefone: +244 925 328 181', 105, 28, { align: 'center' });
-    doc.text('Relatório de Vendas - ADMIN', 105, 36, { align: 'center' });
+    doc.text('Relatorio de Vendas - ADMIN', 105, 36, { align: 'center' });
     doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 42, { align: 'center' });
 
     doc.setDrawColor(corOuro);
@@ -284,101 +256,53 @@ async function exportarPDF() {
     const pedidos = document.getElementById('kpiPedidos').textContent;
     const itens = document.getElementById('kpiItens').textContent;
     const estoque = document.getElementById('kpiEstoque').textContent;
-    const ticketMedio = document.getElementById('kpiTicketMedio').textContent;
-    const economia = document.getElementById('kpiEconomia').textContent;
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(corEsmeralda);
-    doc.text('Resumo do Período', 20, 60);
+    doc.text('Resumo do Periodo', 20, 60);
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(corTexto);
 
-    doc.text('Faturamento:', 20, 72);
-    doc.text('Pedidos:', 110, 72);
+    doc.text('Faturamento Total:', 20, 72);
+    doc.text('Pedidos Realizados:', 110, 72);
     doc.text('Itens Vendidos:', 20, 82);
-    doc.text('Estoque:', 110, 82);
-    doc.text('Ticket Médio:', 20, 92);
-    doc.text('Economia c/ Descontos:', 110, 92);
+    doc.text('Estoque Restante:', 110, 82);
 
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(corEsmeralda);
     doc.text(faturamento, 70, 72, { align: 'right' });
     doc.text(pedidos, 160, 72, { align: 'right' });
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
-    doc.text(ticketMedio, 70, 92, { align: 'right' });
-    doc.text(economia, 160, 92, { align: 'right' });
 
-    // --- GRÁFICOS EM IMAGEM (Item 2) ---
+    let yGrafico = 100; // Posição Y inicial dos gráficos
+
     const canvasVendas = document.getElementById('graficoVendas');
+    if (canvasVendas) {
+        const imgVendas = canvasVendas.toDataURL('image/png');
+        doc.addImage(imgVendas, 'PNG', 15, yGrafico, 85, 45);
+    }
+
     const canvasProdutos = document.getElementById('graficoProdutos');
-    let imgDataVendas, imgDataProdutos;
-    
-    try {
-        imgDataVendas = canvasVendas.toDataURL('image/png', 1.0);
-        imgDataProdutos = canvasProdutos.toDataURL('image/png', 1.0);
-        
-        doc.addImage(imgDataVendas, 'PNG', 20, 100, 80, 45);
-        doc.addImage(imgDataProdutos, 'PNG', 105, 100, 80, 45);
-        var yGrafico = 160;
-    } catch (e) {
-        console.warn('Erro ao capturar gráficos. A caixa ficará vazia.');
-        var yGrafico = 100;
-        doc.text('Gráficos não disponíveis.', 105, 100, { align: 'center' });
+    if (canvasProdutos) {
+        const imgProdutos = canvasProdutos.toDataURL('image/png');
+        doc.addImage(imgProdutos, 'PNG', 110, yGrafico, 85, 45);
     }
 
-    // --- ALERTA DE ESTOQUE CRÍTICO (Item 3) ---
-    const baixoEstoque = catalogo.filter(p => p.estoque < 5 && p.estoque > 0);
-    if (baixoEstoque.length > 0) {
-        doc.setFontSize(12);
-        doc.setTextColor('#E74C3C'); // Vermelho
-        doc.setFont('helvetica', 'bold');
-        doc.text('⚠️ ALERTA: Produtos com Estoque Crítico', 20, yGrafico + 10);
-        doc.setTextColor(corTexto);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        
-        let yAlert = yGrafico + 18;
-        baixoEstoque.forEach(prod => {
-            doc.text(`- ${prod.nome} (Apenas ${prod.estoque} unidades)`, 25, yAlert);
-            yAlert += 6;
-        });
-        yGrafico = yAlert + 10;
-    } else {
-        yGrafico += 20;
-    }
+    yGrafico += 55; // Avança para a tabela
 
-    // --- TABELA DE PRODUTOS ---
+    // Tabela 1: Produtos
     const corpoTabela = document.getElementById('corpoTabelaRelatorio');
     const linhas = corpoTabela.querySelectorAll('tr');
-    const vendasPorProduto = {};
-    
-    // Precisa calcular o top 5 novamente para o campeão
-    todasVendas.forEach(venda => {
-        const produtos = venda.produtosResumo.split(', ');
-        produtos.forEach(item => {
-            const nome = item.split(' (x')[0];
-            const qtd = parseInt(item.split('(x')[1]) || 1;
-            vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-        });
-    });
-    const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]);
-    const campeaoNome = topProdutos.length > 0 ? topProdutos[0][0] : '';
-
     const body = [];
     linhas.forEach(tr => {
         const cols = tr.querySelectorAll('td');
-        let nomeProduto = cols[0].textContent;
-        // ITEM 6: Adicionar Troféu ao Campeão
-        if (nomeProduto === campeaoNome && topProdutos[0][1] > 0) {
-            nomeProduto = '🏆 ' + nomeProduto;
-        }
         body.push([
-            nomeProduto,
+            cols[0].textContent,
             cols[1].textContent,
             cols[2].textContent,
             cols[3].textContent,
@@ -387,7 +311,7 @@ async function exportarPDF() {
     });
 
     doc.autoTable({
-        startY: yGrafico,
+        startY: yGrafico + 10,
         head: [['Produto', 'Qtd', 'Total (Kz)', 'Desconto', 'Estoque']],
         body: body,
         theme: 'grid',
@@ -411,7 +335,50 @@ async function exportarPDF() {
         margin: { left: 15, right: 15 }
     });
 
-    // --- RODAPÉ ---
+    // Tabela 2: Pedidos com Clientes
+    const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
+    const linhasPedidos = corpoTabelaPedidos.querySelectorAll('tr');
+    const bodyPedidos = [];
+    linhasPedidos.forEach(tr => {
+        const cols = tr.querySelectorAll('td');
+        bodyPedidos.push([
+            cols[0].textContent,
+            cols[1].textContent,
+            cols[2].textContent,
+            cols[3].textContent,
+            cols[4].textContent,
+            cols[5].textContent,
+            cols[6].textContent
+        ]);
+    });
+
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [['Data', 'Cliente', 'Telefone', 'NIF', 'Morada', 'Produtos', 'Total']],
+        body: bodyPedidos,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: corOuro, 
+            textColor: '#000000',
+            fontSize: 8,
+            halign: 'center'
+        },
+        bodyStyles: {
+            fontSize: 7,
+            textColor: corTexto
+        },
+        columnStyles: {
+            0: { cellWidth: 25 },
+            1: { cellWidth: 25 },
+            2: { cellWidth: 20 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 30 },
+            5: { cellWidth: 35 },
+            6: { cellWidth: 25, halign: 'right' }
+        },
+        margin: { left: 10, right: 10 }
+    });
+
     const finalY = doc.lastAutoTable.finalY + 15;
     const footerY = Math.min(finalY, 272);
 
@@ -422,16 +389,61 @@ async function exportarPDF() {
     doc.setFontSize(8);
     doc.setTextColor(corCinza);
     doc.setFont('helvetica', 'italic');
-    doc.text('Relatório gerado automaticamente pelo sistema Aurora Comercial.', 105, footerY + 5, { align: 'center' });
-    doc.text('Página 1 de 1', 105, footerY + 10, { align: 'center' });
-
-    if (finalY < 250) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(corTexto);
-        doc.text('____________________________________', 105, finalY + 30, { align: 'center' });
-        doc.text('Assinatura do Administrador', 105, finalY + 38, { align: 'center' });
-    }
+    doc.text('Relatorio gerado pelo sistema Aurora Comercial.', 105, footerY + 5, { align: 'center' });
+    doc.text('Pagina 1 de 1', 105, footerY + 10, { align: 'center' });
 
     doc.save(`Relatorio_Vendas_Admin_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+// ============================================================
+// EXPORTAR EXCEL (AGORA COM 3 ABAS: Resumo, Produtos e Pedidos)
+// ============================================================
+function exportarExcel() {
+    // Aba 1: Produtos
+    const corpoTabela = document.getElementById('corpoTabelaRelatorio');
+    const linhas = corpoTabela.querySelectorAll('tr');
+    const dadosProdutos = [['Produto', 'Qtd Vendida', 'Total (Kz)', 'Desconto', 'Estoque']];
+    linhas.forEach(tr => {
+        const cols = tr.querySelectorAll('td');
+        dadosProdutos.push([
+            cols[0].textContent,
+            cols[1].textContent,
+            cols[2].textContent,
+            cols[3].textContent,
+            cols[4].textContent
+        ]);
+    });
+
+    // Aba 2: KPIs
+    const kpis = [
+        ['Indicador', 'Valor'],
+        ['Faturamento Total', document.getElementById('kpiFaturamento').textContent],
+        ['Pedidos Realizados', document.getElementById('kpiPedidos').textContent],
+        ['Itens Vendidos', document.getElementById('kpiItens').textContent],
+        ['Estoque Restante', document.getElementById('kpiEstoque').textContent]
+    ];
+
+    // Aba 3: Pedidos com clientes
+    const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
+    const linhasPedidos = corpoTabelaPedidos.querySelectorAll('tr');
+    const dadosPedidos = [['Data', 'Cliente', 'Telefone', 'NIF', 'Morada', 'Produtos', 'Total']];
+    linhasPedidos.forEach(tr => {
+        const cols = tr.querySelectorAll('td');
+        dadosPedidos.push([
+            cols[0].textContent,
+            cols[1].textContent,
+            cols[2].textContent,
+            cols[3].textContent,
+            cols[4].textContent,
+            cols[5].textContent,
+            cols[6].textContent
+        ]);
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dadosProdutos), 'Produtos');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(kpis), 'Resumo');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dadosPedidos), 'Pedidos');
+
+    XLSX.writeFile(wb, `Relatorio_Vendas_Admin_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
