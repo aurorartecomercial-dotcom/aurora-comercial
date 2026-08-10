@@ -277,5 +277,14 @@
     <a href="https://wa.me/244925328181?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>
+
+    <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
+        }
+    </script>
 </body>
 </html>

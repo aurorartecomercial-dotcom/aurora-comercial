@@ -192,3 +192,38 @@ window.filtrarPorCategoria = function(categoria) {
     }
     document.getElementById('conteudo-principal').scrollIntoView({ behavior: 'smooth' });
 };
+
+// ============================================================
+// FUNÇÃO DO CARROSSEL (ADICIONADA AO FINAL)
+// ============================================================
+window.mudarSlide = function(direcao) {
+    const slides = document.querySelectorAll('.slide');
+    const indicadores = document.querySelectorAll('.indicador');
+    let indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+
+    slides[indexAtual].classList.remove('ativo');
+    indicadores[indexAtual].classList.remove('ativo');
+
+    indexAtual = (indexAtual + direcao + slides.length) % slides.length;
+
+    slides[indexAtual].classList.add('ativo');
+    indicadores[indexAtual].classList.add('ativo');
+};
+
+// Adicionar clique aos indicadores (pontinhos)
+document.querySelectorAll('.indicador').forEach((ind, i) => {
+    ind.addEventListener('click', () => {
+        const slides = document.querySelectorAll('.slide');
+        const indicadores = document.querySelectorAll('.indicador');
+        const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+        
+        slides[indexAtual].classList.remove('ativo');
+        indicadores[indexAtual].classList.remove('ativo');
+        
+        slides[i].classList.add('ativo');
+        indicadores[i].classList.add('ativo');
+    });
+});
+
+// Auto-play opcional (descomente se quiser que rode automaticamente)
+// setInterval(() => window.mudarSlide(1), 5000);
