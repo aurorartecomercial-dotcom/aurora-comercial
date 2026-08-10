@@ -8,27 +8,148 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=2" />
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <!-- ESTILOS EXCLUSIVOS DO ADMIN (PRETO + OURO + PRATA) -->
+    <style>
+        body.admin-page {
+            background: #0d0d0d;
+            color: #e0e0e0;
+        }
+        .admin-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .admin-container h1 {
+            color: #D4AF37;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        .form-card, .lista-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+        }
+        .admin-container label {
+            color: #a0a0a0;
+            font-weight: 600;
+        }
+        .admin-container input, 
+        .admin-container select, 
+        .admin-container textarea {
+            background: #121212;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .admin-container input:focus, 
+        .admin-container select:focus, 
+        .admin-container textarea:focus {
+            border-color: #D4AF37;
+            outline: none;
+        }
+        .btn-admin {
+            background: #D4AF37;
+            color: #0d0d0d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-admin:hover {
+            background: #b8960f;
+            color: #fff;
+        }
+        .btn-admin-excluir {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-admin-excluir:hover {
+            background: #c0392b;
+        }
+        .btn-admin-jsonbin {
+            background: #333;
+            color: #D4AF37;
+            border: 1px solid #D4AF37;
+        }
+        .btn-admin-jsonbin:hover {
+            background: #D4AF37;
+            color: #000;
+        }
+        #previewImagens img {
+            border: 1px solid #444;
+            background: #222;
+        }
+        .produto-item {
+            background: #121212;
+            border-bottom: 1px solid #333;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #e0e0e0;
+        }
+        .produto-item small {
+            color: #888;
+        }
+        .aviso {
+            background: #222;
+            color: #D4AF37;
+            padding: 12px;
+            border-left: 4px solid #D4AF37;
+            border-radius: 8px;
+        }
+        .aviso.sucesso {
+            border-left-color: #00e5ff;
+            color: #00e5ff;
+        }
+        #loginAdmin {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        #loginAdmin h2 {
+            color: #D4AF37;
+        }
+        #loginAdmin input {
+            background: #121212;
+            color: #fff;
+            border: 1px solid #444;
+        }
+        #loginAdmin input:focus {
+            border-color: #D4AF37;
+        }
+    </style>
 </head>
-<body>
+<body class="admin-page">
+
     <div class="admin-container">
         <h1>🔧 Painel Administrativo - Aurora Comercial</h1>
 
         <!-- Login -->
-        <div id="loginAdmin" style="max-width:400px; margin:40px auto; background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card);">
+        <div id="loginAdmin" style="max-width:400px; margin:40px auto; padding:24px; border-radius:16px;">
             <h2>🔐 Acesso restrito</h2>
             <label for="senhaAdmin">Senha:</label>
             <input type="password" id="senhaAdmin" placeholder="Digite a senha" />
-            <button id="btnLoginAdmin" class="btn-admin">Entrar</button>
-            <p id="erroLogin" style="color:red; display:none;">Senha incorreta.</p>
+            <button id="btnLoginAdmin" class="btn-admin" style="width:100%; margin-top:10px;">Entrar</button>
+            <p id="erroLogin" style="color:#ff5555; display:none;">Senha incorreta.</p>
         </div>
 
         <div id="conteudoAdmin" style="display:none;">
             <div class="aviso" id="statusMsg" style="display:none;"></div>
 
-            <div class="painel-admin">
+            <div class="painel-admin" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
                 <!-- Formulário -->
                 <div class="form-card">
-                    <h2 id="formTitulo">➕ Novo Produto</h2>
+                    <h2 id="formTitulo" style="color:#D4AF37;">➕ Novo Produto</h2>
                     <form id="formProduto">
                         <input type="hidden" id="prodId" />
                         <label>Nome do Produto *</label>
@@ -66,9 +187,9 @@
                         <label>Parcelas (opcional, ex: 3x de KZ 4.166,00)</label>
                         <input type="text" id="parcelas" />
 
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="freteGratis" />
-                            <label for="freteGratis" style="margin:0;">🚚 Frete Grátis</label>
+                        <div class="checkbox-group" style="display:flex; gap:10px; align-items:center; margin:10px 0;">
+                            <input type="checkbox" id="freteGratis" style="width:auto; accent-color:#D4AF37;" />
+                            <label for="freteGratis" style="margin:0; color:#fff;">🚚 Frete Grátis</label>
                         </div>
 
                         <label>Descrição</label>
@@ -84,43 +205,33 @@
                         <label>Estoque (quantidade disponível) *</label>
                         <input type="number" id="estoque" value="10" min="0" required />
 
-                        <!-- CAMPO VÍDEO ADICIONADO -->
                         <label>Vídeo de Demonstração (YouTube Embed)</label>
                         <input type="text" id="video" placeholder="Ex: https://www.youtube.com/embed/ID_DO_VIDEO" />
                         <small style="display:block; color:#888; margin-top:2px;">Cole o link de incorporação (src) do YouTube.</small>
 
                         <div style="margin-top:16px;">
                             <button type="submit" class="btn-admin" id="btnSalvar">💾 Salvar Produto</button>
-                            <button type="button" class="btn-admin" id="btnCancelarEdicao" style="display:none;">Cancelar</button>
+                            <button type="button" class="btn-admin" id="btnCancelarEdicao" style="display:none; background:#444; color:#fff;">Cancelar</button>
                         </div>
                     </form>
 
                     <!-- Configuração JSONbin -->
-                    <div class="jsonbin-config">
-                        <h3>☁️ Sincronizar com JSONbin (para site online)</h3>
-                        <p style="font-size:12px; color:#666; margin-bottom:8px;">
-                            1. Crie um bin em <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> com o conteúdo do seu <code>produtos.json</code>.<br>
-                            2. Copie o <strong>BIN ID</strong> e a <strong>X-Master-Key</strong> (chave secreta).<br>
-                            3. Cole abaixo e clique em "Testar Conexão". Depois use "Enviar para JSONbin" para publicar as mudanças.
-                        </p>
+                    <div class="jsonbin-config" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+                        <h3 style="color:#D4AF37;">☁️ Sincronizar com JSONbin</h3>
+                        <p style="font-size:12px; color:#888; margin-bottom:8px;">Configure o BIN ID e a chave mestra.</p>
                         <input type="text" id="jsonbinId" placeholder="BIN ID" style="margin-bottom:6px;" />
                         <input type="text" id="jsonbinKey" placeholder="X-Master-Key" style="margin-bottom:8px;" />
                         <button type="button" class="btn-admin btn-admin-jsonbin" id="btnTestarJsonbin">🔌 Testar Conexão</button>
-                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnEnviarJsonbin">📤 Enviar Catálogo para JSONbin</button>
-                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnForcarCache">🔄 Forçar atualização do cache</button>
-                        <p style="font-size:11px; color:#888; margin-top:6px;">
-                            Seu site principal lerá automaticamente do JSONbin se você adicionar a configuração no <code>config.js</code>.
-                        </p>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnEnviarJsonbin">📤 Enviar Catálogo</button>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnForcarCache">🔄 Forçar cache</button>
                     </div>
                 </div>
 
-                <!-- Lista de Produtos com drag-and-drop -->
+                <!-- Lista de Produtos -->
                 <div class="lista-card">
-                    <h2>📦 Produtos Cadastrados (<span id="contadorProdutos">0</span>)</h2>
-                    <div id="listaProdutos" style="max-height: 60vh; overflow-y: auto;">
-                        <p style="color:#999;">Carregando...</p>
-                    </div>
-                    <button class="btn-admin" id="btnRecarregar">🔄 Recarregar Lista</button>
+                    <h2 style="color:#D4AF37;">📦 Produtos (<span id="contadorProdutos">0</span>)</h2>
+                    <div id="listaProdutos" style="max-height: 60vh; overflow-y: auto;"></div>
+                    <button class="btn-admin" id="btnRecarregar" style="margin-top:12px;">🔄 Recarregar Lista</button>
                 </div>
             </div>
         </div>

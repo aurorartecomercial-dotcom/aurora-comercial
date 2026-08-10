@@ -8,11 +8,80 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=3" />
+
+    <!-- ESTILOS EXCLUSIVOS DO BLOG (PRETO + BRANCO + CIANO + ROXO) -->
+    <style>
+        body.blog-page {
+            background: #0f0f0f;
+            color: #f0f0f0;
+        }
+        .pagina-blog {
+            background: #0f0f0f;
+            padding: 30px 24px;
+            border-radius: 24px;
+        }
+        .pagina-blog h1 {
+            color: #00d4ff !important; /* CIANO */
+            font-size: 2.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .pagina-blog h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: #8b5cf6; /* ROXO */
+            margin: 10px auto 0;
+        }
+        #blogGrid .produto-card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            color: #f0f0f0;
+            transition: 0.3s;
+        }
+        #blogGrid .produto-card:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+            transform: translateY(-4px);
+        }
+        #blogGrid .produto-imagem {
+            background: #222;
+        }
+        #blogGrid .produto-info h3 {
+            color: #ffffff;
+        }
+        #blogGrid .produto-info p {
+            color: #a0a0a0;
+        }
+        #blogGrid .categoria-tag {
+            color: #8b5cf6 !important; /* ROXO */
+        }
+        #blogGrid .produto-info span:last-child {
+            color: #00d4ff !important;
+        }
+        #blogGrid .produto-info span:last-child:hover {
+            color: #8b5cf6 !important;
+        }
+        .breadcrumb {
+            color: #888;
+        }
+        .breadcrumb a {
+            color: #00d4ff;
+        }
+        .breadcrumb a:hover {
+            color: #8b5cf6;
+        }
+    </style>
 </head>
-<body>
+<body class="blog-page">
+
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <!-- 👇 LOGO AGORA É UM LINK PARA A HOME -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
@@ -33,15 +102,6 @@
             </div>
         </div>
         <nav class="menu-categorias">
-            <!-- Menu sem botão de 4 pontinhos pois já tem no header, mas vou adicionar para manter padrão -->
-            <button id="menuToggle" aria-label="Abrir menu" style="display:none;">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
-            </button>
             <ul id="menuCategorias">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
@@ -52,12 +112,8 @@
     </header>
 
     <main style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
-        <!-- Título com novo visual -->
         <div class="pagina-blog">
-            <h1 style="color:var(--cor-esmeralda); font-size: 2.8rem; text-align:center; margin-bottom:20px; position:relative;">
-                📖 Blog Aurora Comercial
-                <span style="display:block; width:80px; height:3px; background:var(--cor-ouro); margin:10px auto 0;"></span>
-            </h1>
+            <h1>📖 Blog Aurora Comercial</h1>
             <div id="blogGrid" class="grade-produtos" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
         </div>
     </main>
