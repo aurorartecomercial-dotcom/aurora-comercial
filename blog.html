@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog - Aurora Comercial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=3" />
+</head>
+<body>
+    <header class="header-principal" role="banner">
+        <div class="header-top">
+            <!-- 👇 LOGO AGORA É UM LINK PARA A HOME -->
+            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </a>
+
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" />
+                <button type="submit">🔍</button>
+            </form>
+            <div class="header-icones">
+                <button class="btn-entrar" id="btnEntrar">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
+            </div>
+        </div>
+        <nav class="menu-categorias">
+            <!-- Menu sem botão de 4 pontinhos pois já tem no header, mas vou adicionar para manter padrão -->
+            <button id="menuToggle" aria-label="Abrir menu" style="display:none;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                    <rect x="4" y="4" width="6" height="6" rx="1" />
+                    <rect x="14" y="4" width="6" height="6" rx="1" />
+                    <rect x="4" y="14" width="6" height="6" rx="1" />
+                    <rect x="14" y="14" width="6" height="6" rx="1" />
+                </svg>
+            </button>
+            <ul id="menuCategorias">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="index.html#?cat=consolas">Consolas</a></li>
+                <li><a href="blog.html" class="ativo" style="color:var(--cor-ouro);">📖 Blog</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
+        <!-- Título com novo visual -->
+        <div class="pagina-blog">
+            <h1 style="color:var(--cor-esmeralda); font-size: 2.8rem; text-align:center; margin-bottom:20px; position:relative;">
+                📖 Blog Aurora Comercial
+                <span style="display:block; width:80px; height:3px; background:var(--cor-ouro); margin:10px auto 0;"></span>
+            </h1>
+            <div id="blogGrid" class="grade-produtos" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+        </div>
+    </main>
+
+    <footer class="rodape-profissional">
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
+
+    <script type="module" src="js/blog.js?v=3"></script>
+</body>
+</html>

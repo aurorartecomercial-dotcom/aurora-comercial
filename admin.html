@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Aurora Comercial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>🔧 Painel Administrativo - Aurora Comercial</h1>
+
+        <!-- Login -->
+        <div id="loginAdmin" style="max-width:400px; margin:40px auto; background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card);">
+            <h2>🔐 Acesso restrito</h2>
+            <label for="senhaAdmin">Senha:</label>
+            <input type="password" id="senhaAdmin" placeholder="Digite a senha" />
+            <button id="btnLoginAdmin" class="btn-admin">Entrar</button>
+            <p id="erroLogin" style="color:red; display:none;">Senha incorreta.</p>
+        </div>
+
+        <div id="conteudoAdmin" style="display:none;">
+            <div class="aviso" id="statusMsg" style="display:none;"></div>
+
+            <div class="painel-admin">
+                <!-- Formulário -->
+                <div class="form-card">
+                    <h2 id="formTitulo">➕ Novo Produto</h2>
+                    <form id="formProduto">
+                        <input type="hidden" id="prodId" />
+                        <label>Nome do Produto *</label>
+                        <input type="text" id="nome" required />
+
+                        <label>Categoria *</label>
+                        <select id="categoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="eletronicos">Eletrônicos</option>
+                            <option value="consolas">Consolas</option>
+                            <option value="beleza">Beleza</option>
+                            <option value="cozinha">Cozinha</option>
+                            <option value="colunas">Colunas</option>
+                            <option value="ferramentas">Ferramentas</option>
+                            <option value="casa">Casa</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="calcados">Sapatos</option>
+                            <option value="joias">Pulseiras</option>
+                            <option value="automoveis">Carros</option>
+                        </select>
+
+                        <label>Tag (rótulo exibido no card)</label>
+                        <input type="text" id="tag" placeholder="Ex: Eletrônicos, Moda Feminina..." />
+
+                        <label>Preço * (ex: KZ 12.500,00)</label>
+                        <input type="text" id="preco" required />
+
+                        <label>Preço Antigo (opcional, ex: KZ 15.000,00)</label>
+                        <input type="text" id="precoAntigo" />
+
+                        <label>Desconto (opcional, ex: 17%)</label>
+                        <input type="text" id="desconto" placeholder="Ex: 17%" />
+
+                        <label>Parcelas (opcional, ex: 3x de KZ 4.166,00)</label>
+                        <input type="text" id="parcelas" />
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="freteGratis" />
+                            <label for="freteGratis" style="margin:0;">🚚 Frete Grátis</label>
+                        </div>
+
+                        <label>Descrição</label>
+                        <textarea id="descricao"></textarea>
+
+                        <label>Imagens (URLs, separadas por vírgula)</label>
+                        <textarea id="imagens" placeholder="img1.jpg, img2.jpg, img3.jpg"></textarea>
+                        <div id="previewImagens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+
+                        <label>Ordem (número, quanto menor, antes aparece)</label>
+                        <input type="number" id="ordem" value="0" />
+
+                        <label>Estoque (quantidade disponível) *</label>
+                        <input type="number" id="estoque" value="10" min="0" required />
+
+                        <!-- CAMPO VÍDEO ADICIONADO -->
+                        <label>Vídeo de Demonstração (YouTube Embed)</label>
+                        <input type="text" id="video" placeholder="Ex: https://www.youtube.com/embed/ID_DO_VIDEO" />
+                        <small style="display:block; color:#888; margin-top:2px;">Cole o link de incorporação (src) do YouTube.</small>
+
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn-admin" id="btnSalvar">💾 Salvar Produto</button>
+                            <button type="button" class="btn-admin" id="btnCancelarEdicao" style="display:none;">Cancelar</button>
+                        </div>
+                    </form>
+
+                    <!-- Configuração JSONbin -->
+                    <div class="jsonbin-config">
+                        <h3>☁️ Sincronizar com JSONbin (para site online)</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:8px;">
+                            1. Crie um bin em <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> com o conteúdo do seu <code>produtos.json</code>.<br>
+                            2. Copie o <strong>BIN ID</strong> e a <strong>X-Master-Key</strong> (chave secreta).<br>
+                            3. Cole abaixo e clique em "Testar Conexão". Depois use "Enviar para JSONbin" para publicar as mudanças.
+                        </p>
+                        <input type="text" id="jsonbinId" placeholder="BIN ID" style="margin-bottom:6px;" />
+                        <input type="text" id="jsonbinKey" placeholder="X-Master-Key" style="margin-bottom:8px;" />
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnTestarJsonbin">🔌 Testar Conexão</button>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnEnviarJsonbin">📤 Enviar Catálogo para JSONbin</button>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnForcarCache">🔄 Forçar atualização do cache</button>
+                        <p style="font-size:11px; color:#888; margin-top:6px;">
+                            Seu site principal lerá automaticamente do JSONbin se você adicionar a configuração no <code>config.js</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Lista de Produtos com drag-and-drop -->
+                <div class="lista-card">
+                    <h2>📦 Produtos Cadastrados (<span id="contadorProdutos">0</span>)</h2>
+                    <div id="listaProdutos" style="max-height: 60vh; overflow-y: auto;">
+                        <p style="color:#999;">Carregando...</p>
+                    </div>
+                    <button class="btn-admin" id="btnRecarregar">🔄 Recarregar Lista</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
