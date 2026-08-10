@@ -252,6 +252,9 @@ function fecharModalCliente() {
     if (modalCliente) modalCliente.style.display = 'none';
 }
 
+// ============================================================
+// FUNÇÃO GERAR FATURA COM LOGOTIPO E CABEÇALHO PROFISSIONAL
+// ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
     await loadJSPDF();
     const { jsPDF } = window.jspdf;
@@ -259,6 +262,19 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
 
     const verdeEscuro = '#005A4C';
     const dourado = '#D4AF37';
+
+    // ===== LOGOTIPO (adicionei aqui como no relatório) =====
+    try {
+        const logoImg = new Image();
+        logoImg.src = 'logo auro.png';
+        await new Promise((resolve) => {
+            logoImg.onload = () => {
+                doc.addImage(logoImg, 'PNG', 15, 10, 20, 20);
+                resolve();
+            };
+            logoImg.onerror = resolve;
+        });
+    } catch (e) {}
 
     doc.setFontSize(24);
     doc.setTextColor(dourado);
@@ -268,12 +284,12 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setFontSize(9);
     doc.setTextColor('#444');
     doc.setFont(undefined, 'normal');
-    doc.text('Contribuinte Nº: 5000048151  |  Telefone: +244 925 328 181', 105, 27, { align: 'center' });
-    doc.text('Email: contacto@aurorarte.ao  |  Luanda - Angola, Rua da Ende, s/n', 105, 33, { align: 'center' });
+    doc.text('Contribuinte Nº: 5000048151  |  Telefone: +244 925 328 181', 105, 28, { align: 'center' });
+    doc.text('Email: contacto@aurorarte.ao  |  Luanda - Angola, Rua da Ende, s/n', 105, 34, { align: 'center' });
 
     doc.setDrawColor(dourado);
     doc.setLineWidth(0.8);
-    doc.line(20, 38, 190, 38);
+    doc.line(20, 40, 190, 40);
 
     const hoje = new Date();
     const dataEmissao = hoje.toLocaleDateString('pt-BR');
@@ -282,34 +298,34 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setFontSize(10);
     doc.setTextColor('#333');
     doc.setFont(undefined, 'bold');
-    doc.text(`Nº: ${numeroFatura}`, 20, 46);
+    doc.text(`Nº: ${numeroFatura}`, 20, 48);
     doc.setFont(undefined, 'normal');
-    doc.text(`Data de Emissão: ${dataEmissao}`, 120, 46);
+    doc.text(`Data de Emissão: ${dataEmissao}`, 120, 48);
 
     doc.setFontSize(10);
-    doc.text('Cliente:', 20, 56);
+    doc.text('Cliente:', 20, 58);
     doc.setFont(undefined, 'bold');
-    doc.text(nomeCliente || '_________________________', 50, 56);
+    doc.text(nomeCliente || '_________________________', 50, 58);
 
     doc.setFont(undefined, 'normal');
-    doc.text('Telefone:', 20, 63);
+    doc.text('Telefone:', 20, 65);
     doc.setFont(undefined, 'bold');
-    doc.text(telefoneCliente || '_________________________', 50, 63);
+    doc.text(telefoneCliente || '_________________________', 50, 65);
 
     doc.setFont(undefined, 'normal');
-    doc.text('NIF:', 20, 70);
+    doc.text('NIF:', 20, 72);
     doc.setFont(undefined, 'bold');
-    doc.text(nifCliente || '_________________________', 50, 70);
+    doc.text(nifCliente || '_________________________', 50, 72);
 
     doc.setFont(undefined, 'normal');
-    doc.text('Morada:', 20, 77);
+    doc.text('Morada:', 20, 79);
     doc.setFont(undefined, 'bold');
-    doc.text(moradaCliente || '_________________________', 50, 77);
+    doc.text(moradaCliente || '_________________________', 50, 79);
 
     doc.setFontSize(8);
     doc.setTextColor('#666');
     doc.setFont(undefined, 'italic');
-    doc.text('Os bens foram colocados à disposição do adquirente na data do documento.', 105, 85, { align: 'center' });
+    doc.text('Os bens foram colocados à disposição do adquirente na data do documento.', 105, 87, { align: 'center' });
 
     const body = itensCarrinho.map(item => {
         const unitario = extrairValorNumerico(item.preco);
@@ -323,7 +339,7 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     });
 
     doc.autoTable({
-        startY: 92,
+        startY: 94, // Ajustado devido ao deslocamento do cabeçalho
         head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']],
         body: body,
         theme: 'grid',

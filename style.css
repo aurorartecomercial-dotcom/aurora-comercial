@@ -663,3 +663,27 @@ body {
 .blog-page .breadcrumb a:hover {
     color: #8b5cf6;
 }
+
+/* ===== BOTÃO DE ADICIONAR AO CARRINHO DENTRO DOS CARDS ===== */
+.btn-add-carrinho-card {
+    background: var(--cor-ouro);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    max-width: 160px;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+.btn-add-carrinho-card:hover {
+    background: var(--cor-ouro-escuro);
+    transform: scale(1.04);
+    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.5);
+}
+.btn-add-carrinho-card:active {
+    transform: scale(0.95);
+}

@@ -1,5 +1,6 @@
 import { CONFIG } from './config.js';
 import { extrairValorNumerico, debounce } from './utils.js';
+import { adicionarProdutoCarrinho } from './carrinho.js';
 
 export async function carregarCatalogo() {
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
@@ -19,15 +20,12 @@ export async function carregarCatalogo() {
         const data = await res.json();
         let serverData = data.record;
 
-        // Verifica se o servidor enviou um objeto com 'data' e 'version'
         let novosProdutos = Array.isArray(serverData) ? serverData : serverData.data;
         let versaoServer = serverData.version || 0;
 
         if (!novosProdutos) throw new Error('Formato inválido dos produtos');
 
-        // Se a versão do servidor é maior que a do cache OU se o cache expirou
         if (versaoServer > (cache.version || 0) || (Date.now() - (cache.timestamp || 0)) > CONFIG.CACHE_TTL) {
-            // Guarda o novo cache com a nova versão
             localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
                 data: novosProdutos,
                 version: versaoServer,
@@ -35,13 +33,10 @@ export async function carregarCatalogo() {
             }));
             return novosProdutos;
         }
-
-        // Se o cache ainda é válido, retorna os dados do cache (rápido)
         return cache.data;
     } catch (e) {
         console.warn('Falha ao buscar do JSONbin, usando cache ou fallback:', e);
         if (cache.data) return cache.data;
-        // Fallback local (caso o JSONbin esteja fora do ar)
         const fallback = await fetch('produtos.json');
         return fallback.json();
     }
@@ -79,7 +74,6 @@ export function criarCardProduto(prod) {
         html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
     }
 
-    // ===== ESTOQUE =====
     let estoqueHtml = '';
     if (prod.estoque !== undefined) {
         if (prod.estoque <= 0) {
@@ -92,14 +86,41 @@ export function criarCardProduto(prod) {
     }
     html += estoqueHtml;
 
-    // ===== AVALIAÇÃO =====
     const avaliacao = obterAvaliacao(prod.id);
     if (avaliacao.media > 0) {
         html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`;
     }
 
+    // ===== BOTÃO DE ADICIONAR AO CARRINHO DENTRO DO CARD =====
+    html += `
+        <div style="margin-top: 12px; display: flex; justify-content: center;">
+            <button class="btn-add-carrinho-card" 
+                    data-nome="${prod.nome}" 
+                    data-preco="${prod.preco}" 
+                    data-estoque="${prod.estoque || 0}"
+                    style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;">
+                🛒 Adicionar
+            </button>
+        </div>
+    `;
+
     html += `</div>`;
     card.innerHTML = html;
+
+    // Adiciona o evento de clique ao botão (sem ativar o link do card)
+    const btnAdd = card.querySelector('.btn-add-carrinho-card');
+    if (btnAdd) {
+        btnAdd.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            const nome = this.dataset.nome;
+            const preco = this.dataset.preco;
+            const estoque = parseInt(this.dataset.estoque);
+            adicionarProdutoCarrinho(nome, preco, estoque);
+        });
+    }
+
     return card;
 }
 
