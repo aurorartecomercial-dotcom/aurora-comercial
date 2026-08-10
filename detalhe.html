@@ -175,5 +175,138 @@
                 .catch(err => console.log('Erro ao registrar o Service Worker:', err));
         }
     </script>
+
+    <!-- ===== BOTÃO E GUIA DE INSTALAÇÃO DO PWA (APP) ===== -->
+    <style>
+        /* Botão flutuante de instalar */
+        #btn-instalar-app {
+            display: none; /* Só aparece quando o navegador permitir */
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--cor-ouro);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 9999;
+            transition: transform 0.2s;
+        }
+        #btn-instalar-app:hover { transform: scale(1.05); }
+
+        /* Modal de instruções para iPhone */
+        #ios-guide-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 90, 76, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #ios-guide-modal > div {
+            background: #fff;
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.4s ease;
+        }
+        #ios-guide-modal h3 { color: var(--cor-esmeralda); margin-bottom: 10px; }
+        #ios-guide-modal p { font-size: 14px; line-height: 1.6; color: #444; margin: 8px 0; }
+        #ios-guide-modal .btn-fechar-guia {
+            background: var(--cor-ouro);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            color: #000;
+        }
+        .ios-icon-share { display: inline-block; background: #007aff; color: #fff; padding: 2px 10px; border-radius: 6px; font-weight: bold; font-size: 14px; }
+    </style>
+
+    <button id="btn-instalar-app">📲 Instalar App Aurora</button>
+
+    <div id="ios-guide-modal">
+        <div>
+            <h3>📱 Instalar no iPhone</h3>
+            <p>Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
+            <p style="background:#f5f5f5; padding:12px; border-radius:10px; text-align:left;">
+                1. Toque no ícone <span class="ios-icon-share">⬆</span> (Compartilhar) na barra inferior.<br>
+                2. Role para baixo e toque em <strong>"Adicionar à tela de início"</strong>.<br>
+                3. Toque em <strong>"Adicionar"</strong> no canto superior direito.
+            </p>
+            <button class="btn-fechar-guia" id="btnFecharGuiaIOS">✅ Entendi</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== BOTÃO DE INSTALAÇÃO PARA ANDROID (CHROME) ==========
+        let deferredPrompt = null;
+        const btnInstalar = document.getElementById('btn-instalar-app');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Só mostra o botão se o usuário NÃO estiver usando o app em modo standalone (já instalado)
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                btnInstalar.style.display = 'block';
+            }
+        });
+
+        btnInstalar.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    btnInstalar.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // ========== GUIA DE INSTALAÇÃO PARA IPHONE (SAFARI) ==========
+        function isIos() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        const iosModal = document.getElementById('ios-guide-modal');
+        const btnFecharGuia = document.getElementById('btnFecharGuiaIOS');
+
+        if (isIos()) {
+            // Se já estiver instalado, não mostra o guia
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                // Só mostra se o usuário não tiver fechado antes (salvo no localStorage)
+                if (!localStorage.getItem('aurora_ios_guide_closed')) {
+                    setTimeout(() => {
+                        iosModal.style.display = 'flex';
+                    }, 2000); // Espera 2 segundos para não atrapalhar o carregamento
+                }
+            }
+        }
+
+        btnFecharGuia.addEventListener('click', () => {
+            iosModal.style.display = 'none';
+            localStorage.setItem('aurora_ios_guide_closed', 'true'); // Não mostra mais
+        });
+
+        // Fechar modal clicando fora
+        iosModal.addEventListener('click', (e) => {
+            if (e.target === iosModal) {
+                iosModal.style.display = 'none';
+                localStorage.setItem('aurora_ios_guide_closed', 'true');
+            }
+        });
+    </script>
 </body>
 </html>
