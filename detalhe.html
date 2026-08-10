@@ -83,6 +83,17 @@
         </nav>
     </header>
 
+    <!-- BANNER DE INSTALAÇÃO DO APP (FICA DENTRO DA PÁGINA) -->
+    <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
+        <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
+            <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-instalar-inline" class="btn-instalar-inline" style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 700; cursor: pointer;">Instalar Agora</button>
+                <button id="btn-fechar-banner" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONTEÚDO (com breadcrumb) -->
     <div class="container-detalhe">
         <div class="breadcrumb">
@@ -176,136 +187,68 @@
         }
     </script>
 
-    <!-- ===== BOTÃO E GUIA DE INSTALAÇÃO DO PWA (APP) ===== -->
-    <style>
-        /* Botão flutuante de instalar */
-        #btn-instalar-app {
-            display: none; /* Só aparece quando o navegador permitir */
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background: var(--cor-ouro);
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
-            z-index: 9999;
-            transition: transform 0.2s;
-        }
-        #btn-instalar-app:hover { transform: scale(1.05); }
-
-        /* Modal de instruções para iPhone */
-        #ios-guide-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 90, 76, 0.7);
-            backdrop-filter: blur(6px);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        #ios-guide-modal > div {
-            background: #fff;
-            max-width: 400px;
-            width: 100%;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: fadeInUp 0.4s ease;
-        }
-        #ios-guide-modal h3 { color: var(--cor-esmeralda); margin-bottom: 10px; }
-        #ios-guide-modal p { font-size: 14px; line-height: 1.6; color: #444; margin: 8px 0; }
-        #ios-guide-modal .btn-fechar-guia {
-            background: var(--cor-ouro);
-            border: none;
-            padding: 10px 30px;
-            border-radius: 40px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 16px;
-            color: #000;
-        }
-        .ios-icon-share { display: inline-block; background: #007aff; color: #fff; padding: 2px 10px; border-radius: 6px; font-weight: bold; font-size: 14px; }
-    </style>
-
-    <button id="btn-instalar-app">📲 Instalar App Aurora</button>
-
-    <div id="ios-guide-modal">
-        <div>
-            <h3>📱 Instalar no iPhone</h3>
-            <p>Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
+    <!-- ===== BOTÃO DE INSTALAÇÃO DENTRO DA PÁGINA E GUIA IOS ===== -->
+    <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
+            <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
+            <p style="font-size:14px; line-height:1.6; color:#444; margin:8px 0;">Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
             <p style="background:#f5f5f5; padding:12px; border-radius:10px; text-align:left;">
-                1. Toque no ícone <span class="ios-icon-share">⬆</span> (Compartilhar) na barra inferior.<br>
+                1. Toque no ícone <span style="display:inline-block; background:#007aff; color:#fff; padding:2px 10px; border-radius:6px; font-weight:bold; font-size:14px;">⬆</span> (Compartilhar) na barra inferior.<br>
                 2. Role para baixo e toque em <strong>"Adicionar à tela de início"</strong>.<br>
                 3. Toque em <strong>"Adicionar"</strong> no canto superior direito.
             </p>
-            <button class="btn-fechar-guia" id="btnFecharGuiaIOS">✅ Entendi</button>
+            <button id="btn-fechar-guia-ios" style="background:var(--cor-ouro); border:none; padding:10px 30px; border-radius:40px; font-weight:700; cursor:pointer; margin-top:16px; color:#000;">✅ Entendi</button>
         </div>
     </div>
 
     <script>
-        // ========== BOTÃO DE INSTALAÇÃO PARA ANDROID (CHROME) ==========
-        let deferredPrompt = null;
-        const btnInstalar = document.getElementById('btn-instalar-app');
+        // Detectar se já está instalado
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const banner = document.getElementById('pwa-install-banner');
+        
+        // Se NÃO estiver instalado, mostra o banner
+        if (!isStandalone) {
+            banner.style.display = 'block';
+        }
 
+        // === Lógica de Instalação ===
+        let deferredPrompt = null;
+        const btnInstalar = document.getElementById('btn-instalar-inline');
+        const btnFecharBanner = document.getElementById('btn-fechar-banner');
+
+        // Captura o evento de instalação (funciona no Android e Desktop)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Só mostra o botão se o usuário NÃO estiver usando o app em modo standalone (já instalado)
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                btnInstalar.style.display = 'block';
-            }
+            banner.style.display = 'block';
         });
 
+        // Ação do botão "Instalar Agora"
         btnInstalar.addEventListener('click', async () => {
             if (deferredPrompt) {
+                // ANDROID / DESKTOP: Abre a janela nativa de instalação
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    btnInstalar.style.display = 'none';
+                    banner.style.display = 'none';
                 }
                 deferredPrompt = null;
+            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                // IPHONE: Mostra o guia manual (porque a Apple bloqueia a instalação automática)
+                document.getElementById('ios-guide-modal').style.display = 'flex';
+            } else {
+                alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');
             }
         });
 
-        // ========== GUIA DE INSTALAÇÃO PARA IPHONE (SAFARI) ==========
-        function isIos() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
-
-        const iosModal = document.getElementById('ios-guide-modal');
-        const btnFecharGuia = document.getElementById('btnFecharGuiaIOS');
-
-        if (isIos()) {
-            // Se já estiver instalado, não mostra o guia
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                // Só mostra se o usuário não tiver fechado antes (salvo no localStorage)
-                if (!localStorage.getItem('aurora_ios_guide_closed')) {
-                    setTimeout(() => {
-                        iosModal.style.display = 'flex';
-                    }, 2000); // Espera 2 segundos para não atrapalhar o carregamento
-                }
-            }
-        }
-
-        btnFecharGuia.addEventListener('click', () => {
-            iosModal.style.display = 'none';
-            localStorage.setItem('aurora_ios_guide_closed', 'true'); // Não mostra mais
+        // Botão para fechar o banner
+        btnFecharBanner.addEventListener('click', () => {
+            banner.style.display = 'none';
         });
 
-        // Fechar modal clicando fora
-        iosModal.addEventListener('click', (e) => {
-            if (e.target === iosModal) {
-                iosModal.style.display = 'none';
-                localStorage.setItem('aurora_ios_guide_closed', 'true');
-            }
+        // Fechar guia do iPhone
+        document.getElementById('btn-fechar-guia-ios').addEventListener('click', () => {
+            document.getElementById('ios-guide-modal').style.display = 'none';
         });
     </script>
 </body>
