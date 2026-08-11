@@ -59,7 +59,6 @@
                     <p>Produtos em Estoque</p>
                     <h3 id="kpiEstoque">0</h3>
                 </div>
-                <!-- NOVO KPI: DESCONTO TOTAL -->
                 <div class="card-faturamento" style="border-left-color: #E74C3C;">
                     <p>Desconto Total (Kz)</p>
                     <h3 id="kpiDesconto">0 Kz</h3>
@@ -93,7 +92,7 @@
                 </table>
             </div>
 
-            <!-- TABELA DE PEDIDOS COM CLIENTES -->
+            <!-- TABELA DE PEDIDOS COM CLIENTES E AÇÕES -->
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                 <h3 style="color:var(--cor-esmeralda);">📦 Lista de Pedidos (Clientes)</h3>
                 <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
@@ -106,6 +105,7 @@
                             <th style="padding:8px;">Morada</th>
                             <th style="padding:8px;">Produtos</th>
                             <th style="padding:8px;">Total</th>
+                            <th style="padding:8px;">Ações</th> <!-- 👈 NOVA COLUNA ADICIONADA -->
                         </tr>
                     </thead>
                     <tbody id="corpoTabelaPedidos"></tbody>

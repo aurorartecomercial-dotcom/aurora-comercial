@@ -253,6 +253,53 @@ function fecharModalCliente() {
 }
 
 // ============================================================
+// 🚨 FUNÇÃO NOVA: ATUALIZAR ESTOQUE NO JSONBIN
+// ============================================================
+async function atualizarEstoqueProdutos() {
+    try {
+        // 1. Buscar o catálogo atual do JSONbin
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
+        });
+        const data = await res.json();
+        let catalogo = Array.isArray(data.record) ? data.record : (data.record && data.record.data ? data.record.data : []);
+        if (!Array.isArray(catalogo)) catalogo = [];
+
+        // 2. Subtrair as quantidades do carrinho
+        carrinho.forEach(item => {
+            const produto = catalogo.find(p => p.nome === item.nome);
+            if (produto) {
+                produto.estoque = (produto.estoque || 0) - item.quantidade;
+                if (produto.estoque < 0) produto.estoque = 0; // Nunca deixar negativo
+            }
+        });
+
+        // 3. Salvar o catálogo atualizado no JSONbin
+        const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': CONFIG.MASTER_KEY
+            },
+            body: JSON.stringify({ 
+                version: Date.now(), 
+                data: catalogo 
+            })
+        });
+
+        if (!resPut.ok) throw new Error('Erro ao atualizar o estoque na nuvem.');
+
+        // 4. Invalidar o cache local para forçar o site a buscar a nova quantidade
+        localStorage.removeItem(CONFIG.CACHE_KEY);
+        console.log('✅ Estoque atualizado com sucesso!');
+    } catch (e) {
+        console.error('❌ Erro ao atualizar estoque:', e);
+        // Não interrompe a venda, apenas avisa
+        mostrarToast('Aviso: Estoque não foi sincronizado na nuvem.', 'info');
+    }
+}
+
+// ============================================================
 // FUNÇÃO GERAR FATURA COM LOGOTIPO E CABEÇALHO PROFISSIONAL
 // ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
@@ -263,7 +310,6 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     const verdeEscuro = '#005A4C';
     const dourado = '#D4AF37';
 
-    // ===== LOGOTIPO (adicionei aqui como no relatório) =====
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
@@ -339,7 +385,7 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     });
 
     doc.autoTable({
-        startY: 94, // Ajustado devido ao deslocamento do cabeçalho
+        startY: 94,
         head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']],
         body: body,
         theme: 'grid',
@@ -482,8 +528,13 @@ function numeroPorExtensoSimples(n) {
 }
 
 async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
+    // ✅ PASSO 1: Atualizar o estoque no JSONbin ANTES de salvar a venda
+    await atualizarEstoqueProdutos();
+
+    // ✅ PASSO 2: Salvar a venda no histórico
     salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente);
 
+    // ✅ PASSO 3: Gerar a Fatura PDF
     const pdfBlob = await gerarFaturaPDF(carrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente);
     const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
     const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
@@ -538,7 +589,6 @@ async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaC
 // FUNÇÃO DE SALVAR A VENDA NO JSONBIN (COM DADOS DO CLIENTE)
 // ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
-    // Montar os dados da venda
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
@@ -550,25 +600,20 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
         totalItens: totalItensPedido,
-        // NOVOS CAMPOS COM DADOS DO CLIENTE
         nomeCliente: nomeCliente,
         telefoneCliente: telefoneCliente,
         nifCliente: nifCliente,
         moradaCliente: moradaCliente
     };
 
-    // Buscar histórico atual do JSONbin
     try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
         const data = await res.json();
         let historico = data.record || [];
-
-        // Adicionar nova venda
         historico.push(novaVenda);
 
-        // Enviar histórico atualizado para o JSONbin
         await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
             method: 'PUT',
             headers: {
