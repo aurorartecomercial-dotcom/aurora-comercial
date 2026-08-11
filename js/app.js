@@ -4,6 +4,7 @@
 
 import { initCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
+import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
 
 let catalogo = [];
@@ -17,6 +18,7 @@ let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
+    initMobileMenu(); // 👈 MENU CENTRALIZADO
 
     catalogo = await carregarCatalogo();
     if (!catalogo || catalogo.length === 0) {
@@ -92,34 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderizarBalancoSemanal();
     aplicarFiltros();
-
-    // ===== MENU MOBILE (Ícone de 4 pontinhos) =====
-    const menuToggle = document.getElementById('menuToggle');
-    const menuLista = document.getElementById('menuCategorias');
-    if (menuToggle && menuLista) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuLista.classList.toggle('menu-aberto');
-            const isOpen = menuLista.classList.contains('menu-aberto');
-            menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
-        });
-        
-        // 👇 Fecha o menu ao clicar em qualquer link dentro da lista (NOVO)
-        const menuLinks = menuLista.querySelectorAll('a');
-        menuLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                menuLista.classList.remove('menu-aberto');
-                menuToggle.setAttribute('aria-label', 'Abrir menu');
-            });
-        });
-
-        // Fechar menu ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-categorias')) {
-                menuLista.classList.remove('menu-aberto');
-            }
-        });
-    }
 });
 
 function aplicarFiltros(resetPagina = true) {
@@ -210,7 +184,6 @@ window.mudarSlide = function(direcao) {
     indicadores[indexAtual].classList.add('ativo');
 };
 
-// Adicionar clique aos indicadores (pontinhos)
 document.querySelectorAll('.indicador').forEach((ind, i) => {
     ind.addEventListener('click', () => {
         const slides = document.querySelectorAll('.slide');
@@ -224,6 +197,3 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
         indicadores[i].classList.add('ativo');
     });
 });
-
-// Auto-play opcional (descomente se quiser que rode automaticamente)
-// setInterval(() => window.mudarSlide(1), 5000);

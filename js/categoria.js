@@ -4,10 +4,11 @@
 
 import { initCarrinho } from './carrinho.js';
 import { carregarCatalogo, criarCardProduto } from './catalogo.js';
+import { initMobileMenu } from './menu.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Inicia o carrinho (reutiliza a lógica global)
     initCarrinho();
+    initMobileMenu(); // 👈 MENU CENTRALIZADO
 
     const params = new URLSearchParams(window.location.search);
     const categoria = params.get('cat');
@@ -19,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Atualiza o breadcrumb e título
     const nomeCategoria = categoria.charAt(0).toUpperCase() + categoria.slice(1);
     document.getElementById('breadcrumbCat').textContent = nomeCategoria;
     document.getElementById('tituloCategoria').textContent = `📦 ${nomeCategoria}`;
@@ -34,9 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Filtra os produtos pela categoria
     const produtosFiltrados = catalogo.filter(prod => prod.categoria === categoria);
-
     const grid = document.getElementById('gradeCategoria');
     grid.innerHTML = '';
 
@@ -46,26 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Renderiza os produtos
     produtosFiltrados.forEach(prod => {
         const card = criarCardProduto(prod);
         grid.appendChild(card);
     });
-
-    // ===== MENU MOBILE (Ícone de 4 pontinhos) =====
-    const menuToggle = document.getElementById('menuToggle');
-    const menuLista = document.getElementById('menuCategorias');
-    if (menuToggle && menuLista) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuLista.classList.toggle('menu-aberto');
-            const isOpen = menuLista.classList.contains('menu-aberto');
-            menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
-        });
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-categorias')) {
-                menuLista.classList.remove('menu-aberto');
-            }
-        });
-    }
 });

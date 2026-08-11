@@ -53,9 +53,69 @@ function iniciarAdmin() {
     const freteGratis = document.getElementById('freteGratis');
     const descricao = document.getElementById('descricao');
     const imagens = document.getElementById('imagens');
+    const previewImagens = document.getElementById('previewImagens');
     const ordem = document.getElementById('ordem');
     const estoque = document.getElementById('estoque');
     const video = document.getElementById('video');
+
+    // ===== UPLOAD DE IMAGENS PARA IMGBB =====
+    const btnUploadImg = document.getElementById('btnUploadImg');
+    const imgUploadInput = document.getElementById('imgUpload');
+    const uploadProgress = document.getElementById('uploadProgress');
+
+    // SUA CHAVE DA API DO IMGBB
+    const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
+
+    async function uploadParaImgBB(file) {
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', file);
+        
+        const res = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        });
+        if (!res.ok) throw new Error('Erro no upload');
+        const data = await res.json();
+        // Retorna a URL direta da imagem (display_url ou url)
+        return data.data.display_url || data.data.url;
+    }
+
+    btnUploadImg.addEventListener('click', async () => {
+        const files = imgUploadInput.files;
+        if (!files.length) {
+            alert('Selecione pelo menos uma imagem.');
+            return;
+        }
+
+        const imagensAtuais = imagens.value.split(',').map(s => s.trim()).filter(s => s);
+        
+        btnUploadImg.disabled = true;
+        btnUploadImg.textContent = '⏳ Enviando...';
+        uploadProgress.textContent = '0/' + files.length;
+
+        let sucesso = 0;
+        for (let i = 0; i < files.length; i++) {
+            try {
+                const url = await uploadParaImgBB(files[i]);
+                imagensAtuais.push(url);
+                sucesso++;
+            } catch (e) {
+                console.error('Erro no upload da imagem', i, e);
+            }
+            uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
+        }
+
+        imagens.value = imagensAtuais.join(', ');
+        atualizarPreview(imagens.value); // Atualiza as miniaturas
+
+        btnUploadImg.disabled = false;
+        btnUploadImg.textContent = '⬆ Enviar para ImgBB';
+        uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
+        setTimeout(() => uploadProgress.textContent = '', 3000);
+        imgUploadInput.value = ''; // Limpa o input de arquivos
+    });
+    // ===== FIM DO UPLOAD IMGBB =====
 
     // JSONbin
     const jsonbinIdInput = document.getElementById('jsonbinId');
@@ -304,7 +364,6 @@ function iniciarAdmin() {
                     'Content-Type': 'application/json',
                     'X-Master-Key': key
                 },
-                // 👇 ALTERAÇÃO AQUI: Enviamos a versão e os dados
                 body: JSON.stringify({ 
                     version: Date.now(), 
                     data: produtos 
@@ -312,7 +371,6 @@ function iniciarAdmin() {
             });
             if (res.ok) {
                 mostrarMensagem('📤 Catálogo enviado ao JSONbin com sucesso!', 'sucesso');
-                // Invalida cache
                 localStorage.removeItem(CONFIG.CACHE_KEY);
             } else {
                 mostrarMensagem('❌ Falha ao enviar. Verifique permissões.', 'info');
@@ -330,7 +388,6 @@ function iniciarAdmin() {
     // ===== INICIAR =====
     carregarProdutos();
 
-    // Configurações iniciais do JSONbin (preenche com os valores do config)
     jsonbinIdInput.value = CONFIG.BIN_ID;
     jsonbinKeyInput.value = CONFIG.MASTER_KEY;
 }

@@ -199,6 +199,15 @@
                         <textarea id="imagens" placeholder="img1.jpg, img2.jpg, img3.jpg"></textarea>
                         <div id="previewImagens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
 
+                        <!-- 👇 NOVO: UPLOAD PARA IMGBB -->
+                        <label style="margin-top:10px; display:block;">Ou envie imagens para o ImgBB:</label>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <input type="file" id="imgUpload" multiple accept="image/*" style="width:auto; color:#888;" />
+                            <button type="button" id="btnUploadImg" class="btn-admin">⬆ Enviar para ImgBB</button>
+                        </div>
+                        <div id="uploadProgress" style="font-size:12px; color:#888; margin-top:4px;"></div>
+                        <!-- 👆 FIM DO NOVO BLOCO -->
+
                         <label>Ordem (número, quanto menor, antes aparece)</label>
                         <input type="number" id="ordem" value="0" />
 

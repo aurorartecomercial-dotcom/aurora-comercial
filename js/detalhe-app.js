@@ -3,11 +3,14 @@
 // ============================================================
 
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
-import { carregarCatalogo, adicionarAvaliacao } from './catalogo.js';
+import { carregarCatalogo } from './catalogo.js';
+import { initMobileMenu } from './menu.js';
+import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
+    initMobileMenu(); // 👈 MENU CENTRALIZADO
 
     const params = new URLSearchParams(window.location.search);
     const idProduto = parseInt(params.get('id'));
@@ -29,25 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderizarDetalhes(prod);
-    // Atualiza meta tags
     atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
-
-    // ===== MENU MOBILE (Ícone de 4 pontinhos) =====
-    const menuToggle = document.getElementById('menuToggle');
-    const menuLista = document.getElementById('menuCategorias');
-    if (menuToggle && menuLista) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuLista.classList.toggle('menu-aberto');
-            const isOpen = menuLista.classList.contains('menu-aberto');
-            menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
-        });
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-categorias')) {
-                menuLista.classList.remove('menu-aberto');
-            }
-        });
-    }
 });
 
 function mostrarErro(mensagem) {
@@ -63,7 +48,6 @@ function mostrarErro(mensagem) {
 function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
-    // PREENCHER BREADCRUMB
     const catLink = document.getElementById('breadcrumbCat');
     const prodName = document.getElementById('breadcrumbProd');
     if (catLink) {
@@ -76,10 +60,8 @@ function renderizarDetalhes(prod) {
         `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" class="${i === 0 ? 'ativa' : ''}" onerror="this.src='placeholder.jpg'">`
     ).join('');
 
-    // Avaliação
     const avaliacao = obterAvaliacao(prod.id);
 
-    // ===== GERA O HTML DO VÍDEO SE ELE EXISTIR =====
     let videoHtml = '';
     if (prod.video) {
         videoHtml = `
@@ -107,7 +89,7 @@ function renderizarDetalhes(prod) {
                 ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
                 <div class="descricao">${prod.descricao || 'Descrição não disponível.'}</div>
                 
-                ${videoHtml} <!-- <--- VÍDEO INSERIDO AQUI -->
+                ${videoHtml}
 
                 <div class="avaliacao">
                     <span>⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total} avaliações)</span>
@@ -128,7 +110,6 @@ function renderizarDetalhes(prod) {
         </div>
     `;
 
-    // Miniaturas
     const miniaturas = document.querySelectorAll('#miniaturas img');
     const imgPrincipal = document.getElementById('detalhesImg');
     miniaturas.forEach(img => {
@@ -139,26 +120,15 @@ function renderizarDetalhes(prod) {
         });
     });
 
-    // ===== BOTÃO DE COMPRA COM ESTOQUE =====
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
         adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
     });
 
-    // Avaliação
     document.getElementById('btnAvaliar').addEventListener('click', () => {
         const nota = parseInt(document.getElementById('notaAvaliacao').value);
         adicionarAvaliacao(prod.id, nota);
         mostrarToast('Avaliação registada!', 'sucesso');
-        // Atualiza a exibição
         const novaAval = obterAvaliacao(prod.id);
         document.querySelector('.avaliacao span').textContent = `⭐ ${novaAval.media.toFixed(1)} (${novaAval.total} avaliações)`;
     });
-}
-
-function obterAvaliacao(prodId) {
-    const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
-    const prodAval = avaliacoes[prodId] || [];
-    if (prodAval.length === 0) return { media: 0, total: 0 };
-    const soma = prodAval.reduce((acc, a) => acc + a.nota, 0);
-    return { media: soma / prodAval.length, total: prodAval.length };
 }
