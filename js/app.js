@@ -18,7 +18,7 @@ let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
-    initMobileMenu(); // 👈 MENU CENTRALIZADO
+    initMobileMenu();
 
     catalogo = await carregarCatalogo();
     if (!catalogo || catalogo.length === 0) {
@@ -159,17 +159,10 @@ function renderizarBalancoSemanal() {
 window.filtrarPorCategoria = function(categoria) {
     const link = document.querySelector(`.menu-categorias a[data-categoria="${categoria}"]`);
     if (link) link.click();
-    else {
-        categoriaAtiva = categoria;
-        paginaAtual = 1;
-        aplicarFiltros();
-    }
+    else { categoriaAtiva = categoria; paginaAtual = 1; aplicarFiltros(); }
     document.getElementById('conteudo-principal').scrollIntoView({ behavior: 'smooth' });
 };
 
-// ============================================================
-// FUNÇÃO DO CARROSSEL (ADICIONADA AO FINAL)
-// ============================================================
 window.mudarSlide = function(direcao) {
     const slides = document.querySelectorAll('.slide');
     const indicadores = document.querySelectorAll('.indicador');
@@ -189,11 +182,17 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
         const slides = document.querySelectorAll('.slide');
         const indicadores = document.querySelectorAll('.indicador');
         const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
-        
         slides[indexAtual].classList.remove('ativo');
         indicadores[indexAtual].classList.remove('ativo');
-        
         slides[i].classList.add('ativo');
         indicadores[i].classList.add('ativo');
     });
 });
+
+// ============================================================
+// NOVA FUNÇÃO DE PARTILHA (MARKETING VIRAL)
+// ============================================================
+window.shareProduct = function(nome, preco, link) {
+    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+};

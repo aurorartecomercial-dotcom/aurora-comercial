@@ -1,36 +1,24 @@
 import { CONFIG } from './config.js';
-import { extrairValorNumerico, debounce } from './utils.js';
+import { extrairValorNumerico } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
+import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
     let cache = {};
     if (cachedStr) {
-        try {
-            cache = JSON.parse(cachedStr);
-        } catch (e) {}
+        try { cache = JSON.parse(cachedStr); } catch (e) {}
     }
-
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
-        });
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
         if (!res.ok) throw new Error('Erro ao buscar JSONbin');
-
         const data = await res.json();
         let serverData = data.record;
-
         let novosProdutos = Array.isArray(serverData) ? serverData : serverData.data;
         let versaoServer = serverData.version || 0;
-
         if (!novosProdutos) throw new Error('Formato inválido dos produtos');
-
         if (versaoServer > (cache.version || 0) || (Date.now() - (cache.timestamp || 0)) > CONFIG.CACHE_TTL) {
-            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
-                data: novosProdutos,
-                version: versaoServer,
-                timestamp: Date.now()
-            }));
+            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, version: versaoServer, timestamp: Date.now() }));
             return novosProdutos;
         }
         return cache.data;
@@ -67,85 +55,49 @@ export function criarCardProduto(prod) {
         html += `<p class="preco">${prod.preco}</p>`;
     }
 
-    if (prod.parcelas) {
-        html += `<p class="parcelas">${prod.parcelas}</p>`;
-    }
-    if (prod.freteGratis) {
-        html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
-    }
+    if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
+    if (prod.freteGratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
 
     let estoqueHtml = '';
     if (prod.estoque !== undefined) {
-        if (prod.estoque <= 0) {
-            estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
-        } else if (prod.estoque <= 5) {
-            estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
-        } else {
-            estoqueHtml = `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
-        }
+        if (prod.estoque <= 0) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
+        else if (prod.estoque <= 5) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
+        else estoqueHtml = `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
     html += estoqueHtml;
 
     const avaliacao = obterAvaliacao(prod.id);
-    if (avaliacao.media > 0) {
-        html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`;
-    }
+    if (avaliacao.media > 0) { html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`; }
 
-    // ===== BOTÃO DE ADICIONAR AO CARRINHO DENTRO DO CARD =====
     html += `
-        <div style="margin-top: 12px; display: flex; justify-content: center;">
-            <button class="btn-add-carrinho-card" 
-                    data-nome="${prod.nome}" 
-                    data-preco="${prod.preco}" 
-                    data-estoque="${prod.estoque || 0}"
-                    style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;">
+        <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-add-carrinho-card" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
+                    style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
+            </button>
+            <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${window.location.origin}/detalhe.html?id=${prod.id}')"
+                    style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s;">
+                📤 Partilhar
             </button>
         </div>
     `;
-
     html += `</div>`;
     card.innerHTML = html;
 
-    // Adiciona o evento de clique ao botão (sem ativar o link do card)
     const btnAdd = card.querySelector('.btn-add-carrinho-card');
     if (btnAdd) {
         btnAdd.addEventListener('click', function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-
-            const nome = this.dataset.nome;
-            const preco = this.dataset.preco;
-            const estoque = parseInt(this.dataset.estoque);
-            adicionarProdutoCarrinho(nome, preco, estoque);
+            e.stopPropagation(); e.preventDefault();
+            adicionarProdutoCarrinho(this.dataset.nome, this.dataset.preco, parseInt(this.dataset.estoque));
         });
     }
-
     return card;
-}
-
-function obterAvaliacao(prodId) {
-    const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
-    const prodAval = avaliacoes[prodId] || [];
-    if (prodAval.length === 0) return { media: 0, total: 0 };
-    const soma = prodAval.reduce((acc, a) => acc + a.nota, 0);
-    return { media: soma / prodAval.length, total: prodAval.length };
-}
-
-export function adicionarAvaliacao(prodId, nota) {
-    const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
-    if (!avaliacoes[prodId]) avaliacoes[prodId] = [];
-    avaliacoes[prodId].push({ nota, data: new Date().toISOString() });
-    localStorage.setItem('aurora_avaliacoes', JSON.stringify(avaliacoes));
 }
 
 export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao) {
     let filtrados = produtos.filter(prod => {
         const matchCategoria = categoria === 'todos' || prod.categoria === categoria;
-        const matchBusca = !busca ||
-            prod.nome.toLowerCase().includes(busca.toLowerCase()) ||
-            prod.tag.toLowerCase().includes(busca.toLowerCase()) ||
-            prod.categoria.toLowerCase().includes(busca.toLowerCase());
+        const matchBusca = !busca || prod.nome.toLowerCase().includes(busca.toLowerCase()) || prod.tag.toLowerCase().includes(busca.toLowerCase()) || prod.categoria.toLowerCase().includes(busca.toLowerCase());
         const precoNum = extrairValorNumerico(prod.preco);
         const matchPreco = precoNum >= min && precoNum <= max;
         return matchCategoria && matchBusca && matchPreco;
@@ -176,19 +128,4 @@ export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensP
         const card = criarCardProduto(prod);
         container.appendChild(card);
     });
-
-    const totalPaginas = Math.ceil(produtosFiltrados.length / itensPorPagina);
-    const controles = document.getElementById('paginaControles');
-    if (controles) {
-        if (totalPaginas <= 1) {
-            controles.style.display = 'none';
-        } else {
-            controles.style.display = 'flex';
-            const btnCarregarMais = document.getElementById('carregarMais');
-            if (btnCarregarMais) {
-                btnCarregarMais.textContent = pagina < totalPaginas ? 'Carregar mais' : 'Todos carregados';
-                btnCarregarMais.disabled = pagina >= totalPaginas;
-            }
-        }
-    }
 }
