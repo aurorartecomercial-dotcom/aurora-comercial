@@ -10,7 +10,6 @@ export function initMobileMenu() {
             menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
         });
 
-        // Fecha o menu ao clicar em qualquer link dentro dele
         menuLista.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 menuLista.classList.remove('menu-aberto');
@@ -18,7 +17,6 @@ export function initMobileMenu() {
             });
         });
 
-        // Fecha o menu ao clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menu-categorias')) {
                 menuLista.classList.remove('menu-aberto');

@@ -7,7 +7,7 @@ let modalCliente, modalPagamento;
 let inputNome, inputTelefone, inputNif, inputMorada;
 let btnSalvarCliente, btnFecharModal;
 let cupomAplicado = null;
-let dadosVendaTemp = {}; // Guarda os dados do cliente temporariamente
+let dadosVendaTemp = {};
 
 export function initCarrinho() {
     listaProdutosHTML = document.getElementById('itensCarrinhoLoja');
@@ -282,9 +282,6 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
-// ============================================================
-// CORREÇÃO PRINCIPAL AQUI: SALVAR VENDA NO JSONBIN
-// ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -312,11 +309,9 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
-        
         const data = await resGet.json();
         let historico = data.record;
 
-        // 👇 CORREÇÃO AQUI (IMPORTANTE!)
         if (!Array.isArray(historico)) {
             console.warn('⚠️ O JSONbin devolveu algo que não era uma lista. A criar uma nova lista.');
             historico = [];
@@ -333,7 +328,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
-        // Fallback local
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
@@ -453,7 +447,7 @@ function numeroPorExtensoSimples(n) {
     if (n === 0) return '';
     if (n < 10) return unidades[n];
     if (n < 20) {
-        const especiais = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
+        const especiais = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
         return especiais[n - 10];
     }
     if (n < 100) {

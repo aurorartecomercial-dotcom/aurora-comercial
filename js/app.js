@@ -1,7 +1,3 @@
-// ============================================================
-// APP - Página inicial
-// ============================================================
-
 import { initCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
@@ -189,9 +185,6 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
     });
 });
 
-// ============================================================
-// NOVA FUNÇÃO DE PARTILHA (MARKETING VIRAL)
-// ============================================================
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
