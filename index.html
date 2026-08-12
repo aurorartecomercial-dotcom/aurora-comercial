@@ -187,6 +187,14 @@
             <button class="btn-fechar-carrinho" id="btnFecharCarrinho" aria-label="Fechar sacola">&times;</button>
         </div>
         <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
+
+        <!-- 👇 CAMPO DE CUPOM (Adicionado aqui!) -->
+        <div class="cupom-container" style="display:flex; gap:8px; padding:0 24px 12px;">
+            <input type="text" id="inputCupom" placeholder="Cupom de desconto" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:8px; font-size:13px;" />
+            <button id="btnAplicarCupom" style="background:var(--cor-esmeralda); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Aplicar</button>
+        </div>
+        <!-- 👆 FIM DO CAMPO DE CUPOM -->
+
         <div class="carrinho-footer">
             <div class="total-linha">
                 <span>Total:</span>

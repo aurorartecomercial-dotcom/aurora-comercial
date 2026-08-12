@@ -5,12 +5,14 @@ let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
 let modalCliente, inputNome, inputTelefone, inputNif, inputMorada;
 let btnSalvarCliente, btnFecharModal;
+let cupomAplicado = null;
 
 export function initCarrinho() {
+    console.log('➡️ Carrinho inicializado...'); // Para ver se o arquivo carregou
+
     listaProdutosHTML = document.getElementById('itensCarrinhoLoja');
     totalHTML = document.getElementById('totalCarrinhoLoja');
     badgeContador = document.getElementById('badgeContador');
-    const totalItensSpan = document.getElementById('carrinhoTotalItens');
     sidebar = document.getElementById('carrinhoSidebar');
     overlay = document.getElementById('carrinhoOverlay');
 
@@ -30,6 +32,18 @@ export function initCarrinho() {
     if (abrirBtn) abrirBtn.addEventListener('click', abrirCarrinho);
     if (fecharBtn) fecharBtn.addEventListener('click', fecharCarrinho);
     if (overlay) overlay.addEventListener('click', fecharCarrinho);
+
+    // 👇 EVENTO DO BOTÃO DE CUPOM (Verificado)
+    const btnCupom = document.getElementById('btnAplicarCupom');
+    const inputCupom = document.getElementById('inputCupom');
+    if (btnCupom && inputCupom) {
+        btnCupom.addEventListener('click', () => {
+            console.log('🔘 Botão Cupom clicado'); // Teste
+            aplicarCupom(inputCupom.value.trim());
+        });
+    } else {
+        console.warn('⚠️ Campo de cupom não encontrado no HTML');
+    }
 
     const btnFinalizar = document.getElementById('btnFinalizarWhatsApp');
     if (btnFinalizar) {
@@ -61,15 +75,8 @@ export function initCarrinho() {
         });
     }
 
-    if (btnFecharModal) {
-        btnFecharModal.addEventListener('click', fecharModalCliente);
-    }
-
-    if (modalCliente) {
-        modalCliente.addEventListener('click', (e) => {
-            if (e.target === modalCliente) fecharModalCliente();
-        });
-    }
+    if (btnFecharModal) btnFecharModal.addEventListener('click', fecharModalCliente);
+    if (modalCliente) modalCliente.addEventListener('click', (e) => { if (e.target === modalCliente) fecharModalCliente(); });
 
     window.addEventListener('storage', (e) => {
         if (e.key === 'carrinho_aurora') {
@@ -89,17 +96,12 @@ export function initCarrinho() {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
 
-    // ===== GPS (novo) =====
     const btnGPS = document.getElementById('btnGPS');
     if (btnGPS && inputMorada) {
         btnGPS.addEventListener('click', () => {
-            if (!navigator.geolocation) {
-                alert('Seu navegador não suporta GPS.');
-                return;
-            }
+            if (!navigator.geolocation) { alert('Seu navegador não suporta GPS.'); return; }
             btnGPS.textContent = '⏳ Buscando...';
             btnGPS.disabled = true;
-
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const lat = position.coords.latitude;
@@ -107,11 +109,8 @@ export function initCarrinho() {
                     try {
                         const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                         const dados = await resposta.json();
-                        if (dados && dados.display_name) {
-                            inputMorada.value = dados.display_name;
-                        } else {
-                            inputMorada.value = `Lat: ${lat}, Lng: ${lng}`;
-                        }
+                        if (dados && dados.display_name) inputMorada.value = dados.display_name;
+                        else inputMorada.value = `Lat: ${lat}, Lng: ${lng}`;
                         btnGPS.textContent = '✅ Localizado!';
                         setTimeout(() => { btnGPS.textContent = '📍 GPS'; btnGPS.disabled = false; }, 3000);
                     } catch (erro) {
@@ -121,7 +120,7 @@ export function initCarrinho() {
                     }
                 },
                 (erro) => {
-                    alert('Erro ao obter localização. Permita o GPS no navegador.');
+                    alert('Erro ao obter localização. Permita o GPS.');
                     btnGPS.textContent = '📍 GPS';
                     btnGPS.disabled = false;
                 }
@@ -168,9 +167,11 @@ export function atualizarCarrinho() {
         });
     }
 
-    if (totalHTML) {
-        totalHTML.textContent = totalGeral.toFixed(2);
+    if (cupomAplicado) {
+        totalGeral = totalGeral - (totalGeral * (cupomAplicado.desconto / 100));
     }
+
+    if (totalHTML) totalHTML.textContent = totalGeral.toFixed(2);
     atualizarBadge();
     salvarCarrinho();
 }
@@ -180,10 +181,6 @@ function atualizarBadge() {
     if (badgeContador) {
         badgeContador.textContent = totalItens;
         badgeContador.style.display = totalItens > 0 ? 'inline' : 'none';
-    }
-    const totalItensSpan = document.getElementById('carrinhoTotalItens');
-    if (totalItensSpan) {
-        totalItensSpan.textContent = totalItens > 0 ? `(${totalItens} itens)` : '';
     }
 }
 
@@ -204,27 +201,21 @@ function fecharCarrinho() {
 window.alterarQtd = function(index, mudanca) {
     if (!carrinho[index]) return;
     carrinho[index].quantidade += mudanca;
-    if (carrinho[index].quantidade <= 0) {
-        carrinho.splice(index, 1);
-    }
+    if (carrinho[index].quantidade <= 0) carrinho.splice(index, 1);
     atualizarCarrinho();
 };
 
-// ===== FUNÇÃO DE ADICIONAR AO CARRINHO COM VALIDAÇÃO DE ESTOQUE =====
 export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) {
         mostrarToast('🚫 Produto esgotado!', 'info');
         return;
     }
-
     const existente = carrinho.find(i => i.nome === nome);
     let quantidadeAtual = existente ? existente.quantidade : 0;
-
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) {
-        mostrarToast('🚫 Estoque esgotado! Não é possível adicionar mais.', 'info');
+        mostrarToast('🚫 Estoque esgotado!', 'info');
         return;
     }
-
     if (existente) {
         existente.quantidade += 1;
     } else {
@@ -234,13 +225,26 @@ export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
     mostrarToast('Produto adicionado!', 'sucesso');
 }
 
+// ============================================================
+// SISTEMA DE CUPOM DE DESCONTO
+// ============================================================
+export function aplicarCupom(codigoCupom) {
+    const cuponsValidos = { 'BEMVINDO10': 10, 'AURORA20': 20, 'FRETE50': 50 };
+    const desconto = cuponsValidos[codigoCupom.toUpperCase()];
+    if (desconto) {
+        cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto };
+        mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${desconto}% OFF`, 'sucesso');
+        atualizarCarrinho();
+    } else {
+        mostrarToast('Cupom inválido!', 'info');
+    }
+}
+// ============================================================
+
 function abrirModalCliente() {
     if (modalCliente) {
         modalCliente.style.display = 'flex';
-        inputNome.value = '';
-        inputTelefone.value = '';
-        inputNif.value = '';
-        inputMorada.value = '';
+        inputNome.value = ''; inputTelefone.value = ''; inputNif.value = ''; inputMorada.value = '';
         document.getElementById('erroNome').textContent = '';
         document.getElementById('erroTelefone').textContent = '';
         document.getElementById('erroNif').textContent = '';
@@ -252,72 +256,17 @@ function fecharModalCliente() {
     if (modalCliente) modalCliente.style.display = 'none';
 }
 
-// ============================================================
-// 🚨 FUNÇÃO NOVA: ATUALIZAR ESTOQUE NO JSONBIN
-// ============================================================
-async function atualizarEstoqueProdutos() {
-    try {
-        // 1. Buscar o catálogo atual do JSONbin
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
-        });
-        const data = await res.json();
-        let catalogo = Array.isArray(data.record) ? data.record : (data.record && data.record.data ? data.record.data : []);
-        if (!Array.isArray(catalogo)) catalogo = [];
-
-        // 2. Subtrair as quantidades do carrinho
-        carrinho.forEach(item => {
-            const produto = catalogo.find(p => p.nome === item.nome);
-            if (produto) {
-                produto.estoque = (produto.estoque || 0) - item.quantidade;
-                if (produto.estoque < 0) produto.estoque = 0; // Nunca deixar negativo
-            }
-        });
-
-        // 3. Salvar o catálogo atualizado no JSONbin
-        const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': CONFIG.MASTER_KEY
-            },
-            body: JSON.stringify({ 
-                version: Date.now(), 
-                data: catalogo 
-            })
-        });
-
-        if (!resPut.ok) throw new Error('Erro ao atualizar o estoque na nuvem.');
-
-        // 4. Invalidar o cache local para forçar o site a buscar a nova quantidade
-        localStorage.removeItem(CONFIG.CACHE_KEY);
-        console.log('✅ Estoque atualizado com sucesso!');
-    } catch (e) {
-        console.error('❌ Erro ao atualizar estoque:', e);
-        // Não interrompe a venda, apenas avisa
-        mostrarToast('Aviso: Estoque não foi sincronizado na nuvem.', 'info');
-    }
-}
-
-// ============================================================
-// FUNÇÃO GERAR FATURA COM LOGOTIPO E CABEÇALHO PROFISSIONAL
-// ============================================================
-async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
+async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
     await loadJSPDF();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
     const verdeEscuro = '#005A4C';
     const dourado = '#D4AF37';
-
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
         await new Promise((resolve) => {
-            logoImg.onload = () => {
-                doc.addImage(logoImg, 'PNG', 15, 10, 20, 20);
-                resolve();
-            };
+            logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); };
             logoImg.onerror = resolve;
         });
     } catch (e) {}
@@ -326,13 +275,11 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setTextColor(dourado);
     doc.setFont(undefined, 'bold');
     doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
-
     doc.setFontSize(9);
     doc.setTextColor('#444');
     doc.setFont(undefined, 'normal');
     doc.text('Contribuinte Nº: 5000048151  |  Telefone: +244 925 328 181', 105, 28, { align: 'center' });
     doc.text('Email: contacto@aurorarte.ao  |  Luanda - Angola, Rua da Ende, s/n', 105, 34, { align: 'center' });
-
     doc.setDrawColor(dourado);
     doc.setLineWidth(0.8);
     doc.line(20, 40, 190, 40);
@@ -348,72 +295,43 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setFont(undefined, 'normal');
     doc.text(`Data de Emissão: ${dataEmissao}`, 120, 48);
 
+    let y = 58;
     doc.setFontSize(10);
-    doc.text('Cliente:', 20, 58);
+    doc.text('Cliente:', 20, y);
     doc.setFont(undefined, 'bold');
-    doc.text(nomeCliente || '_________________________', 50, 58);
-
+    doc.text(nomeCliente || '_________________________', 50, y); y += 7;
     doc.setFont(undefined, 'normal');
-    doc.text('Telefone:', 20, 65);
+    doc.text('Telefone:', 20, y);
     doc.setFont(undefined, 'bold');
-    doc.text(telefoneCliente || '_________________________', 50, 65);
-
+    doc.text(telefoneCliente || '_________________________', 50, y); y += 7;
     doc.setFont(undefined, 'normal');
-    doc.text('NIF:', 20, 72);
+    doc.text('NIF:', 20, y);
     doc.setFont(undefined, 'bold');
-    doc.text(nifCliente || '_________________________', 50, 72);
-
+    doc.text(nifCliente || '_________________________', 50, y); y += 7;
     doc.setFont(undefined, 'normal');
-    doc.text('Morada:', 20, 79);
+    doc.text('Morada:', 20, y);
     doc.setFont(undefined, 'bold');
-    doc.text(moradaCliente || '_________________________', 50, 79);
-
-    doc.setFontSize(8);
-    doc.setTextColor('#666');
-    doc.setFont(undefined, 'italic');
-    doc.text('Os bens foram colocados à disposição do adquirente na data do documento.', 105, 87, { align: 'center' });
+    doc.text(moradaCliente || '_________________________', 50, y); y += 10;
 
     const body = itensCarrinho.map(item => {
         const unitario = extrairValorNumerico(item.preco);
-        const subtotal = unitario * item.quantidade;
-        return [
-            item.nome,
-            item.quantidade.toString(),
-            `${unitario.toFixed(2)}`,
-            `${subtotal.toFixed(2)}`
-        ];
+        return [item.nome, item.quantidade.toString(), `${unitario.toFixed(2)}`, `${(unitario * item.quantidade).toFixed(2)}`];
     });
 
     doc.autoTable({
-        startY: 94,
+        startY: y + 5,
         head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']],
         body: body,
         theme: 'grid',
-        headStyles: {
-            fillColor: verdeEscuro,
-            textColor: '#FFFFFF',
-            fontSize: 9,
-            halign: 'center',
-            fontStyle: 'bold'
-        },
-        bodyStyles: {
-            textColor: '#333',
-            fontSize: 9,
-        },
-        columnStyles: {
-            0: { cellWidth: 70 },
-            1: { cellWidth: 20, halign: 'center' },
-            2: { cellWidth: 35, halign: 'right' },
-            3: { cellWidth: 35, halign: 'right' }
-        },
+        headStyles: { fillColor: verdeEscuro, textColor: '#FFFFFF', fontSize: 9, halign: 'center', fontStyle: 'bold' },
+        bodyStyles: { textColor: '#333', fontSize: 9 },
+        columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 20, halign: 'center' }, 2: { cellWidth: 35, halign: 'right' }, 3: { cellWidth: 35, halign: 'right' } },
         margin: { left: 20, right: 20 },
         tableWidth: 170,
         styles: { lineColor: dourado, lineWidth: 0.2 }
     });
 
     const finalY = doc.lastAutoTable.finalY + 8;
-    const totalGeral = itensCarrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
-
     doc.setFontSize(9);
     doc.setTextColor('#333');
     doc.setFont(undefined, 'bold');
@@ -428,7 +346,6 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setTextColor(verdeEscuro);
     doc.setFont(undefined, 'bold');
     doc.text(`Total a Pagar: ${totalGeral.toFixed(2)} Kz`, 140, finalY + 8, { align: 'right' });
-
     doc.setFontSize(9);
     doc.setTextColor('#333');
     doc.setFont(undefined, 'normal');
@@ -444,19 +361,15 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.setFontSize(7);
     doc.setTextColor('#888');
     doc.setFont(undefined, 'italic');
-    doc.text(`Processado por Sistema Validado - Aurora Comercial v1.0  |  Utilizador: admin`, 105, rodapeY, { align: 'center' });
-    doc.text(`Impresso aos ${hoje.toLocaleTimeString('pt-BR')} - ${dataEmissao}  |  Regime: Simplificado`, 105, rodapeY + 5, { align: 'center' });
-    doc.text('página 1 de 1', 105, rodapeY + 10, { align: 'center' });
+    doc.text(`Processado por Sistema Validado - Aurora Comercial v1.0`, 105, rodapeY, { align: 'center' });
+    doc.text('página 1 de 1', 105, rodapeY + 5, { align: 'center' });
 
     return doc.output('blob');
 }
 
 function loadJSPDF() {
     return new Promise((resolve, reject) => {
-        if (window.jspdf && window.jspdf.jsPDF) {
-            resolve();
-            return;
-        }
+        if (window.jspdf && window.jspdf.jsPDF) { resolve(); return; }
         const script1 = document.createElement('script');
         script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         script1.onload = () => {
@@ -475,16 +388,12 @@ function numeroPorExtenso(valor) {
     const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
     const dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
     const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
     const inteiro = Math.floor(valor);
     const centavos = Math.round((valor - inteiro) * 100);
-
     if (inteiro === 0) return 'zero kwanzas';
-
     let extenso = '';
     const milhares = Math.floor(inteiro / 1000);
     const resto = inteiro % 1000;
-
     if (milhares > 0) {
         if (milhares === 1) extenso += 'mil ';
         else {
@@ -492,14 +401,9 @@ function numeroPorExtenso(valor) {
             extenso += milExt + ' mil ';
         }
     }
-    if (resto > 0) {
-        extenso += numeroPorExtensoSimples(resto);
-    }
-
+    if (resto > 0) extenso += numeroPorExtensoSimples(resto);
     extenso = extenso.trim() + ' kwanzas';
-    if (centavos > 0) {
-        extenso += ` e ${centavos} centavos`;
-    }
+    if (centavos > 0) extenso += ` e ${centavos} centavos`;
     return extenso;
 }
 
@@ -528,73 +432,64 @@ function numeroPorExtensoSimples(n) {
 }
 
 async function finalizarPedido(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
-    // ✅ PASSO 1: Atualizar o estoque no JSONbin ANTES de salvar a venda
-    await atualizarEstoqueProdutos();
-
-    // ✅ PASSO 2: Salvar a venda no histórico
-    salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente);
-
-    // ✅ PASSO 3: Gerar a Fatura PDF
-    const pdfBlob = await gerarFaturaPDF(carrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente);
+    console.log('🚀 Iniciando finalização...');
+    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    let cupomSalvo = null;
+    if (cupomAplicado) {
+        totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
+        cupomSalvo = { ...cupomAplicado };
+    }
+    console.log('💾 Salvando venda...');
+    await salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo);
+    console.log('📄 Gerando fatura...');
+    const pdfBlob = await gerarFaturaPDF(carrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalComDesconto);
     const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
     const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
 
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-            await navigator.share({
-                title: 'Fatura Aurora Comercial',
-                text: 'Segue a fatura do seu pedido.',
-                files: [file]
-            });
-            carrinho = [];
-            atualizarCarrinho();
-            fecharCarrinho();
+            await navigator.share({ title: 'Fatura Aurora Comercial', text: 'Segue a fatura do seu pedido.', files: [file] });
+            carrinho = []; cupomAplicado = null; sessionStorage.removeItem('cupom_atual');
+            atualizarCarrinho(); fecharCarrinho();
             mostrarToast('Fatura enviada com sucesso!', 'sucesso');
             return;
-        } catch (err) {
-            console.warn('Partilha cancelada ou falhou.', err);
-        }
+        } catch (err) { console.warn('Partilha cancelada.', err); }
     }
 
     const urlBlob = URL.createObjectURL(pdfBlob);
     const linkDownload = document.createElement('a');
-    linkDownload.href = urlBlob;
-    linkDownload.download = nomeArquivo;
-    document.body.appendChild(linkDownload);
-    linkDownload.click();
-    document.body.removeChild(linkDownload);
+    linkDownload.href = urlBlob; linkDownload.download = nomeArquivo;
+    document.body.appendChild(linkDownload); linkDownload.click(); document.body.removeChild(linkDownload);
     URL.revokeObjectURL(urlBlob);
 
     let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
-    textoWhats += `Cliente: ${nomeCliente}\n`;
-    textoWhats += `Telefone: ${telefoneCliente}\n`;
-    textoWhats += `NIF: ${nifCliente}\n`;
-    textoWhats += `Morada: ${moradaCliente}\n\n`;
-    carrinho.forEach(item => {
-        textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco}\n`;
-    });
-    const total = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
-    textoWhats += `\n*Total:* KZ ${total.toFixed(2)}\n`;
+    textoWhats += `Cliente: ${nomeCliente}\nTelefone: ${telefoneCliente}\nNIF: ${nifCliente}\nMorada: ${moradaCliente}\n\n`;
+    carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco}\n`; });
+    if (cupomSalvo) textoWhats += `\n💸 *Cupom aplicado:* ${cupomSalvo.codigo} (-${cupomSalvo.desconto}%)\n`;
+    textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
     textoWhats += `\n✅ A fatura em PDF foi descarregada. Anexe o ficheiro antes de enviar.`;
 
     window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
 
-    carrinho = [];
-    atualizarCarrinho();
-    fecharCarrinho();
+    carrinho = []; cupomAplicado = null; sessionStorage.removeItem('cupom_atual');
+    atualizarCarrinho(); fecharCarrinho();
     mostrarToast('Fatura descarregada. Anexe‑a ao WhatsApp!', 'sucesso');
 }
 
 // ============================================================
-// FUNÇÃO DE SALVAR A VENDA NO JSONBIN (COM DADOS DO CLIENTE)
+// FUNÇÃO DE SALVAR A VENDA COM CÓDIGO DE RASTREIO
 // ============================================================
-async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente) {
+async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     
+    // 👇 GERA O CÓDIGO DE RASTREIO
+    const codigoRastreio = `AURORA-${Date.now().toString().slice(-6)}`;
+
     const novaVenda = {
         dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
@@ -603,29 +498,40 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         nomeCliente: nomeCliente,
         telefoneCliente: telefoneCliente,
         nifCliente: nifCliente,
-        moradaCliente: moradaCliente
+        moradaCliente: moradaCliente,
+        codigoRastreio: codigoRastreio,
+        status: 'confirmado',
+        cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
+        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0
     };
 
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
+        console.log('📡 A enviar venda para JSONbin...');
+        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
-        const data = await res.json();
+        if (!resGet.ok) throw new Error(`Falha buscar histórico: ${resGet.status}`);
+        const data = await resGet.json();
         let historico = data.record || [];
         historico.push(novaVenda);
 
-        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
+        const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': CONFIG.MASTER_KEY_VENDAS
-            },
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS },
             body: JSON.stringify(historico)
         });
 
-        console.log('Venda registrada com sucesso na nuvem!');
+        if (resPut.ok) {
+            console.log('✅ Venda salva no JSONbin!');
+            // 👇 ALERTA QUE O USUÁRIO ESTÁ A PROCURAR
+            alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
+            mostrarToast(`Código de rastreio gerado: ${codigoRastreio}`, 'sucesso');
+        } else {
+            throw new Error(`Falha no PUT: ${resPut.status}`);
+        }
     } catch (e) {
-        console.warn('Erro ao salvar venda no JSONbin. Venda salva localmente como fallback.');
+        console.error('❌ ERRO AO SALVAR VENDA:', e.message);
+        alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));

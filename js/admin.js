@@ -1,7 +1,3 @@
-// ============================================================
-// ADMIN - Painel administrativo
-// ============================================================
-
 import { CONFIG } from './config.js';
 import { extrairValorNumerico, mostrarToast } from './utils.js';
 
@@ -9,7 +5,6 @@ let produtos = [];
 let editandoId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Verifica login
     const loginDiv = document.getElementById('loginAdmin');
     const conteudoAdmin = document.getElementById('conteudoAdmin');
     const btnLogin = document.getElementById('btnLoginAdmin');
@@ -32,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function iniciarAdmin() {
-    // Elementos
     const form = document.getElementById('formProduto');
     const formTitulo = document.getElementById('formTitulo');
     const btnSalvar = document.getElementById('btnSalvar');
@@ -41,7 +35,6 @@ function iniciarAdmin() {
     const contadorSpan = document.getElementById('contadorProdutos');
     const statusMsg = document.getElementById('statusMsg');
 
-    // Inputs
     const prodId = document.getElementById('prodId');
     const nome = document.getElementById('nome');
     const categoria = document.getElementById('categoria');
@@ -58,38 +51,33 @@ function iniciarAdmin() {
     const estoque = document.getElementById('estoque');
     const video = document.getElementById('video');
 
-    // ===== UPLOAD DE IMAGENS PARA IMGBB =====
+    const jsonbinIdInput = document.getElementById('jsonbinId');
+    const jsonbinKeyInput = document.getElementById('jsonbinKey');
+    const btnTestar = document.getElementById('btnTestarJsonbin');
+    const btnEnviar = document.getElementById('btnEnviarJsonbin');
+    const btnForcarCache = document.getElementById('btnForcarCache');
+
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
 
-    // SUA CHAVE DA API DO IMGBB
     const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
 
     async function uploadParaImgBB(file) {
         const formData = new FormData();
         formData.append('key', IMGBB_API_KEY);
         formData.append('image', file);
-        
-        const res = await fetch('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        });
+        const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
         if (!res.ok) throw new Error('Erro no upload');
         const data = await res.json();
-        // Retorna a URL direta da imagem (display_url ou url)
         return data.data.display_url || data.data.url;
     }
 
     btnUploadImg.addEventListener('click', async () => {
         const files = imgUploadInput.files;
-        if (!files.length) {
-            alert('Selecione pelo menos uma imagem.');
-            return;
-        }
+        if (!files.length) { alert('Selecione pelo menos uma imagem.'); return; }
 
         const imagensAtuais = imagens.value.split(',').map(s => s.trim()).filter(s => s);
-        
         btnUploadImg.disabled = true;
         btnUploadImg.textContent = '⏳ Enviando...';
         uploadProgress.textContent = '0/' + files.length;
@@ -100,58 +88,32 @@ function iniciarAdmin() {
                 const url = await uploadParaImgBB(files[i]);
                 imagensAtuais.push(url);
                 sucesso++;
-            } catch (e) {
-                console.error('Erro no upload da imagem', i, e);
-            }
+            } catch (e) { console.error('Erro no upload da imagem', i, e); }
             uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
         }
 
         imagens.value = imagensAtuais.join(', ');
-        atualizarPreview(imagens.value); // Atualiza as miniaturas
+        atualizarPreview(imagens.value);
 
         btnUploadImg.disabled = false;
         btnUploadImg.textContent = '⬆ Enviar para ImgBB';
         uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
         setTimeout(() => uploadProgress.textContent = '', 3000);
-        imgUploadInput.value = ''; // Limpa o input de arquivos
+        imgUploadInput.value = '';
     });
-    // ===== FIM DO UPLOAD IMGBB =====
-
-    // JSONbin
-    const jsonbinIdInput = document.getElementById('jsonbinId');
-    const jsonbinKeyInput = document.getElementById('jsonbinKey');
-    const btnTestar = document.getElementById('btnTestarJsonbin');
-    const btnEnviar = document.getElementById('btnEnviarJsonbin');
-    const btnForcarCache = document.getElementById('btnForcarCache');
 
     function carregarProdutos() {
         const dados = localStorage.getItem('aurora_produtos_admin');
         if (dados) {
-            try {
-                produtos = JSON.parse(dados);
-                if (!Array.isArray(produtos)) produtos = [];
-            } catch (e) {
-                produtos = [];
-            }
+            try { produtos = JSON.parse(dados); if (!Array.isArray(produtos)) produtos = []; } catch (e) { produtos = []; }
         } else {
-            fetch('produtos.json')
-                .then(res => res.json())
-                .then(dados => {
-                    produtos = dados;
-                    salvarLocalStorage();
-                    renderizarLista();
-                })
-                .catch(() => {
-                    produtos = [];
-                    renderizarLista();
-                });
+            fetch('produtos.json').then(res => res.json()).then(dados => { produtos = dados; salvarLocalStorage(); renderizarLista(); }).catch(() => { produtos = []; renderizarLista(); });
         }
         renderizarLista();
     }
 
     function salvarLocalStorage() {
         localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
-        // Invalida cache do catálogo
         localStorage.removeItem(CONFIG.CACHE_KEY);
     }
 
@@ -163,32 +125,46 @@ function iniciarAdmin() {
         setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
     }
 
-    // ===== LISTA DE PRODUTOS =====
     function renderizarLista() {
         contadorSpan.textContent = produtos.length;
-        if (produtos.length === 0) {
-            listaDiv.innerHTML = '<p style="color:#999;">Nenhum produto cadastrado.</p>';
-            return;
-        }
-        const ordenados = [...produtos].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-        listaDiv.innerHTML = ordenados.map(prod => `
-            <div class="produto-item" data-id="${prod.id}">
-                <div>
-                    <span>${prod.nome}</span>
-                    <small style="color:#888; display:block;">
-                        ${prod.categoria} | ${prod.preco} 
-                        ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
-                        ${prod.video ? '| 🎬 Vídeo' : ''}
-                    </small>
-                </div>
-                <div class="acoes">
-                    <button class="btn-admin" onclick="window.editarProduto(${prod.id})">✏️ Editar</button>
-                    <button class="btn-admin btn-admin-excluir" onclick="window.excluirProduto(${prod.id})">🗑️ Excluir</button>
-                </div>
-            </div>
-        `).join('');
+        let htmlLista = '';
 
-        // Drag-and-drop (SortableJS)
+        if (produtos.length === 0) {
+            htmlLista = '<p style="color:#999;">Nenhum produto cadastrado.</p>';
+        } else {
+            const ordenados = [...produtos].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            htmlLista = ordenados.map(prod => `
+                <div class="produto-item" data-id="${prod.id}">
+                    <div>
+                        <span>${prod.nome}</span>
+                        <small style="color:#888; display:block;">
+                            ${prod.categoria} | ${prod.preco} 
+                            ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
+                            ${prod.video ? '| 🎬 Vídeo' : ''}
+                        </small>
+                    </div>
+                    <div class="acoes">
+                        <button class="btn-admin" onclick="window.editarProduto(${prod.id})">✏️ Editar</button>
+                        <button class="btn-admin btn-admin-excluir" onclick="window.excluirProduto(${prod.id})">🗑️ Excluir</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 👇 ALERTA DE ESTOQUE BAIXO (adicionei essa verificação)
+        const produtosBaixos = produtos.filter(p => p.estoque <= 2 && p.estoque > 0);
+        if (produtosBaixos.length > 0) {
+            htmlLista = `
+                <div style="background:#fde8e8; border:1px solid #E74C3C; padding:12px; border-radius:8px; margin-bottom:16px; color:#E74C3C;">
+                    <strong>⚠️ ALERTA DE ESTOQUE BAIXO</strong><br>
+                    ${produtosBaixos.map(p => `🔴 ${p.nome} (Estoque: ${p.estoque})`).join('<br>')}
+                </div>
+            ` + htmlLista;
+        }
+        // 👆 FIM DO ALERTA
+
+        listaDiv.innerHTML = htmlLista;
+
         if (typeof Sortable !== 'undefined') {
             const el = document.getElementById('listaProdutos');
             Sortable.create(el, {
@@ -211,7 +187,6 @@ function iniciarAdmin() {
         }
     }
 
-    // ===== FORMULÁRIO =====
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const precoValor = preco.value.trim();
@@ -240,10 +215,7 @@ function iniciarAdmin() {
 
         if (editandoId) {
             const index = produtos.findIndex(p => p.id === editandoId);
-            if (index !== -1) {
-                produtos[index] = novoProduto;
-                mostrarMensagem('Produto atualizado com sucesso!', 'sucesso');
-            }
+            if (index !== -1) { produtos[index] = novoProduto; mostrarMensagem('Produto atualizado com sucesso!', 'sucesso'); }
         } else {
             produtos.push(novoProduto);
             mostrarMensagem('Produto adicionado com sucesso!', 'sucesso');
@@ -304,10 +276,7 @@ function iniciarAdmin() {
         previewImagens.innerHTML = '';
     }
 
-    // ===== PREVIEW IMAGENS =====
-    imagens.addEventListener('input', () => {
-        atualizarPreview(imagens.value);
-    });
+    imagens.addEventListener('input', () => { atualizarPreview(imagens.value); });
 
     function atualizarPreview(texto) {
         const urls = texto.split(',').map(s => s.trim()).filter(s => s);
@@ -320,64 +289,37 @@ function iniciarAdmin() {
         });
     }
 
-    // ===== RECARREGAR =====
-    document.getElementById('btnRecarregar').addEventListener('click', () => {
-        carregarProdutos();
-        mostrarMensagem('Lista recarregada.', 'info');
-    });
+    document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
 
-    // ===== JSONBIN =====
     btnTestar.addEventListener('click', async () => {
         const binId = jsonbinIdInput.value.trim();
         const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) {
-            alert('Preencha BIN ID e X-Master-Key.');
-            return;
-        }
+        if (!binId || !key) { alert('Preencha BIN ID e X-Master-Key.'); return; }
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: { 'X-Master-Key': key }
-            });
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers: { 'X-Master-Key': key } });
             if (res.ok) {
                 const data = await res.json();
                 mostrarMensagem('✅ Conexão bem-sucedida! JSONbin contém ' + data.record.length + ' produtos.', 'sucesso');
             } else {
                 mostrarMensagem('❌ Erro ao acessar JSONbin. Verifique as credenciais.', 'info');
             }
-        } catch (e) {
-            mostrarMensagem('❌ Erro de rede ao testar JSONbin.', 'info');
-        }
+        } catch (e) { mostrarMensagem('❌ Erro de rede ao testar JSONbin.', 'info'); }
     });
 
     btnEnviar.addEventListener('click', async () => {
         const binId = jsonbinIdInput.value.trim();
         const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) {
-            alert('Configure o JSONbin primeiro.');
-            return;
-        }
+        if (!binId || !key) { alert('Configure o JSONbin primeiro.'); return; }
         if (!confirm('Isso substituirá o conteúdo do JSONbin pelo catálogo atual. Continuar?')) return;
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': key
-                },
-                body: JSON.stringify({ 
-                    version: Date.now(), 
-                    data: produtos 
-                })
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
+                body: JSON.stringify({ version: Date.now(), data: produtos })
             });
-            if (res.ok) {
-                mostrarMensagem('📤 Catálogo enviado ao JSONbin com sucesso!', 'sucesso');
-                localStorage.removeItem(CONFIG.CACHE_KEY);
-            } else {
-                mostrarMensagem('❌ Falha ao enviar. Verifique permissões.', 'info');
-            }
-        } catch (e) {
-            mostrarMensagem('❌ Erro de rede.', 'info');
-        }
+            if (res.ok) { mostrarMensagem('📤 Catálogo enviado ao JSONbin com sucesso!', 'sucesso'); localStorage.removeItem(CONFIG.CACHE_KEY); } 
+            else { mostrarMensagem('❌ Falha ao enviar. Verifique permissões.', 'info'); }
+        } catch (e) { mostrarMensagem('❌ Erro de rede.', 'info'); }
     });
 
     btnForcarCache.addEventListener('click', () => {
@@ -385,9 +327,7 @@ function iniciarAdmin() {
         mostrarMensagem('Cache do catálogo removido. O site recarregará os dados na próxima visita.', 'sucesso');
     });
 
-    // ===== INICIAR =====
     carregarProdutos();
-
     jsonbinIdInput.value = CONFIG.BIN_ID;
     jsonbinKeyInput.value = CONFIG.MASTER_KEY;
 }
