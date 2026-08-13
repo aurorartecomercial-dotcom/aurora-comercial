@@ -39,6 +39,11 @@ export function criarCardProduto(prod) {
 
     const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
 
+    // 👇 CORREÇÃO DO LINK DE PARTILHA AQUI
+    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+    const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
+    // 👆 FIM DA CORREÇÃO
+
     let html = `
         <div class="produto-imagem">
             <img src="${imgSrc}" alt="${prod.nome}" loading="lazy" decoding="async" onerror="this.src='placeholder.jpg'">
@@ -75,7 +80,8 @@ export function criarCardProduto(prod) {
                     style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
             </button>
-            <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${window.location.origin}/detalhe.html?id=${prod.id}')"
+            <!-- 👇 BOTÃO DE PARTILHA COM O LINK CORRIGIDO -->
+            <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${shareLink}')"
                     style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s;">
                 📤 Partilhar
             </button>

@@ -6,7 +6,7 @@ export const CONFIG = {
     CACHE_TTL: 60 * 60 * 1000,
     
     // Configurações Gerais
-    NUMERO_WHATSAPP: '244925328181',
+    NUMERO_WHATSAPP: '244933677628', // 👈 NOVO NÚMERO AQUI
     ADMIN_SENHA: 'admin123',
 
     // CONFIGURAÇÃO DO BIN DE VENDAS
