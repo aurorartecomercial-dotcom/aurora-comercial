@@ -15,6 +15,11 @@
     <link rel="stylesheet" href="style.css?v=3" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
+    
+    <!-- 👇 ESTAS 2 LINHAS CORRIGEM O ERRO DO PDF NO SITE DO CLIENTE 👇 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- 👆 FIM DA CORREÇÃO -->
 </head>
 <body>
 
@@ -76,6 +81,8 @@
                 </li>
                 <li><a href="#" data-categoria="automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
+                <!-- 👇 NOVO LINK DE RASTREIO NO MENU -->
+                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
             </ul>
         </nav>
     </header>
@@ -119,6 +126,18 @@
                 </div>
             </div>
         </section>
+
+        <!-- 👇 BOTÃO DE RASTREIO EM DESTAQUE (LOGÓ APÓS O CARROSSEL) -->
+        <div style="max-width:1480px; margin: 20px auto 0; padding: 0 24px; display:flex; justify-content:center;">
+            <a href="rastreio.html" 
+               style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); 
+                      padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px; 
+                      display:inline-flex; align-items:center; gap:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+                      transition: 0.2s;">
+                📦 Rastrear meu pedido
+            </a>
+        </div>
+        <!-- 👆 FIM DO BOTÃO DE RASTREIO -->
 
         <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
             <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">

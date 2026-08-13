@@ -5,6 +5,8 @@ let todasVendas = [];
 let catalogo = [];
 let graficoVendas = null;
 let graficoProdutos = null;
+let graficoComparativo = null;
+let graficoMapa = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginVendas');
@@ -36,16 +38,12 @@ async function carregarDados() {
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
-        const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
-        });
+        const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
         if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
         const dataVendas = await resVendas.json();
         todasVendas = (dataVendas && Array.isArray(dataVendas.record)) ? dataVendas.record : [];
 
-        const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
-        });
+        const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
         if (!resProdutos.ok) throw new Error(`Erro Produtos: ${resProdutos.status}`);
         const dataProdutos = await resProdutos.json();
         let serverData = dataProdutos.record;
@@ -63,6 +61,8 @@ async function carregarDados() {
     }
 }
 
+let vendasFiltradasCache = [];
+
 function gerarRelatorio(periodo) {
     if (!Array.isArray(catalogo)) catalogo = [];
     const agora = new Date();
@@ -78,6 +78,8 @@ function gerarRelatorio(periodo) {
             return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
         });
     }
+    
+    vendasFiltradasCache = vendasFiltradas;
 
     const faturamento = vendasFiltradas.reduce((acc, v) => acc + v.valorTotal, 0);
     const pedidos = vendasFiltradas.length;
@@ -85,17 +87,26 @@ function gerarRelatorio(periodo) {
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
 
     let descontoTotal = 0;
+    let lucroTotal = 0;
+
     vendasFiltradas.forEach(v => {
         v.produtosResumo.split(', ').forEach(item => {
             const nome = item.split(' (x')[0];
             const qtd = parseInt(item.split('(x')[1]) || 1;
             const prod = catalogo.find(p => p.nome === nome);
+            
             if (prod && prod.precoAntigo) {
                 const precoFinal = extrairValorNumerico(prod.preco);
                 const precoAntigo = extrairValorNumerico(prod.precoAntigo);
                 if (precoAntigo > precoFinal) descontoTotal += (precoAntigo - precoFinal) * qtd;
             }
+            if (prod && prod.custo) {
+                const precoFinal = extrairValorNumerico(prod.preco);
+                const custo = extrairValorNumerico(prod.custo);
+                lucroTotal += (precoFinal - custo) * qtd;
+            }
         });
+        if (v.descontoCupom) descontoTotal += v.descontoCupom;
     });
 
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
@@ -103,6 +114,7 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
     document.getElementById('kpiDesconto').textContent = descontoTotal.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiLucro').textContent = lucroTotal.toLocaleString('pt-AO') + ' Kz';
 
     // Tabela Produtos
     const vendasPorProduto = {};
@@ -124,9 +136,129 @@ function gerarRelatorio(periodo) {
         corpoTabela.appendChild(tr);
     });
 
-    // Tabela Pedidos + BOTÕES DE STATUS E PDF
+    renderizarTabelaPedidos(vendasFiltradas);
+
+    // Gráficos
+    const vendasPorDia = {};
+    vendasFiltradas.forEach(v => { const dia = v.dataHora.split(' ')[0]; vendasPorDia[dia] = (vendasPorDia[dia] || 0) + v.valorTotal; });
+    const dias = Object.keys(vendasPorDia);
+    const valores = Object.values(vendasPorDia);
+    if (graficoVendas) graficoVendas.destroy();
+    if (dias.length > 0) {
+        graficoVendas = new Chart(document.getElementById('graficoVendas'), { type: 'bar', data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] } });
+    } else { document.getElementById('graficoVendas').style.display = 'none'; }
+
+    const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    if (graficoProdutos) graficoProdutos.destroy();
+    if (topProdutos.length > 0) {
+        graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
+    } else { document.getElementById('graficoProdutos').style.display = 'none'; }
+
+    // Comparativo Mensal
+    const mesAtual = agora.getMonth();
+    const anoAtual = agora.getFullYear();
+    const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
+    const anoPassado = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+
+    const vendasMesAtual = todasVendas.filter(v => {
+        const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
+        return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+    });
+    const vendasMesPassado = todasVendas.filter(v => {
+        const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
+        return data.getMonth() === mesPassado && data.getFullYear() === anoPassado;
+    });
+
+    const faturamentoMesAtual = vendasMesAtual.reduce((acc, v) => acc + v.valorTotal, 0);
+    const faturamentoMesPassado = vendasMesPassado.reduce((acc, v) => acc + v.valorTotal, 0);
+
+    if (graficoComparativo) graficoComparativo.destroy();
+    graficoComparativo = new Chart(document.getElementById('graficoComparativo'), {
+        type: 'bar', data: {
+            labels: ['Faturamento'],
+            datasets: [
+                { label: 'Mês Passado', data: [faturamentoMesPassado], backgroundColor: '#E74C3C' },
+                { label: 'Este Mês', data: [faturamentoMesAtual], backgroundColor: '#005A4C' }
+            ]
+        }, options: { responsive: true, plugins: { legend: { position: 'top' } } }
+    });
+
+    // Mapa de Vendas
+    const regioes = {};
+    vendasFiltradas.forEach(v => {
+        const morada = v.moradaCliente || '';
+        const termos = morada.split(',');
+        let cidade = '';
+        if (termos.length > 1) cidade = termos[1].trim();
+        if (!cidade) cidade = 'Desconhecida';
+        regioes[cidade] = (regioes[cidade] || 0) + v.valorTotal;
+    });
+
+    const labelsMapa = Object.keys(regioes);
+    const dataMapa = Object.values(regioes);
+
+    if (graficoMapa) graficoMapa.destroy();
+    if (labelsMapa.length > 0) {
+        graficoMapa = new Chart(document.getElementById('graficoMapa'), {
+            type: 'pie', data: {
+                labels: labelsMapa,
+                datasets: [{ data: dataMapa, backgroundColor: ['#D4AF37', '#005A4C', '#3498DB', '#E74C3C', '#2ECC71', '#9B59B6', '#F39C12'] }]
+            }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+        });
+    } else { document.getElementById('graficoMapa').style.display = 'none'; }
+
+    // Dead Stock
+    const vendasUltimos30Dias = todasVendas.filter(v => {
+        const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
+        const diffTime = Math.abs(agora - data);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 30;
+    });
+    
+    const produtosVendidosUltimos30 = new Set();
+    vendasUltimos30Dias.forEach(v => {
+        v.produtosResumo.split(', ').forEach(item => {
+            const nome = item.split(' (x')[0];
+            produtosVendidosUltimos30.add(nome);
+        });
+    });
+
+    const deadStock = catalogo.filter(p => !produtosVendidosUltimos30.has(p.nome) && p.estoque > 0);
+    const elDead = document.getElementById('deadStockAlert');
+    if (deadStock.length > 0) {
+        if (!elDead) {
+            const alertHTML = `
+                <div id="deadStockAlert" style="background:#fde8e8; border:1px solid #E74C3C; padding:12px; border-radius:8px; margin-bottom:16px; color:#E74C3C;">
+                    <strong>🚨 PRODUTOS PARADOS (+30 dias sem venda)</strong><br>
+                    ${deadStock.map(p => `🔴 ${p.nome} (Estoque: ${p.estoque})`).join('<br>')}
+                </div>
+            `;
+            const painel = document.querySelector('.painel-faturamento');
+            if (painel) {
+                const div = document.createElement('div');
+                div.innerHTML = alertHTML;
+                painel.parentNode.insertBefore(div, painel.nextSibling);
+            }
+        }
+    } else {
+        if (elDead) elDead.remove();
+    }
+}
+
+// Tabela de Pedidos com Filtro
+function renderizarTabelaPedidos(vendas) {
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
+    
+    const filtroNome = document.getElementById('filtroPedidoCliente').value.toLowerCase();
+    const filtroStatus = document.getElementById('filtroStatus').value;
+
+    const vendasFiltradas = vendas.filter(v => {
+        const matchNome = v.nomeCliente.toLowerCase().includes(filtroNome);
+        const matchStatus = filtroStatus === 'todos' || v.status === filtroStatus;
+        return matchNome && matchStatus;
+    });
+
     vendasFiltradas.forEach(v => {
         const tr = document.createElement('tr');
         const statusMap = { confirmado: '🟡 Confirmado', enviado: '🔵 Enviado', entregue: '🟢 Entregue' };
@@ -156,31 +288,24 @@ function gerarRelatorio(periodo) {
         corpoTabelaPedidos.appendChild(tr);
     });
 
-    // Gráficos
-    const vendasPorDia = {};
-    vendasFiltradas.forEach(v => { const dia = v.dataHora.split(' ')[0]; vendasPorDia[dia] = (vendasPorDia[dia] || 0) + v.valorTotal; });
-    const dias = Object.keys(vendasPorDia);
-    const valores = Object.values(vendasPorDia);
-    if (graficoVendas) graficoVendas.destroy();
-    if (dias.length > 0) {
-        graficoVendas = new Chart(document.getElementById('graficoVendas'), { type: 'bar', data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] } });
-    } else { document.getElementById('graficoVendas').style.display = 'none'; }
-
-    const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    if (graficoProdutos) graficoProdutos.destroy();
-    if (topProdutos.length > 0) {
-        graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
-    } else { document.getElementById('graficoProdutos').style.display = 'none'; }
+    if (vendasFiltradas.length === 0) {
+        corpoTabelaPedidos.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#999; padding:20px;">Nenhum pedido encontrado com este filtro.</td></tr>`;
+    }
 }
 
-async function limparHistorico() {
-    if (!confirm('Apagar TODO o histórico?')) return;
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify([]) });
-    if (res.ok) { todasVendas = []; gerarRelatorio('semana'); alert('Histórico limpo!'); } else alert('Erro ao limpar.');
-}
+// Eventos de filtro
+document.addEventListener('DOMContentLoaded', () => {
+    const inputFiltro = document.getElementById('filtroPedidoCliente');
+    const selectStatus = document.getElementById('filtroStatus');
+    if (inputFiltro && selectStatus) {
+        const aplicarFiltro = () => renderizarTabelaPedidos(vendasFiltradasCache);
+        inputFiltro.addEventListener('input', aplicarFiltro);
+        selectStatus.addEventListener('change', aplicarFiltro);
+    }
+});
 
 // ============================================================
-// BOTÃO DE ATUALIZAR STATUS (RASTREAMENTO)
+// BOTÃO DE ATUALIZAR STATUS (COM WHATSAPP PÓS-ENTREGA)
 // ============================================================
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
@@ -194,15 +319,31 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
         if(index !== -1) {
             historico[index].status = novoStatus;
             await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify(historico) });
+            
+            if (novoStatus === 'entregue') {
+                const tel = historico[index].telefoneCliente;
+                if (tel) {
+                    const msg = `Olá ${historico[index].nomeCliente}! 🎉\nSeu pedido foi entregue com sucesso!\nAgradecemos pela preferência.\n\nPara nos ajudar a melhorar, dê uma nota (1 a 5) respondendo esta mensagem. 💛`;
+                    window.open(`https://wa.me/244${tel.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                }
+            }
+
             alert('Status atualizado! Recarregue a página de rastreio.');
             location.reload();
         } else alert('Pedido não encontrado.');
     } catch(e) { alert('Erro ao atualizar status: ' + e.message); }
 };
 
+async function limparHistorico() {
+    if (!confirm('Apagar TODO o histórico?')) return;
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify([]) });
+    if (res.ok) { todasVendas = []; gerarRelatorio('semana'); alert('Histórico limpo!'); } else alert('Erro ao limpar.');
+}
+
 // ============================================================
-// EXPORTAÇÕES E PDFS COMPLETOS (CORRIGIDO)
+// EXPORTAÇÕES E PDFS (FATURAS E ROTEIROS RESTAURADOS)
 // ============================================================
+
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'mm', 'a4');
@@ -212,7 +353,6 @@ async function exportarPDF() {
     const corTexto = '#333333';
     const corCinza = '#999999';
 
-    // Logo
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
@@ -433,6 +573,7 @@ function exportarExcel() {
     XLSX.writeFile(wb, `Relatorio_Vendas_Admin_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
+// 👇 FATURA DO CLIENTE (RESTAURADA)
 window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal, dataHora) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -475,6 +616,7 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     alert('Fatura gerada com sucesso! Baixe o PDF e envie para o cliente.');
 };
 
+// 👇 ROTEIRO DO MOTOBOY (RESTAURADA)
 window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });

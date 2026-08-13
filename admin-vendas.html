@@ -29,9 +29,7 @@
             <p id="erroLoginVendas" style="color:red; display:none;">Senha incorreta.</p>
         </div>
 
-        <!-- CONTEÚDO DO PAINEL -->
         <div id="conteudoVendas" style="display:none;">
-            
             <div id="erroMensagem" style="display:none;"></div>
 
             <div style="margin: 20px 0; display:flex; flex-wrap:wrap; gap:10px;">
@@ -63,6 +61,11 @@
                     <p>Desconto Total (Kz)</p>
                     <h3 id="kpiDesconto">0 Kz</h3>
                 </div>
+                <!-- 👇 NOVO KPI LUCRO -->
+                <div class="card-faturamento" style="border-left-color: #3498db;">
+                    <p>Lucro Total Estimado</p>
+                    <h3 id="kpiLucro">0 Kz</h3>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
@@ -75,6 +78,31 @@
                     <canvas id="graficoProdutos" height="200"></canvas>
                 </div>
             </div>
+
+            <!-- 👇 NOVOS GRÁFICOS: COMPARATIVO E MAPA -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
+                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
+                    <h3 style="color:var(--cor-esmeralda);">📈 Comparativo Mensal</h3>
+                    <canvas id="graficoComparativo" height="200"></canvas>
+                </div>
+                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
+                    <h3 style="color:var(--cor-esmeralda);">📍 Mapa de Vendas (Regiões)</h3>
+                    <canvas id="graficoMapa" height="200"></canvas>
+                </div>
+            </div>
+            <!-- 👆 FIM DOS NOVOS GRÁFICOS -->
+
+            <!-- 👇 FILTRO DE PEDIDOS -->
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                <input type="text" id="filtroPedidoCliente" placeholder="🔍 Buscar por cliente..." style="padding:8px; border:1px solid #ddd; border-radius:6px; flex:1; min-width:150px; font-size:13px;" />
+                <select id="filtroStatus" style="padding:8px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
+                    <option value="todos">Todos os status</option>
+                    <option value="confirmado">🟡 Confirmado</option>
+                    <option value="enviado">🔵 Enviado</option>
+                    <option value="entregue">🟢 Entregue</option>
+                </select>
+            </div>
+            <!-- 👆 FIM DO FILTRO -->
 
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); margin-bottom:30px;">
                 <h3 style="color:var(--cor-esmeralda);">Detalhamento por Produto</h3>
@@ -95,21 +123,23 @@
             <!-- TABELA DE PEDIDOS COM CLIENTES + AÇÕES -->
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                 <h3 style="color:var(--cor-esmeralda);">📦 Lista de Pedidos (Clientes)</h3>
-                <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
-                    <thead>
-                        <tr style="background:var(--cor-ouro); color:#000;">
-                            <th style="padding:8px;">Data/Hora</th>
-                            <th style="padding:8px;">Cliente</th>
-                            <th style="padding:8px;">Telefone</th>
-                            <th style="padding:8px;">NIF</th>
-                            <th style="padding:8px;">Morada</th>
-                            <th style="padding:8px;">Produtos</th>
-                            <th style="padding:8px;">Total</th>
-                            <th style="padding:8px;">Ações</th> <!-- 👈 ESTA COLUNA É ESSENCIAL -->
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabelaPedidos"></tbody>
-                </table>
+                <div id="containerTabelaPedidos"> <!-- Wrapper para filtrar -->
+                    <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                        <thead>
+                            <tr style="background:var(--cor-ouro); color:#000;">
+                                <th style="padding:8px;">Data/Hora</th>
+                                <th style="padding:8px;">Cliente</th>
+                                <th style="padding:8px;">Telefone</th>
+                                <th style="padding:8px;">NIF</th>
+                                <th style="padding:8px;">Morada</th>
+                                <th style="padding:8px;">Produtos</th>
+                                <th style="padding:8px;">Total</th>
+                                <th style="padding:8px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaPedidos"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>

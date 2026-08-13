@@ -3,6 +3,7 @@ import { extrairValorNumerico, mostrarToast } from './utils.js';
 
 let produtos = [];
 let editandoId = null;
+let todasVendas = []; // Para o backup
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
@@ -41,6 +42,7 @@ function iniciarAdmin() {
     const tag = document.getElementById('tag');
     const preco = document.getElementById('preco');
     const precoAntigo = document.getElementById('precoAntigo');
+    const custo = document.getElementById('custo'); // NOVO
     const desconto = document.getElementById('desconto');
     const parcelas = document.getElementById('parcelas');
     const freteGratis = document.getElementById('freteGratis');
@@ -60,7 +62,6 @@ function iniciarAdmin() {
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
-
     const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
 
     async function uploadParaImgBB(file) {
@@ -94,7 +95,6 @@ function iniciarAdmin() {
 
         imagens.value = imagensAtuais.join(', ');
         atualizarPreview(imagens.value);
-
         btnUploadImg.disabled = false;
         btnUploadImg.textContent = '⬆ Enviar para ImgBB';
         uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
@@ -138,7 +138,7 @@ function iniciarAdmin() {
                     <div>
                         <span>${prod.nome}</span>
                         <small style="color:#888; display:block;">
-                            ${prod.categoria} | ${prod.preco} 
+                            ${prod.categoria} | ${prod.preco} | Custo: ${prod.custo || 'N/A'}
                             ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
                             ${prod.video ? '| 🎬 Vídeo' : ''}
                         </small>
@@ -151,7 +151,6 @@ function iniciarAdmin() {
             `).join('');
         }
 
-        // 👇 ALERTA DE ESTOQUE BAIXO (adicionei essa verificação)
         const produtosBaixos = produtos.filter(p => p.estoque <= 2 && p.estoque > 0);
         if (produtosBaixos.length > 0) {
             htmlLista = `
@@ -161,7 +160,6 @@ function iniciarAdmin() {
                 </div>
             ` + htmlLista;
         }
-        // 👆 FIM DO ALERTA
 
         listaDiv.innerHTML = htmlLista;
 
@@ -190,8 +188,8 @@ function iniciarAdmin() {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const precoValor = preco.value.trim();
-        if (!nome.value.trim() || !categoria.value || !precoValor) {
-            alert('Preencha Nome, Categoria e Preço obrigatoriamente.');
+        if (!nome.value.trim() || !categoria.value || !precoValor || !custo.value.trim()) {
+            alert('Preencha Nome, Categoria, Preço e Preço de Custo obrigatoriamente.');
             return;
         }
 
@@ -203,6 +201,7 @@ function iniciarAdmin() {
             categoria: categoria.value,
             preco: precoValor,
             precoAntigo: precoAntigo.value.trim() || '',
+            custo: custo.value.trim(), // NOVO
             desconto: desconto.value.trim() || '',
             parcelas: parcelas.value.trim() || '',
             freteGratis: freteGratis.checked,
@@ -236,6 +235,7 @@ function iniciarAdmin() {
         tag.value = prod.tag || '';
         preco.value = prod.preco;
         precoAntigo.value = prod.precoAntigo || '';
+        custo.value = prod.custo || '';
         desconto.value = prod.desconto || '';
         parcelas.value = prod.parcelas || '';
         freteGratis.checked = prod.freteGratis || false;
@@ -270,6 +270,7 @@ function iniciarAdmin() {
         ordem.value = '0';
         estoque.value = '10';
         video.value = '';
+        custo.value = '';
         formTitulo.textContent = '➕ Novo Produto';
         btnSalvar.textContent = '💾 Salvar Produto';
         btnCancelar.style.display = 'none';
@@ -290,6 +291,73 @@ function iniciarAdmin() {
     }
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
+
+    // ============================================================
+    // IDEIAS 1 e 4: IMPORTAR CSV E BACKUP
+    // ============================================================
+    const btnImportarCSV = document.getElementById('btnImportarCSV');
+    const inputCSV = document.getElementById('inputCSV');
+    if (btnImportarCSV && inputCSV) {
+        btnImportarCSV.addEventListener('click', () => inputCSV.click());
+        inputCSV.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const linhas = text.split('\n');
+                let adicionados = 0;
+                for (let i = 1; i < linhas.length; i++) {
+                    const colunas = linhas[i].split(',');
+                    if (colunas.length >= 4) {
+                        const novoProd = {
+                            id: produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 + adicionados : 1 + adicionados,
+                            ordem: 999,
+                            nome: colunas[0].trim(),
+                            categoria: colunas[1].trim(),
+                            preco: colunas[2].trim(),
+                            custo: colunas[3] ? colunas[3].trim() : '0', // Usa a 4ª coluna como custo se existir
+                            estoque: parseInt(colunas[4] ? colunas[4].trim() : 0) || 0,
+                            imagens: ['placeholder.jpg'],
+                            tag: colunas[1].trim()
+                        };
+                        produtos.push(novoProd);
+                        adicionados++;
+                    }
+                }
+                salvarLocalStorage();
+                renderizarLista();
+                mostrarMensagem(`✅ ${adicionados} produtos importados com sucesso!`, 'sucesso');
+                inputCSV.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+    }
+
+    // Backup Manual
+    const btnBackup = document.getElementById('btnBackup');
+    if (btnBackup) {
+        btnBackup.addEventListener('click', async () => {
+            try {
+                const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
+                const dataVendas = await resVendas.json();
+                todasVendas = dataVendas.record || [];
+            } catch (e) { console.warn('Erro ao carregar vendas para backup'); }
+
+            const backup = { produtos: produtos, vendas: todasVendas };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_aurora_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            mostrarMensagem('✅ Backup descarregado!', 'sucesso');
+        });
+    }
+    // ============================================================
+    // FIM DO CSV E BACKUP
+    // ============================================================
 
     btnTestar.addEventListener('click', async () => {
         const binId = jsonbinIdInput.value.trim();
