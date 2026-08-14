@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // URL e chave anon do seu projeto Supabase
 const supabaseUrl = 'https://qcjbeivelpqiboibj.supabase.co';
@@ -8,5 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const CONFIG = {
     NUMERO_WHATSAPP: '244933677628',
-    ADMIN_SENHA: 'admin123'
+    ADMIN_SENHA: 'admin123',
+    CACHE_KEY: 'aurora_catalogo_cache',
+    CACHE_TTL: 60 * 60 * 1000 // 1 hora de cache
 };

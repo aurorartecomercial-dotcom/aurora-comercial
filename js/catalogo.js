@@ -1,36 +1,40 @@
+import { supabase } from './config.js'; // Importa o Supabase agora
 import { CONFIG } from './config.js';
 import { extrairValorNumerico } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
+    // Tenta pegar do cache do navegador primeiro para ser rápido
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
-    let cache = {};
     if (cachedStr) {
-        try { cache = JSON.parse(cachedStr); } catch (e) {}
+        try {
+            const cache = JSON.parse(cachedStr);
+            // Se o cache tiver menos de 1 hora, usa ele
+            if (Date.now() - cache.timestamp < CONFIG.CACHE_TTL) {
+                return cache.data;
+            }
+        } catch (e) {}
     }
-    try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
-        if (!res.ok) throw new Error('Erro ao buscar JSONbin');
-        const data = await res.json();
-        let serverData = data.record;
-        let novosProdutos = Array.isArray(serverData) ? serverData : serverData.data;
-        let versaoServer = serverData.version || 0;
-        if (!novosProdutos) throw new Error('Formato inválido dos produtos');
-        if (versaoServer > (cache.version || 0) || (Date.now() - (cache.timestamp || 0)) > CONFIG.CACHE_TTL) {
-            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, version: versaoServer, timestamp: Date.now() }));
-            return novosProdutos;
-        }
-        return cache.data;
-    } catch (e) {
-        console.warn('Falha ao buscar do JSONbin, usando cache ou fallback:', e);
-        if (cache.data) return cache.data;
-        const fallback = await fetch('produtos.json');
-        return fallback.json();
+
+    // Se não tiver cache ou tiver expirado, busca direto do Supabase
+    const { data, error } = await supabase.from('produtos').select('*').order('ordem', { ascending: true });
+    
+    if (error) {
+        console.error('Erro ao carregar produtos do Supabase:', error);
+        // Em caso de erro de rede, tenta devolver o cache antigo como fallback
+        const fallbackCache = JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY));
+        if (fallbackCache) return fallbackCache.data;
+        return [];
     }
+
+    // Salva os novos dados no cache e devolve
+    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: data || [], timestamp: Date.now() }));
+    return data || [];
 }
 
 export function criarCardProduto(prod) {
+    // (Mantido igual ao seu código original, não mexa aqui)
     const card = document.createElement('a');
     card.className = 'produto-card';
     card.href = `detalhe.html?id=${prod.id}`;
