@@ -39,10 +39,8 @@ export function criarCardProduto(prod) {
 
     const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
 
-    // 👇 CORREÇÃO DO LINK DE PARTILHA AQUI
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
     const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
-    // 👆 FIM DA CORREÇÃO
 
     let html = `
         <div class="produto-imagem">
@@ -76,11 +74,10 @@ export function criarCardProduto(prod) {
 
     html += `
         <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-add-carrinho-card" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
+            <button class="btn-add-carrinho-card" data-id="${prod.id}" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
                     style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
             </button>
-            <!-- 👇 BOTÃO DE PARTILHA COM O LINK CORRIGIDO -->
             <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${shareLink}')"
                     style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s;">
                 📤 Partilhar
@@ -94,7 +91,12 @@ export function criarCardProduto(prod) {
     if (btnAdd) {
         btnAdd.addEventListener('click', function(e) {
             e.stopPropagation(); e.preventDefault();
-            adicionarProdutoCarrinho(this.dataset.nome, this.dataset.preco, parseInt(this.dataset.estoque));
+            adicionarProdutoCarrinho(
+                parseInt(this.dataset.id), 
+                this.dataset.nome, 
+                this.dataset.preco, 
+                parseInt(this.dataset.estoque)
+            );
         });
     }
     return card;

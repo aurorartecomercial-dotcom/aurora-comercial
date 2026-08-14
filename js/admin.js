@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js';
+import { supabase } from './config.js';
 import { extrairValorNumerico, mostrarToast } from './utils.js';
 
 let produtos = [];
@@ -42,7 +42,7 @@ function iniciarAdmin() {
     const tag = document.getElementById('tag');
     const preco = document.getElementById('preco');
     const precoAntigo = document.getElementById('precoAntigo');
-    const custo = document.getElementById('custo'); // NOVO
+    const custo = document.getElementById('custo');
     const desconto = document.getElementById('desconto');
     const parcelas = document.getElementById('parcelas');
     const freteGratis = document.getElementById('freteGratis');
@@ -52,12 +52,6 @@ function iniciarAdmin() {
     const ordem = document.getElementById('ordem');
     const estoque = document.getElementById('estoque');
     const video = document.getElementById('video');
-
-    const jsonbinIdInput = document.getElementById('jsonbinId');
-    const jsonbinKeyInput = document.getElementById('jsonbinKey');
-    const btnTestar = document.getElementById('btnTestarJsonbin');
-    const btnEnviar = document.getElementById('btnEnviarJsonbin');
-    const btnForcarCache = document.getElementById('btnForcarCache');
 
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
@@ -102,19 +96,38 @@ function iniciarAdmin() {
         imgUploadInput.value = '';
     });
 
-    function carregarProdutos() {
+    // ============================================================
+    // 👇 NOVAS FUNÇÕES COM SUPABASE
+    // ============================================================
+    async function carregarProdutos() {
+        // Tenta pegar do cache local primeiro para agilizar
         const dados = localStorage.getItem('aurora_produtos_admin');
         if (dados) {
             try { produtos = JSON.parse(dados); if (!Array.isArray(produtos)) produtos = []; } catch (e) { produtos = []; }
-        } else {
-            fetch('produtos.json').then(res => res.json()).then(dados => { produtos = dados; salvarLocalStorage(); renderizarLista(); }).catch(() => { produtos = []; renderizarLista(); });
+            renderizarLista();
         }
+
+        // Busca os dados atualizados do Supabase
+        const { data, error } = await supabase.from('produtos').select('*').order('ordem', { ascending: true });
+        if (error) {
+            console.error('Erro ao carregar produtos do Supabase:', error);
+            return;
+        }
+        produtos = data || [];
+        localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
         renderizarLista();
     }
 
-    function salvarLocalStorage() {
-        localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
-        localStorage.removeItem(CONFIG.CACHE_KEY);
+    async function salvarProduto(produto) {
+        const { error } = await supabase.from('produtos').upsert(produto, { onConflict: 'id' });
+        if (error) { console.error('Erro ao salvar:', error); return false; }
+        return true;
+    }
+
+    async function deletarProduto(id) {
+        const { error } = await supabase.from('produtos').delete().eq('id', id);
+        if (error) { console.error('Erro ao excluir:', error); return false; }
+        return true;
     }
 
     function mostrarMensagem(texto, tipo = 'info') {
@@ -177,7 +190,9 @@ function iniciarAdmin() {
                     });
                     produtos = newOrder;
                     produtos.forEach((p, i) => p.ordem = i + 1);
-                    salvarLocalStorage();
+                    // Salva alteração de ordem no Supabase
+                    produtos.forEach(async (p) => { await supabase.from('produtos').update({ ordem: p.ordem }).eq('id', p.id); });
+                    localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
                     renderizarLista();
                     mostrarMensagem('Ordem atualizada!', 'sucesso');
                 }
@@ -185,7 +200,7 @@ function iniciarAdmin() {
         }
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const precoValor = preco.value.trim();
         if (!nome.value.trim() || !categoria.value || !precoValor || !custo.value.trim()) {
@@ -201,7 +216,7 @@ function iniciarAdmin() {
             categoria: categoria.value,
             preco: precoValor,
             precoAntigo: precoAntigo.value.trim() || '',
-            custo: custo.value.trim(), // NOVO
+            custo: custo.value.trim(),
             desconto: desconto.value.trim() || '',
             parcelas: parcelas.value.trim() || '',
             freteGratis: freteGratis.checked,
@@ -212,17 +227,21 @@ function iniciarAdmin() {
             video: video.value.trim()
         };
 
-        if (editandoId) {
-            const index = produtos.findIndex(p => p.id === editandoId);
-            if (index !== -1) { produtos[index] = novoProduto; mostrarMensagem('Produto atualizado com sucesso!', 'sucesso'); }
+        const sucesso = await salvarProduto(novoProduto);
+        if (sucesso) {
+            if (editandoId) {
+                const index = produtos.findIndex(p => p.id === editandoId);
+                if (index !== -1) { produtos[index] = novoProduto; mostrarMensagem('Produto atualizado com sucesso!', 'sucesso'); }
+            } else {
+                produtos.push(novoProduto);
+                mostrarMensagem('Produto adicionado com sucesso!', 'sucesso');
+            }
+            localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
+            resetForm();
+            renderizarLista();
         } else {
-            produtos.push(novoProduto);
-            mostrarMensagem('Produto adicionado com sucesso!', 'sucesso');
+            mostrarMensagem('Erro ao salvar produto no Supabase.', 'info');
         }
-
-        salvarLocalStorage();
-        resetForm();
-        renderizarLista();
     });
 
     window.editarProduto = function(id) {
@@ -252,13 +271,18 @@ function iniciarAdmin() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.excluirProduto = function(id) {
+    window.excluirProduto = async function(id) {
         if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-        produtos = produtos.filter(p => p.id !== id);
-        salvarLocalStorage();
-        if (editandoId === id) resetForm();
-        renderizarLista();
-        mostrarMensagem('Produto excluído.', 'sucesso');
+        const sucesso = await deletarProduto(id);
+        if (sucesso) {
+            produtos = produtos.filter(p => p.id !== id);
+            localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
+            if (editandoId === id) resetForm();
+            renderizarLista();
+            mostrarMensagem('Produto excluído.', 'sucesso');
+        } else {
+            mostrarMensagem('Erro ao excluir produto.', 'info');
+        }
     };
 
     btnCancelar.addEventListener('click', resetForm);
@@ -292,57 +316,13 @@ function iniciarAdmin() {
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
 
-    // ============================================================
-    // IDEIAS 1 e 4: IMPORTAR CSV E BACKUP
-    // ============================================================
-    const btnImportarCSV = document.getElementById('btnImportarCSV');
-    const inputCSV = document.getElementById('inputCSV');
-    if (btnImportarCSV && inputCSV) {
-        btnImportarCSV.addEventListener('click', () => inputCSV.click());
-        inputCSV.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const linhas = text.split('\n');
-                let adicionados = 0;
-                for (let i = 1; i < linhas.length; i++) {
-                    const colunas = linhas[i].split(',');
-                    if (colunas.length >= 4) {
-                        const novoProd = {
-                            id: produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 + adicionados : 1 + adicionados,
-                            ordem: 999,
-                            nome: colunas[0].trim(),
-                            categoria: colunas[1].trim(),
-                            preco: colunas[2].trim(),
-                            custo: colunas[3] ? colunas[3].trim() : '0', // Usa a 4ª coluna como custo se existir
-                            estoque: parseInt(colunas[4] ? colunas[4].trim() : 0) || 0,
-                            imagens: ['placeholder.jpg'],
-                            tag: colunas[1].trim()
-                        };
-                        produtos.push(novoProd);
-                        adicionados++;
-                    }
-                }
-                salvarLocalStorage();
-                renderizarLista();
-                mostrarMensagem(`✅ ${adicionados} produtos importados com sucesso!`, 'sucesso');
-                inputCSV.value = '';
-            };
-            reader.readAsText(file, 'UTF-8');
-        });
-    }
-
     // Backup Manual
     const btnBackup = document.getElementById('btnBackup');
     if (btnBackup) {
         btnBackup.addEventListener('click', async () => {
-            try {
-                const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
-                const dataVendas = await resVendas.json();
-                todasVendas = dataVendas.record || [];
-            } catch (e) { console.warn('Erro ao carregar vendas para backup'); }
+            // Pega vendas do Supabase para o backup
+            const { data: vendasData } = await supabase.from('vendas').select('*');
+            todasVendas = vendasData || [];
 
             const backup = { produtos: produtos, vendas: todasVendas };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -355,47 +335,55 @@ function iniciarAdmin() {
             mostrarMensagem('✅ Backup descarregado!', 'sucesso');
         });
     }
-    // ============================================================
-    // FIM DO CSV E BACKUP
-    // ============================================================
 
-    btnTestar.addEventListener('click', async () => {
-        const binId = jsonbinIdInput.value.trim();
-        const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) { alert('Preencha BIN ID e X-Master-Key.'); return; }
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers: { 'X-Master-Key': key } });
-            if (res.ok) {
-                const data = await res.json();
-                mostrarMensagem('✅ Conexão bem-sucedida! JSONbin contém ' + data.record.length + ' produtos.', 'sucesso');
-            } else {
-                mostrarMensagem('❌ Erro ao acessar JSONbin. Verifique as credenciais.', 'info');
-            }
-        } catch (e) { mostrarMensagem('❌ Erro de rede ao testar JSONbin.', 'info'); }
-    });
-
-    btnEnviar.addEventListener('click', async () => {
-        const binId = jsonbinIdInput.value.trim();
-        const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) { alert('Configure o JSONbin primeiro.'); return; }
-        if (!confirm('Isso substituirá o conteúdo do JSONbin pelo catálogo atual. Continuar?')) return;
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
-                body: JSON.stringify({ version: Date.now(), data: produtos })
-            });
-            if (res.ok) { mostrarMensagem('📤 Catálogo enviado ao JSONbin com sucesso!', 'sucesso'); localStorage.removeItem(CONFIG.CACHE_KEY); } 
-            else { mostrarMensagem('❌ Falha ao enviar. Verifique permissões.', 'info'); }
-        } catch (e) { mostrarMensagem('❌ Erro de rede.', 'info'); }
-    });
-
-    btnForcarCache.addEventListener('click', () => {
-        localStorage.removeItem(CONFIG.CACHE_KEY);
-        mostrarMensagem('Cache do catálogo removido. O site recarregará os dados na próxima visita.', 'sucesso');
-    });
+    // Importar CSV
+    const btnImportarCSV = document.getElementById('btnImportarCSV');
+    const inputCSV = document.getElementById('inputCSV');
+    if (btnImportarCSV && inputCSV) {
+        btnImportarCSV.addEventListener('click', () => inputCSV.click());
+        inputCSV.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const linhas = text.split('\n');
+                let adicionados = 0;
+                const produtosParaInserir = [];
+                for (let i = 1; i < linhas.length; i++) {
+                    const colunas = linhas[i].split(',');
+                    if (colunas.length >= 4) {
+                        const novoProd = {
+                            id: produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 + adicionados : 1 + adicionados,
+                            ordem: 999,
+                            nome: colunas[0].trim(),
+                            categoria: colunas[1].trim(),
+                            preco: colunas[2].trim(),
+                            custo: colunas[3] ? colunas[3].trim() : '0',
+                            estoque: parseInt(colunas[4] ? colunas[4].trim() : 0) || 0,
+                            imagens: ['placeholder.jpg'],
+                            tag: colunas[1].trim()
+                        };
+                        produtosParaInserir.push(novoProd);
+                        adicionados++;
+                    }
+                }
+                if (produtosParaInserir.length > 0) {
+                    const { error } = await supabase.from('produtos').insert(produtosParaInserir);
+                    if (!error) {
+                        produtos.push(...produtosParaInserir);
+                        localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
+                        renderizarLista();
+                        mostrarMensagem(`✅ ${adicionados} produtos importados com sucesso!`, 'sucesso');
+                    } else {
+                        mostrarMensagem('Erro ao importar CSV.', 'info');
+                    }
+                }
+                inputCSV.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+    }
 
     carregarProdutos();
-    jsonbinIdInput.value = CONFIG.BIN_ID;
-    jsonbinKeyInput.value = CONFIG.MASTER_KEY;
 }

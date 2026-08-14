@@ -1,5 +1,5 @@
+import { supabase } from './config.js';
 import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura } from './utils.js';
-import { CONFIG } from './config.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -168,12 +168,15 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
+// ============================================================
+// 👇 NOVA FUNÇÃO ADICIONAR PRODUTO (aceitando ID)
+// ============================================================
+export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
-    const existente = carrinho.find(i => i.nome === nome);
+    const existente = carrinho.find(i => i.id === id);
     let quantidadeAtual = existente ? existente.quantidade : 0;
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) { mostrarToast('🚫 Estoque esgotado!', 'info'); return; }
-    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1 }); }
+    if (existente) { existente.quantidade += 1; } else { carrinho.push({ id, nome, preco, quantidade: 1 }); }
     atualizarCarrinho();
     mostrarToast('Produto adicionado!', 'sucesso');
 }
@@ -282,59 +285,48 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
+// ============================================================
+// 👇 NOVA FUNÇÃO SALVAR VENDA (COM SUPABASE)
+// ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
-    let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
-    let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
-    if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
-    let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-    const agora = new Date();
-    const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const codigoRastreio = `AURORA-${Date.now().toString().slice(-6)}`;
-    const novaVenda = {
-        dataHora: dataHoraFormatada,
-        produtosResumo: produtosResumo,
-        valorTotal: valorTotalPedido,
-        totalItens: totalItensPedido,
-        nomeCliente: nomeCliente,
-        telefoneCliente: telefoneCliente,
-        nifCliente: nifCliente,
-        moradaCliente: moradaCliente,
-        codigoRastreio: codigoRastreio,
-        status: 'confirmado',
-        cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
-        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0
-    };
+    // 1. Monta o array de itens no formato JSON que o SQL espera
+    const itensArray = carrinho.map(item => ({
+        produto_id: item.id,
+        quantidade: item.quantidade,
+        preco: extrairValorNumerico(item.preco)
+    }));
 
-    try {
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
-        });
-        const data = await resGet.json();
-        let historico = data.record;
+    // 2. Chama a função SQL 'criar_venda' (a função mágica que garante o estoque)
+    const { data, error } = await supabase.rpc('criar_venda', {
+        p_cliente_nome: nomeCliente,
+        p_cliente_telefone: telefoneCliente,
+        p_cliente_nif: nifCliente,
+        p_cliente_morada: moradaCliente,
+        p_itens: itensArray
+    });
 
-        if (!Array.isArray(historico)) {
-            console.warn('⚠️ O JSONbin devolveu algo que não era uma lista. A criar uma nova lista.');
-            historico = [];
-        }
-
-        historico.push(novaVenda);
-
-        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS },
-            body: JSON.stringify(historico)
-        });
-
-        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
-    } catch (e) {
-        console.error('Erro ao salvar venda:', e);
-        const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
-        historicoLocal.push(novaVenda);
-        localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-        alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
+    // 3. Verifica se houve erro de estoque ou falha na conexão
+    if (error || data.erro) {
+        console.error('Erro ao finalizar venda:', error || data.mensagem);
+        alert('❌ ' + (data.mensagem || 'Erro ao registrar a venda. Estoque pode estar insuficiente.'));
+        return;
     }
+
+    // 4. Se tudo deu certo, busca o código de rastreio gerado pelo banco
+    const { data: vendaCriada } = await supabase
+        .from('vendas')
+        .select('codigo_rastreio')
+        .eq('id', data.venda_id)
+        .single();
+
+    const codigoRastreio = vendaCriada?.codigo_rastreio || 'AURORA-' + Date.now();
+    
+    alert(`✅ Pedido registrado com sucesso!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente.`);
 }
 
+// ============================================================
+// FUNÇÃO DE GERAR FATURA (MANTIDA IGUAL)
+// ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
     await loadJSPDF();
     const { jsPDF } = window.jspdf;
