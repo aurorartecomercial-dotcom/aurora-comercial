@@ -1,6 +1,9 @@
 import { supabase } from './config.js';
 import { extrairValorNumerico, mostrarToast } from './utils.js';
 
+// Senha definida diretamente aqui para garantir que o botão funcione sempre
+const ADMIN_SENHA = 'admin123';
+
 let produtos = [];
 let editandoId = null;
 let todasVendas = []; // Para o backup
@@ -13,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLogin');
 
     btnLogin.addEventListener('click', () => {
-        if (senhaInput.value === CONFIG.ADMIN_SENHA) {
+        if (senhaInput.value === ADMIN_SENHA) {
             loginDiv.style.display = 'none';
             conteudoAdmin.style.display = 'block';
             iniciarAdmin();
@@ -97,17 +100,15 @@ function iniciarAdmin() {
     });
 
     // ============================================================
-    // 👇 NOVAS FUNÇÕES COM SUPABASE
+    // FUNÇÕES COM SUPABASE
     // ============================================================
     async function carregarProdutos() {
-        // Tenta pegar do cache local primeiro para agilizar
         const dados = localStorage.getItem('aurora_produtos_admin');
         if (dados) {
             try { produtos = JSON.parse(dados); if (!Array.isArray(produtos)) produtos = []; } catch (e) { produtos = []; }
             renderizarLista();
         }
 
-        // Busca os dados atualizados do Supabase
         const { data, error } = await supabase.from('produtos').select('*').order('ordem', { ascending: true });
         if (error) {
             console.error('Erro ao carregar produtos do Supabase:', error);
@@ -190,7 +191,6 @@ function iniciarAdmin() {
                     });
                     produtos = newOrder;
                     produtos.forEach((p, i) => p.ordem = i + 1);
-                    // Salva alteração de ordem no Supabase
                     produtos.forEach(async (p) => { await supabase.from('produtos').update({ ordem: p.ordem }).eq('id', p.id); });
                     localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
                     renderizarLista();
@@ -316,11 +316,9 @@ function iniciarAdmin() {
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
 
-    // Backup Manual
     const btnBackup = document.getElementById('btnBackup');
     if (btnBackup) {
         btnBackup.addEventListener('click', async () => {
-            // Pega vendas do Supabase para o backup
             const { data: vendasData } = await supabase.from('vendas').select('*');
             todasVendas = vendasData || [];
 
@@ -336,7 +334,6 @@ function iniciarAdmin() {
         });
     }
 
-    // Importar CSV
     const btnImportarCSV = document.getElementById('btnImportarCSV');
     const inputCSV = document.getElementById('inputCSV');
     if (btnImportarCSV && inputCSV) {
