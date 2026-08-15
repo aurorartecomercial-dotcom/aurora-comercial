@@ -5,39 +5,49 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 export async function carregarProdutosPagina(categoria, busca, pagina = 1, itensPorPagina = 10) {
     const offset = (pagina - 1) * itensPorPagina;
     
-    // Cache apenas para a 1ª página (aparece em 0ms)
-    if (pagina === 1) {
-        const cached = localStorage.getItem('aurora_cache_pagina1');
-        if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                if (Date.now() - parsed.timestamp < 60000) { // cache de 1 minuto
-                    return parsed.data;
-                }
-            } catch(e) {}
-        }
+    // 1. Tenta carregar do cache do navegador (instantâneo, funciona offline)
+    const cached = localStorage.getItem('aurora_cache_pagina1');
+    if (pagina === 1 && cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.timestamp < 60000) { // Cache de 1 minuto
+                return parsed.data;
+            }
+        } catch(e) {}
     }
 
-    // Chama a função SQL otimizada
-    const { data, error } = await supabase
-        .rpc('get_paginated_products', {
-            p_categoria: categoria === 'todos' ? null : categoria,
-            p_busca: busca || null,
-            p_limite: itensPorPagina,
-            p_offset: offset
-        });
+    // 2. Tenta buscar no Supabase
+    try {
+        const { data, error } = await supabase
+            .rpc('get_paginated_products', {
+                p_categoria: categoria === 'todos' ? null : categoria,
+                p_busca: busca || null,
+                p_limite: itensPorPagina,
+                p_offset: offset
+            });
 
-    if (error) {
-        console.error('Erro Supabase:', error);
+        if (error) throw error;
+
+        // Guarda a 1ª página em cache
+        if (pagina === 1 && data) {
+            localStorage.setItem('aurora_cache_pagina1', JSON.stringify({ data, timestamp: Date.now() }));
+        }
+
+        return data || [];
+    } catch (error) {
+        console.error('Erro de rede ou Supabase:', error);
+        // 3. PLANO DE FALLBACK: Se a internet falhar, usa o cache mais antigo (mesmo que expirado)
+        if (pagina === 1) {
+            const cacheAntigo = localStorage.getItem('aurora_cache_pagina1');
+            if (cacheAntigo) {
+                try {
+                    const parsed = JSON.parse(cacheAntigo);
+                    return parsed.data;
+                } catch(e) {}
+            }
+        }
         return [];
     }
-
-    // Guarda a 1ª página em cache
-    if (pagina === 1 && data) {
-        localStorage.setItem('aurora_cache_pagina1', JSON.stringify({ data, timestamp: Date.now() }));
-    }
-
-    return data || [];
 }
 
 export function criarCardProduto(prod) {
@@ -47,7 +57,6 @@ export function criarCardProduto(prod) {
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    // 👇 OTIMMIZAÇÃO DE IMAGEM: Adiciona ?format=webp para imagens do ImgBB
     let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
     if (imgSrc.includes('i.ibb.co') && !imgSrc.includes('format=webp')) {
         imgSrc += '?format=webp';
@@ -65,15 +74,15 @@ export function criarCardProduto(prod) {
             <h3>${prod.nome}</h3>
     `;
 
-    if (prod.preco_antigo) {
+    if (prod.precoAntigo) {
         html += `<p class="preco"><span class="desconto">${prod.desconto || ''}</span> ${prod.preco}</p>`;
-        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.preco_antigo}</span>`;
+        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.precoAntigo}</span>`;
     } else {
         html += `<p class="preco">${prod.preco}</p>`;
     }
 
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
-    if (prod.frete_gratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
+    if (prod.freteGratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
 
     if (prod.estoque !== undefined) {
         if (prod.estoque <= 0) html += `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
