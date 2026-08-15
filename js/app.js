@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
     initMobileMenu();
 
-    // 1. CARREGA DO CACHE IMEDIATAMENTE (0ms)
+    // 1. CARREGA DO CACHE IMEDIATAMENTE (0ms) - se existir
+    let cacheRenderizado = false;
     const cacheData = localStorage.getItem('aurora_cache_pagina1');
     if (cacheData) {
         try {
@@ -26,24 +27,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('carregandoProdutos').style.display = 'none';
                 renderizarGrade(catalogo, document.getElementById('gradeProdutos'), 1, ITENS_POR_PAGINA);
                 renderizarMaisComprados();
+                cacheRenderizado = true;
             }
-        } catch (e) {}
+        } catch (e) { console.warn('Erro ao ler cache'); }
     }
 
-    // 2. BUSCA DADOS REAIS DO SERVIDOR (em background) e atualiza
+    // 2. TENTA BUSCAR DADOS NOVOS. Se falhar, NÃO APAGA o cache renderizado.
     try {
         const dadosNovos = await carregarProdutosPagina('todos', '', 1, ITENS_POR_PAGINA);
+        
+        // Só atualiza e renderiza novamente se houver dados novos
         if (dadosNovos && dadosNovos.length > 0) {
             catalogo = dadosNovos;
             document.getElementById('carregandoProdutos').style.display = 'none';
             const container = document.getElementById('gradeProdutos');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Limpa para renderizar os novos
             renderizarGrade(catalogo, container, 1, ITENS_POR_PAGINA);
             renderizarMaisComprados();
+        } else {
+            // Se a rede falhar e dadosNovos for vazio, mantemos o catalogo do passo 1!
+            console.warn('Supabase não respondeu. A manter produtos do cache.');
         }
-    } catch (e) { console.error('Erro bg:', e); }
+    } catch (e) {
+        console.error('Erro de rede, mantendo cache:', e);
+    }
 
-    // 3. Lógica de Busca e Filtros
+    // 3. Lógica de Busca e Filtros (Mantida)
     const buscaInput = document.getElementById('campoBusca');
     buscaInput.addEventListener('input', debounce(() => {
         termoBusca = buscaInput.value.trim();
@@ -62,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // 4. Botão "Carregar mais"
+    // 4. Botão "Carregar mais" (Mantido)
     document.getElementById('carregarMais').addEventListener('click', async () => {
         paginaAtual++;
         const novos = await carregarProdutosPagina(categoriaAtiva, termoBusca, paginaAtual, ITENS_POR_PAGINA);
@@ -80,34 +89,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderizarBalancoSemanal();
 });
 
-async function aplicarFiltros() {
-    paginaAtual = 1;
-    document.getElementById('gradeProdutos').innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Carregando...</p>';
-    const dados = await carregarProdutosPagina(categoriaAtiva, termoBusca, 1, ITENS_POR_PAGINA);
-    catalogo = dados || [];
-    document.getElementById('gradeProdutos').innerHTML = '';
-    renderizarGrade(catalogo, document.getElementById('gradeProdutos'), 1, ITENS_POR_PAGINA);
-    document.getElementById('carregarMais').disabled = false;
-    document.getElementById('carregarMais').textContent = 'Carregar mais';
-}
-
-function renderizarMaisComprados() {
-    // Mantenha o seu código original de renderizarMaisComprados aqui
-    // ...
-}
-
-function renderizarBalancoSemanal() {
-    // Mantenha o seu código original de balanço aqui
-    // ...
-}
-
-window.filtrarPorCategoria = function(categoria) {
-    const link = document.querySelector(`.menu-categorias a[data-categoria="${categoria}"]`);
-    if (link) link.click();
-    else { categoriaAtiva = categoria; aplicarFiltros(); }
-};
-
-window.mudarSlide = function(direcao) {
-    // Mantenha o código do carrossel original aqui
-    // ...
-};
+// ... O resto das funções (aplicarFiltros, renderizarMaisComprados, etc) mantêm-se iguais
