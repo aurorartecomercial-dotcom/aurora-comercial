@@ -1,47 +1,57 @@
-import { supabase } from './config.js'; // Importa o Supabase agora
-import { CONFIG } from './config.js';
+import { supabase } from './config.js';
 import { extrairValorNumerico } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
-import { obterAvaliacao } from './avaliacoes.js';
 
-export async function carregarCatalogo() {
-    // Tenta pegar do cache do navegador primeiro para ser rápido
-    const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
-    if (cachedStr) {
-        try {
-            const cache = JSON.parse(cachedStr);
-            // Se o cache tiver menos de 1 hora, usa ele
-            if (Date.now() - cache.timestamp < CONFIG.CACHE_TTL) {
-                return cache.data;
-            }
-        } catch (e) {}
+export async function carregarProdutosPagina(categoria, busca, pagina = 1, itensPorPagina = 10) {
+    const offset = (pagina - 1) * itensPorPagina;
+    
+    // Cache apenas para a 1ª página (aparece em 0ms)
+    if (pagina === 1) {
+        const cached = localStorage.getItem('aurora_cache_pagina1');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                if (Date.now() - parsed.timestamp < 60000) { // cache de 1 minuto
+                    return parsed.data;
+                }
+            } catch(e) {}
+        }
     }
 
-    // Se não tiver cache ou tiver expirado, busca direto do Supabase
-    const { data, error } = await supabase.from('produtos').select('*').order('ordem', { ascending: true });
-    
+    // Chama a função SQL otimizada
+    const { data, error } = await supabase
+        .rpc('get_paginated_products', {
+            p_categoria: categoria === 'todos' ? null : categoria,
+            p_busca: busca || null,
+            p_limite: itensPorPagina,
+            p_offset: offset
+        });
+
     if (error) {
-        console.error('Erro ao carregar produtos do Supabase:', error);
-        // Em caso de erro de rede, tenta devolver o cache antigo como fallback
-        const fallbackCache = JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY));
-        if (fallbackCache) return fallbackCache.data;
+        console.error('Erro Supabase:', error);
         return [];
     }
 
-    // Salva os novos dados no cache e devolve
-    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: data || [], timestamp: Date.now() }));
+    // Guarda a 1ª página em cache
+    if (pagina === 1 && data) {
+        localStorage.setItem('aurora_cache_pagina1', JSON.stringify({ data, timestamp: Date.now() }));
+    }
+
     return data || [];
 }
 
 export function criarCardProduto(prod) {
-    // (Mantido igual ao seu código original, não mexa aqui)
     const card = document.createElement('a');
     card.className = 'produto-card';
     card.href = `detalhe.html?id=${prod.id}`;
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+    // 👇 OTIMMIZAÇÃO DE IMAGEM: Adiciona ?format=webp para imagens do ImgBB
+    let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+    if (imgSrc.includes('i.ibb.co') && !imgSrc.includes('format=webp')) {
+        imgSrc += '?format=webp';
+    }
 
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
     const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
@@ -55,26 +65,21 @@ export function criarCardProduto(prod) {
             <h3>${prod.nome}</h3>
     `;
 
-    if (prod.precoAntigo) {
+    if (prod.preco_antigo) {
         html += `<p class="preco"><span class="desconto">${prod.desconto || ''}</span> ${prod.preco}</p>`;
-        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.precoAntigo}</span>`;
+        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.preco_antigo}</span>`;
     } else {
         html += `<p class="preco">${prod.preco}</p>`;
     }
 
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
-    if (prod.freteGratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
+    if (prod.frete_gratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
 
-    let estoqueHtml = '';
     if (prod.estoque !== undefined) {
-        if (prod.estoque <= 0) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
-        else if (prod.estoque <= 5) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
-        else estoqueHtml = `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
+        if (prod.estoque <= 0) html += `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
+        else if (prod.estoque <= 5) html += `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
+        else html += `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
-    html += estoqueHtml;
-
-    const avaliacao = obterAvaliacao(prod.id);
-    if (avaliacao.media > 0) { html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`; }
 
     html += `
         <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
@@ -106,37 +111,16 @@ export function criarCardProduto(prod) {
     return card;
 }
 
-export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao) {
-    let filtrados = produtos.filter(prod => {
-        const matchCategoria = categoria === 'todos' || prod.categoria === categoria;
-        const matchBusca = !busca || prod.nome.toLowerCase().includes(busca.toLowerCase()) || prod.tag.toLowerCase().includes(busca.toLowerCase()) || prod.categoria.toLowerCase().includes(busca.toLowerCase());
-        const precoNum = extrairValorNumerico(prod.preco);
-        const matchPreco = precoNum >= min && precoNum <= max;
-        return matchCategoria && matchBusca && matchPreco;
-    });
-
-    switch (ordenacao) {
-        case 'preco-asc': filtrados.sort((a, b) => extrairValorNumerico(a.preco) - extrairValorNumerico(b.preco)); break;
-        case 'preco-desc': filtrados.sort((a, b) => extrairValorNumerico(b.preco) - extrairValorNumerico(a.preco)); break;
-        case 'nome': filtrados.sort((a, b) => a.nome.localeCompare(b.nome)); break;
-        default: filtrados.sort((a, b) => (a.ordem || a.id) - (b.ordem || b.id));
-    }
-    return filtrados;
-}
-
-export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
+export function renderizarGrade(produtos, container, pagina = 1, itensPorPagina = 10, append = false) {
     if (!container) return;
-    const start = (pagina - 1) * itensPorPagina;
-    const end = start + itensPorPagina;
-    const paginaProdutos = produtosFiltrados.slice(start, end);
-
-    if (pagina === 1) container.innerHTML = '';
-    if (paginaProdutos.length === 0 && pagina === 1) {
+    if (!append && pagina === 1) container.innerHTML = '';
+    
+    if (produtos.length === 0 && pagina === 1) {
         container.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#999; font-size:16px;">Nenhum produto encontrado.</p>`;
         return;
     }
 
-    paginaProdutos.forEach(prod => {
+    produtos.forEach(prod => {
         const card = criarCardProduto(prod);
         container.appendChild(card);
     });

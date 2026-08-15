@@ -168,9 +168,6 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-// ============================================================
-// 👇 NOVA FUNÇÃO ADICIONAR PRODUTO (aceitando ID)
-// ============================================================
 export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
     const existente = carrinho.find(i => i.id === id);
@@ -286,17 +283,15 @@ function limparCarrinho() {
 }
 
 // ============================================================
-// 👇 NOVA FUNÇÃO SALVAR VENDA (COM SUPABASE)
+// 👇 NOVA FUNÇÃO SALVAR VENDA (COM SUPABASE) - MANTIDA IGUAL
 // ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
-    // 1. Monta o array de itens no formato JSON que o SQL espera
     const itensArray = carrinho.map(item => ({
         produto_id: item.id,
         quantidade: item.quantidade,
         preco: extrairValorNumerico(item.preco)
     }));
 
-    // 2. Chama a função SQL 'criar_venda' (a função mágica que garante o estoque)
     const { data, error } = await supabase.rpc('criar_venda', {
         p_cliente_nome: nomeCliente,
         p_cliente_telefone: telefoneCliente,
@@ -305,14 +300,12 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         p_itens: itensArray
     });
 
-    // 3. Verifica se houve erro de estoque ou falha na conexão
     if (error || data.erro) {
         console.error('Erro ao finalizar venda:', error || data.mensagem);
         alert('❌ ' + (data.mensagem || 'Erro ao registrar a venda. Estoque pode estar insuficiente.'));
         return;
     }
 
-    // 4. Se tudo deu certo, busca o código de rastreio gerado pelo banco
     const { data: vendaCriada } = await supabase
         .from('vendas')
         .select('codigo_rastreio')
@@ -325,16 +318,25 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 }
 
 // ============================================================
-// FUNÇÃO DE GERAR FATURA (MANTIDA IGUAL)
+// 👇 FUNÇÃO DE GERAR FATURA CORRIGIDA (NÃO USA LOADJSPDF, USA O QUE JÁ ESTÁ NO HTML)
 // ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    await loadJSPDF();
+    // Verifica se as bibliotecas carregadas no HTML estão disponíveis
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('Erro crítico: Biblioteca PDF não carregada. Verifique a sua conexão com a internet.');
+        throw new Error('jspdf not loaded');
+    }
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
+    
     try {
         const logoImg = new Image(); logoImg.src = 'logo auro.png';
-        await new Promise((resolve) => { logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; logoImg.onerror = resolve; });
+        await new Promise((resolve) => { 
+            logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; 
+            logoImg.onerror = resolve; 
+        });
     } catch (e) {}
 
     doc.setFontSize(24); doc.setTextColor(dourado); doc.setFont(undefined, 'bold'); doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
@@ -383,22 +385,8 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
 }
 
-function loadJSPDF() {
-    return new Promise((resolve, reject) => {
-        if (window.jspdf && window.jspdf.jsPDF) { resolve(); return; }
-        const script1 = document.createElement('script');
-        script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script1.onload = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-            script2.onload = resolve; script2.onerror = reject; document.head.appendChild(script2);
-        };
-        script1.onerror = reject; document.head.appendChild(script1);
-    });
-}
-
 // ============================================================
-// FUNÇÕES DE NÚMERO POR EXTENSO
+// FUNÇÕES DE NÚMERO POR EXTENSO (MANTIDAS IGUAIS)
 // ============================================================
 function numeroPorExtenso(valor) {
     const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];

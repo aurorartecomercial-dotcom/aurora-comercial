@@ -1,9 +1,6 @@
 import { supabase } from './config.js';
 import { extrairValorNumerico } from './utils.js';
 
-// Senha definida diretamente aqui para garantir que o botão funcione sempre
-const ADMIN_SENHA = 'admin123';
-
 let todasVendas = [];
 let catalogo = [];
 let graficoVendas = null;
@@ -19,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLoginVendas');
 
     btnLogin.addEventListener('click', () => {
-        if (senhaInput.value === ADMIN_SENHA) {
+        if (senhaInput.value === CONFIG.ADMIN_SENHA) {
             loginDiv.style.display = 'none';
             conteudoDiv.style.display = 'block';
             carregarDados();
@@ -35,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
 
+    // Filtros
     const inputFiltro = document.getElementById('filtroPedidoCliente');
     const selectStatus = document.getElementById('filtroStatus');
     if (inputFiltro && selectStatus) {
@@ -47,17 +45,19 @@ document.addEventListener('DOMContentLoaded', () => {
 let vendasFiltradasCache = [];
 
 // ============================================================
-// FUNÇÕES ATUALIZADAS COM SUPABASE
+// FUNÇÕES COM SUPABASE (MANTIDAS IGUAIS)
 // ============================================================
 async function carregarDados() {
     const erroDiv = document.getElementById('erroMensagem');
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
+        // Buscar vendas no Supabase
         const { data: vendasData, error: vendasError } = await supabase.from('vendas').select('*').order('data_hora', { ascending: false });
         if (vendasError) throw new Error(`Erro Vendas: ${vendasError.message}`);
         todasVendas = vendasData || [];
 
+        // Buscar produtos do localStorage (ou fallback)
         const produtosLocal = localStorage.getItem('aurora_produtos_admin');
         if (produtosLocal) {
             try { catalogo = JSON.parse(produtosLocal); } catch (e) { catalogo = []; }
@@ -109,7 +109,7 @@ function gerarRelatorio(periodo) {
         if (v.produtos_resumo) {
             v.produtos_resumo.split(', ').forEach(item => {
                 const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1);
+                const qtd = parseInt(item.split('(x')[1]) || 1;
                 const prod = catalogo.find(p => p.nome === nome);
                 if (prod && prod.custo) {
                     const precoFinal = extrairValorNumerico(prod.preco);
@@ -127,12 +127,13 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiDesconto').textContent = descontoTotal.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiLucro').textContent = lucroTotal.toLocaleString('pt-AO') + ' Kz';
 
+    // Tabela Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         if (venda.produtos_resumo) {
             venda.produtos_resumo.split(', ').forEach(item => {
                 const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1);
+                const qtd = parseInt(item.split('(x')[1]) || 1;
                 vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
             });
         }
@@ -150,6 +151,7 @@ function gerarRelatorio(periodo) {
 
     renderizarTabelaPedidos(vendasFiltradas);
 
+    // Gráficos (Vendas por Dia)
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => {
         const dataObj = new Date(v.data_hora);
@@ -163,12 +165,14 @@ function gerarRelatorio(periodo) {
         graficoVendas = new Chart(document.getElementById('graficoVendas'), { type: 'bar', data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] } });
     } else { document.getElementById('graficoVendas').style.display = 'none'; }
 
+    // Gráfico Produtos Mais Vendidos
     const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]).slice(0, 5);
     if (graficoProdutos) graficoProdutos.destroy();
     if (topProdutos.length > 0) {
         graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
     } else { document.getElementById('graficoProdutos').style.display = 'none'; }
 
+    // Gráfico Comparativo Mensal
     const mesAtual = agora.getMonth();
     const anoAtual = agora.getFullYear();
     const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
@@ -197,6 +201,7 @@ function gerarRelatorio(periodo) {
         }, options: { responsive: true, plugins: { legend: { position: 'top' } } }
     });
 
+    // Gráfico Mapa de Vendas
     const regioes = {};
     vendasFiltradas.forEach(v => {
         const morada = v.cliente_morada || '';
@@ -220,6 +225,7 @@ function gerarRelatorio(periodo) {
     } else { document.getElementById('graficoMapa').style.display = 'none'; }
 }
 
+// Tabela de Pedidos com Filtro
 function renderizarTabelaPedidos(vendas) {
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
@@ -268,6 +274,9 @@ function renderizarTabelaPedidos(vendas) {
     }
 }
 
+// ============================================================
+// BOTÃO DE ATUALIZAR STATUS E LIMPAR
+// ============================================================
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
@@ -315,6 +324,9 @@ async function limparHistorico() {
     }
 }
 
+// ============================================================
+// EXPORTAÇÕES E PDFS (MANTIDAS IGUAIS)
+// ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'mm', 'a4');
@@ -544,7 +556,15 @@ function exportarExcel() {
     XLSX.writeFile(wb, `Relatorio_Vendas_Admin_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
+// ============================================================
+// 👇 FATURA DO CLIENTE CORRIGIDA (COMPLETA)
+// ============================================================
 window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal, dataHora) {
+    // Verifica se a biblioteca carregada no HTML está disponível
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('Erro: Biblioteca PDF não carregada. Verifique sua conexão.');
+        return;
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
@@ -571,9 +591,9 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
         const nome = item.split(' (x')[0]; const qtd = item.split('(x')[1] ? item.split('(x')[1].replace(')', '') : '1';
         return [nome, qtd];
     });
-    const body = itens.map(i => [i[0], i[1]]);
+    
     doc.autoTable({
-        startY: y + 5, head: [['Descrição', 'Qtd']], body: body, theme: 'grid',
+        startY: y + 5, head: [['Descrição', 'Qtd']], body: itens, theme: 'grid',
         headStyles: { fillColor: verdeEscuro, textColor: '#FFF', fontSize: 9, halign: 'center' },
         bodyStyles: { fontSize: 9 },
         columnStyles: { 0: { cellWidth: 120 }, 1: { cellWidth: 30, halign: 'center' } },
@@ -583,10 +603,18 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.setFontSize(14); doc.setTextColor(verdeEscuro); doc.setFont('helvetica', 'bold'); doc.text(`Total a Pagar: ${valorTotal.toLocaleString('pt-AO')} Kz`, 190, finalY, { align: 'right' });
     doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont('helvetica', 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
-    alert('Fatura gerada com sucesso! Baixe o PDF e envie para o cliente.');
+    alert('Fatura gerada com sucesso!');
 };
 
+// ============================================================
+// 👇 ROTEIRO DO MOTOBOY CORRIGIDO (COMPLETO)
+// ============================================================
 window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal) {
+    // Verifica se a biblioteca carregada no HTML está disponível
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('Erro: Biblioteca PDF não carregada. Verifique sua conexão.');
+        return;
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     doc.setFontSize(22); doc.setTextColor('#D4AF37'); doc.setFont('helvetica', 'bold'); doc.text('ROTEIRO DE ENTREGA - AURORA', 105, 20, { align: 'center' });
@@ -613,5 +641,5 @@ window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.text('4. Envie uma foto do cliente com a encomenda.', 25, y); y += 7;
     doc.setFontSize(8); doc.setTextColor('#999'); doc.text('Documento interno - AURORA COMERCIAL', 105, 280, { align: 'center' });
     doc.save(`Roteiro_Entrega_${new Date().toISOString().slice(0,10)}.pdf`);
-    alert('Roteiro gerado! Entregue o PDF ao motoboy ou imprima.');
+    alert('Roteiro gerado!');
 };
