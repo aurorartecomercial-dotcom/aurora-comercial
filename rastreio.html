@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rastrear Pedido - Aurora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+    <header class="header-principal" role="banner">
+        <div class="header-top">
+            <a href="index.html" class="logo">
+                <img src="logo auro.png" alt="Logo" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </a>
+        </div>
+    </header>
+
+    <div style="max-width: 700px; margin: 60px auto; padding: 0 24px; text-align:center;">
+        <h1 style="color:var(--cor-esmeralda);">📦 Rastrear Pedido</h1>
+        <p style="color:#666; margin-bottom:20px;">Digite o código de rastreio que recebeu na sua fatura.</p>
+        
+        <div style="display:flex; gap:10px; max-width:400px; margin:0 auto;">
+            <input type="text" id="inputRastreio" placeholder="Ex: AURORA-1234" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px;" />
+            <button id="btnRastrear" class="btn-admin" style="background:var(--cor-ouro); color:#000; margin:0;">🔍 Rastrear</button>
+        </div>
+
+        <div id="resultadoRastreio" style="display:none; margin-top:30px; background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card); text-align:left;">
+            <h3 id="rastreioNome" style="color:var(--cor-esmeralda);"></h3>
+            <p style="color:#888; font-size:14px; margin:4px 0;" id="rastreioData"></p>
+            
+            <div style="margin-top:20px; position:relative;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#999;">
+                    <span>✅ Confirmado</span>
+                    <span>🚚 Enviado</span>
+                    <span>📦 Entregue</span>
+                </div>
+                <div style="position:relative; height:4px; background:#eee; margin:8px 0; border-radius:4px;">
+                    <div id="barraProgresso" style="height:100%; background:var(--cor-esmeralda); border-radius:4px; width:0%; transition:width 0.5s;"></div>
+                </div>
+                <div id="statusAtualTexto" style="text-align:center; font-weight:700; color:var(--cor-esmeralda); margin-top:10px;">Pedido confirmado</div>
+            </div>
+
+            <div id="rastreioItens" style="margin-top:20px; border-top:1px solid #eee; padding-top:16px; font-size:14px;">
+                <strong>Itens:</strong> <span id="rastreioProdutos"></span>
+            </div>
+            <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--cor-esmeralda); font-weight:600;">← Voltar à loja</a>
+        </div>
+
+        <div id="erroRastreio" style="display:none; margin-top:20px; color:#E74C3C; font-weight:600;">Código não encontrado. Verifique o número da fatura.</div>
+    </div>
+
+    <script type="module">
+        import { CONFIG } from './js/config.js';
+
+        document.getElementById('btnRastrear').addEventListener('click', async () => {
+            const codigo = document.getElementById('inputRastreio').value.trim();
+            const resultadoDiv = document.getElementById('resultadoRastreio');
+            const erroDiv = document.getElementById('erroRastreio');
+            
+            if(!codigo) return alert('Digite um código.');
+
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
+                    headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
+                });
+                const data = await res.json();
+                const vendas = data.record || [];
+
+                const venda = vendas.find(v => v.codigoRastreio === codigo);
+                if(!venda) {
+                    erroDiv.style.display = 'block';
+                    resultadoDiv.style.display = 'none';
+                    return;
+                }
+
+                erroDiv.style.display = 'none';
+                resultadoDiv.style.display = 'block';
+
+                document.getElementById('rastreioNome').textContent = `Olá, ${venda.nomeCliente}`;
+                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${venda.dataHora}`;
+                document.getElementById('rastreioProdutos').textContent = venda.produtosResumo;
+
+                const status = venda.status || 'confirmado';
+                let progresso = 0;
+                let texto = '';
+
+                if(status === 'confirmado') { progresso = 0; texto = '✅ Pedido confirmado'; }
+                else if(status === 'enviado') { progresso = 50; texto = '🚚 Pedido saiu para entrega'; }
+                else if(status === 'entregue') { progresso = 100; texto = '📦 Pedido entregue com sucesso!'; }
+
+                document.getElementById('barraProgresso').style.width = progresso + '%';
+                document.getElementById('statusAtualTexto').textContent = texto;
+
+            } catch(e) {
+                alert('Erro ao buscar o pedido. Tente novamente.');
+            }
+        });
+    </script>
+</body>
+</html>

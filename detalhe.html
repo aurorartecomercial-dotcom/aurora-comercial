@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="paginaTitulo">Detalhes - Aurora</title>
+    <meta name="description" id="metaDesc" content="Detalhes do produto" />
+    <meta property="og:title" id="ogTitulo" content="Aurora - Detalhes" />
+    <meta property="og:description" id="ogDesc" content="Detalhes do produto" />
+    <meta property="og:image" id="ogImagem" content="" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="logo auro.png" />
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div id="toast-notificacao" role="alert" aria-live="polite">
+        <span id="toastMensagem">Adicionado ao carrinho!</span>
+        <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
+    </div>
+    <div class="carrinho-overlay" id="carrinhoOverlay"></div>
+
+    <!-- HEADER -->
+    <header class="header-principal" role="banner">
+        <div class="header-top">
+            <!-- 👇 LOGO AGORA É UM LINK PARA A HOME -->
+            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </a>
+
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
+                <button type="submit" aria-label="Pesquisar">🔍</button>
+            </form>
+            <div class="header-icones">
+                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MENU COM BOTÃO DE 4 PONTINHOS -->
+        <nav class="menu-categorias" aria-label="Categorias">
+            <button id="menuToggle" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                    <rect x="4" y="4" width="6" height="6" rx="1" />
+                    <rect x="14" y="4" width="6" height="6" rx="1" />
+                    <rect x="4" y="14" width="6" height="6" rx="1" />
+                    <rect x="14" y="14" width="6" height="6" rx="1" />
+                </svg>
+            </button>
+
+            <ul id="menuCategorias">
+                <li><a href="index.html" data-categoria="todos">Todos</a></li>
+                <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="index.html#?cat=consolas">Consolas</a></li>
+                <li><a href="index.html#?cat=beleza">Beleza</a></li>
+                <li><a href="index.html#?cat=cozinha">Cozinha</a></li>
+                <li><a href="index.html#?cat=colunas">Colunas</a></li>
+                <li><a href="index.html#?cat=ferramentas">Ferramentas</a></li>
+                <li><a href="index.html#?cat=casa">Casa</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="index.html#?cat=feminino" role="menuitem">Feminino</a></li>
+                        <li><a href="index.html#?cat=masculino" role="menuitem">Masculino</a></li>
+                        <li><a href="index.html#?cat=calcados" role="menuitem">Sapatos</a></li>
+                        <li><a href="index.html#?cat=joias" role="menuitem">Pulseiras</a></li>
+                    </ul>
+                </li>
+                <li><a href="index.html#?cat=automoveis">Carros</a></li>
+                <li><a href="blog.html">📖 Blog</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- BANNER DE INSTALAÇÃO DO APP (FICA DENTRO DA PÁGINA) -->
+    <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
+        <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
+            <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-instalar-inline" class="btn-instalar-inline" style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 700; cursor: pointer;">Instalar Agora</button>
+                <button id="btn-fechar-banner" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO (com breadcrumb) -->
+    <div class="container-detalhe">
+        <div class="breadcrumb">
+            <a href="index.html">Home</a> &gt; 
+            <a href="index.html#?cat=eletronicos" id="breadcrumbCat">Eletrônicos</a> &gt; 
+            <span id="breadcrumbProd">Produto</span>
+        </div>
+
+        <div id="detalhesConteudo">
+            <div class="carregando-msg">⏳ Carregando produto...</div>
+        </div>
+    </div>
+
+    <!-- CARRINHO LATERAL -->
+    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
+        <div class="carrinho-header">
+            <h2>🛒 Minha Sacola</h2>
+            <button class="btn-fechar-carrinho" id="btnFecharCarrinho" aria-label="Fechar sacola">&times;</button>
+        </div>
+        <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
+        <div class="carrinho-footer">
+            <div class="total-linha">
+                <span>Total:</span>
+                <span><span id="totalCarrinhoLoja">0</span> Kz</span>
+            </div>
+            <button id="btnFinalizarWhatsApp" class="btn-finalizar">Enviar Pedido ao WhatsApp</button>
+        </div>
+    </aside>
+
+    <!-- MODAL DO CLIENTE -->
+    <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
+        <div>
+            <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
+            <h2>Dados do Cliente</h2>
+            <label for="inputNome">Nome do Cliente *</label>
+            <input type="text" id="inputNome" placeholder="Ex: João Silva" required aria-required="true" />
+            <span class="erro-validacao" id="erroNome"></span>
+            <label for="inputTelefone">Telefone *</label>
+            <input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required aria-required="true" />
+            <span class="erro-validacao" id="erroTelefone"></span>
+            <label for="inputNif">NIF *</label>
+            <input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required aria-required="true" />
+            <span class="erro-validacao" id="erroNif"></span>
+            <label for="inputMorada">Morada</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, Castilhos, s/n" style="flex:1;" />
+                <button type="button" id="btnGPS" style="background:var(--cor-ouro); border:none; padding:8px 14px; border-radius:40px; font-weight:600; cursor:pointer;">📍 GPS</button>
+            </div>
+            <small style="display:block; margin-top:4px; color:#888; font-size:12px;">Clique em GPS para preencher automaticamente sua localização.</small>
+            <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura</button>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape-profissional" style="margin-top:40px;">
+        <div class="rodape-grid">
+            <div class="rodape-coluna">
+                <h3>Aurora Comercial</h3>
+                <p>Marketplace angolano com curadoria premium.</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Contacto</h4>
+                <p>📞 +244 925 328 181</p>
+                <p>✉️ contacto@aurorarte.ao</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Institucional</h4>
+                <ul>
+                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
+                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
+                    <li><a href="blog.html">📖 Blog</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
+
+    <script type="module" src="js/detalhe-app.js?v=3"></script>
+
+    <!-- ✅ BOTÃO FLUTUANTE DO WHATSAPP -->
+    <a href="https://wa.me/244925328181?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
+        💬 Fale connosco
+    </a>
+
+    <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
+        }
+    </script>
+
+    <!-- ===== BOTÃO DE INSTALAÇÃO DENTRO DA PÁGINA E GUIA IOS ===== -->
+    <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
+            <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
+            <p style="font-size:14px; line-height:1.6; color:#444; margin:8px 0;">Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
+            <p style="background:#f5f5f5; padding:12px; border-radius:10px; text-align:left;">
+                1. Toque no ícone <span style="display:inline-block; background:#007aff; color:#fff; padding:2px 10px; border-radius:6px; font-weight:bold; font-size:14px;">⬆</span> (Compartilhar) na barra inferior.<br>
+                2. Role para baixo e toque em <strong>"Adicionar à tela de início"</strong>.<br>
+                3. Toque em <strong>"Adicionar"</strong> no canto superior direito.
+            </p>
+            <button id="btn-fechar-guia-ios" style="background:var(--cor-ouro); border:none; padding:10px 30px; border-radius:40px; font-weight:700; cursor:pointer; margin-top:16px; color:#000;">✅ Entendi</button>
+        </div>
+    </div>
+
+    <script>
+        // Detectar se já está instalado
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const banner = document.getElementById('pwa-install-banner');
+        
+        // Se NÃO estiver instalado, mostra o banner
+        if (!isStandalone) {
+            banner.style.display = 'block';
+        }
+
+        // === Lógica de Instalação ===
+        let deferredPrompt = null;
+        const btnInstalar = document.getElementById('btn-instalar-inline');
+        const btnFecharBanner = document.getElementById('btn-fechar-banner');
+
+        // Captura o evento de instalação (funciona no Android e Desktop)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            banner.style.display = 'block';
+        });
+
+        // Ação do botão "Instalar Agora"
+        btnInstalar.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // ANDROID / DESKTOP: Abre a janela nativa de instalação
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    banner.style.display = 'none';
+                }
+                deferredPrompt = null;
+            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                // IPHONE: Mostra o guia manual (porque a Apple bloqueia a instalação automática)
+                document.getElementById('ios-guide-modal').style.display = 'flex';
+            } else {
+                alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');
+            }
+        });
+
+        // Botão para fechar o banner
+        btnFecharBanner.addEventListener('click', () => {
+            banner.style.display = 'none';
+        });
+
+        // Fechar guia do iPhone
+        document.getElementById('btn-fechar-guia-ios').addEventListener('click', () => {
+            document.getElementById('ios-guide-modal').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Aurora Comercial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=2" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        body.admin-page { background: #0d0d0d; color: #e0e0e0; }
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .admin-container h1 { color: #D4AF37; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        .form-card, .lista-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 24px; box-shadow: 0 4px 30px rgba(0,0,0,0.8); }
+        .admin-container label { color: #a0a0a0; font-weight: 600; }
+        .admin-container input, .admin-container select, .admin-container textarea { background: #121212; border: 1px solid #444; color: #fff; padding: 10px 14px; border-radius: 8px; width: 100%; }
+        .admin-container input:focus, .admin-container select:focus, .admin-container textarea:focus { border-color: #D4AF37; outline: none; }
+        .btn-admin { background: #D4AF37; color: #0d0d0d; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-admin:hover { background: #b8960f; color: #fff; }
+        .btn-admin-excluir { background: #e74c3c; color: #fff; }
+        .btn-admin-excluir:hover { background: #c0392b; }
+        .btn-admin-jsonbin { background: #333; color: #D4AF37; border: 1px solid #D4AF37; }
+        .btn-admin-jsonbin:hover { background: #D4AF37; color: #000; }
+        #previewImagens img { border: 1px solid #444; background: #222; }
+        .produto-item { background: #121212; border-bottom: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: #e0e0e0; }
+        .produto-item small { color: #888; }
+        .aviso { background: #222; color: #D4AF37; padding: 12px; border-left: 4px solid #D4AF37; border-radius: 8px; }
+        .aviso.sucesso { border-left-color: #00e5ff; color: #00e5ff; }
+        #loginAdmin { background: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
+        #loginAdmin h2 { color: #D4AF37; }
+        #loginAdmin input { background: #121212; color: #fff; border: 1px solid #444; }
+        #loginAdmin input:focus { border-color: #D4AF37; }
+    </style>
+</head>
+<body class="admin-page">
+
+    <div class="admin-container">
+        <h1>🔧 Painel Administrativo - Aurora Comercial</h1>
+
+        <div id="loginAdmin" style="max-width:400px; margin:40px auto; padding:24px; border-radius:16px;">
+            <h2>🔐 Acesso restrito</h2>
+            <label for="senhaAdmin">Senha:</label>
+            <input type="password" id="senhaAdmin" placeholder="Digite a senha" />
+            <button id="btnLoginAdmin" class="btn-admin" style="width:100%; margin-top:10px;">Entrar</button>
+            <p id="erroLogin" style="color:#ff5555; display:none;">Senha incorreta.</p>
+        </div>
+
+        <div id="conteudoAdmin" style="display:none;">
+            <div class="aviso" id="statusMsg" style="display:none;"></div>
+
+            <div class="painel-admin" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+                <div class="form-card">
+                    <h2 id="formTitulo" style="color:#D4AF37;">➕ Novo Produto</h2>
+                    <form id="formProduto">
+                        <input type="hidden" id="prodId" />
+                        <label>Nome do Produto *</label>
+                        <input type="text" id="nome" required />
+
+                        <label>Categoria *</label>
+                        <select id="categoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="eletronicos">Eletrônicos</option>
+                            <option value="consolas">Consolas</option>
+                            <option value="beleza">Beleza</option>
+                            <option value="cozinha">Cozinha</option>
+                            <option value="colunas">Colunas</option>
+                            <option value="ferramentas">Ferramentas</option>
+                            <option value="casa">Casa</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="calcados">Sapatos</option>
+                            <option value="joias">Pulseiras</option>
+                            <option value="automoveis">Carros</option>
+                        </select>
+
+                        <label>Tag (rótulo exibido no card)</label>
+                        <input type="text" id="tag" placeholder="Ex: Eletrônicos, Moda Feminina..." />
+
+                        <label>Preço * (ex: KZ 12.500,00)</label>
+                        <input type="text" id="preco" required />
+
+                        <label>Preço Antigo (opcional, ex: KZ 15.000,00)</label>
+                        <input type="text" id="precoAntigo" />
+
+                        <label>Preço de Custo (Kz) *</label>
+                        <input type="text" id="custo" placeholder="Ex: KZ 8.000,00" required />
+
+                        <label>Desconto (opcional, ex: 17%)</label>
+                        <input type="text" id="desconto" placeholder="Ex: 17%" />
+
+                        <label>Parcelas (opcional, ex: 3x de KZ 4.166,00)</label>
+                        <input type="text" id="parcelas" />
+
+                        <div class="checkbox-group" style="display:flex; gap:10px; align-items:center; margin:10px 0;">
+                            <input type="checkbox" id="freteGratis" style="width:auto; accent-color:#D4AF37;" />
+                            <label for="freteGratis" style="margin:0; color:#fff;">🚚 Frete Grátis</label>
+                        </div>
+
+                        <label>Descrição</label>
+                        <textarea id="descricao"></textarea>
+
+                        <label>Imagens (URLs, separadas por vírgula)</label>
+                        <textarea id="imagens" placeholder="img1.jpg, img2.jpg, img3.jpg"></textarea>
+                        <div id="previewImagens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+
+                        <label style="margin-top:10px; display:block;">Ou envie imagens para o ImgBB:</label>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <input type="file" id="imgUpload" multiple accept="image/*" style="width:auto; color:#888;" />
+                            <button type="button" id="btnUploadImg" class="btn-admin">⬆ Enviar para ImgBB</button>
+                        </div>
+                        <div id="uploadProgress" style="font-size:12px; color:#888; margin-top:4px;"></div>
+
+                        <label>Ordem (número, quanto menor, antes aparece)</label>
+                        <input type="number" id="ordem" value="0" />
+
+                        <label>Estoque (quantidade disponível) *</label>
+                        <input type="number" id="estoque" value="10" min="0" required />
+
+                        <label>Vídeo de Demonstração (YouTube Embed)</label>
+                        <input type="text" id="video" placeholder="Ex: https://www.youtube.com/embed/ID_DO_VIDEO" />
+                        <small style="display:block; color:#888; margin-top:2px;">Cole o link de incorporação (src) do YouTube.</small>
+
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn-admin" id="btnSalvar">💾 Salvar Produto</button>
+                            <button type="button" class="btn-admin" id="btnCancelarEdicao" style="display:none; background:#444; color:#fff;">Cancelar</button>
+                        </div>
+                    </form>
+
+                    <div class="jsonbin-config" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+                        <h3 style="color:#D4AF37;">☁️ Sincronizar com JSONbin</h3>
+                        <p style="font-size:12px; color:#888; margin-bottom:8px;">Configure o BIN ID e a chave mestra.</p>
+                        <input type="text" id="jsonbinId" placeholder="BIN ID" style="margin-bottom:6px;" />
+                        <input type="text" id="jsonbinKey" placeholder="X-Master-Key" style="margin-bottom:8px;" />
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnTestarJsonbin">🔌 Testar Conexão</button>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnEnviarJsonbin">📤 Enviar Catálogo</button>
+                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnForcarCache">🔄 Forçar cache</button>
+                    </div>
+                </div>
+
+                <div class="lista-card">
+                    <h2 style="color:#D4AF37;">📦 Produtos (<span id="contadorProdutos">0</span>)</h2>
+                    <div id="listaProdutos" style="max-height: 60vh; overflow-y: auto;"></div>
+                    
+                    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-admin" id="btnRecarregar">🔄 Recarregar Lista</button>
+                        <button class="btn-admin" id="btnImportarCSV" style="margin-top:0;">📥 Importar CSV</button>
+                        <input type="file" id="inputCSV" accept=".csv" style="display:none;" />
+                        <button class="btn-admin" id="btnBackup" style="margin-top:0; background: #333; color: #D4AF37; border: 1px solid #D4AF37;">💾 Descarregar Backup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
