@@ -1,5 +1,5 @@
 import { initCarrinho } from './carrinho.js';
-import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
+import { carregarProdutosPagina, buscarAtualizacaoSupabase, renderizarGrade } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
 
@@ -16,15 +16,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
     initMobileMenu();
 
-    catalogo = await carregarCatalogo();
-    if (!catalogo || catalogo.length === 0) {
-        document.getElementById('carregandoProdutos').textContent = '❌ Erro ao carregar produtos.';
-        return;
+    // 1. Carrega os produtos INSTANTANEAMENTE a partir do 'produtos.json'
+    const dadosIniciais = await carregarProdutosPagina('todos', '', 1, ITENS_POR_PAGINA);
+    if (dadosIniciais && dadosIniciais.length > 0) {
+        catalogo = dadosIniciais;
+        document.getElementById('carregandoProdutos').style.display = 'none';
+        renderizarGrade(catalogo, document.getElementById('gradeProdutos'), 1, ITENS_POR_PAGINA);
+        renderizarMaisComprados();
     }
-    document.getElementById('carregandoProdutos').style.display = 'none';
 
-    renderizarMaisComprados();
+    // 2. Tenta buscar dados atualizados do Supabase (em background)
+    try {
+        const dadosNovos = await buscarAtualizacaoSupabase('todos', '', 1, ITENS_POR_PAGINA);
+        if (dadosNovos && dadosNovos.length > 0) {
+            catalogo = dadosNovos;
+            const container = document.getElementById('gradeProdutos');
+            container.innerHTML = '';
+            renderizarGrade(catalogo, container, 1, ITENS_POR_PAGINA);
+            renderizarMaisComprados();
+        }
+    } catch (e) { console.warn('Atualização Supabase falhou, a manter cache.'); }
 
+    // 3. Lógica de Busca
     const buscaInput = document.getElementById('campoBusca');
     buscaInput.addEventListener('input', debounce(() => {
         termoBusca = buscaInput.value.trim();
@@ -32,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         aplicarFiltros();
     }, 300));
 
+    // 4. Lógica de Filtros e Categorias
     document.querySelectorAll('.menu-categorias a[data-categoria]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -43,67 +57,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    document.querySelectorAll('.filtro-rapido').forEach(el => {
-        el.addEventListener('click', () => {
-            const cat = el.dataset.categoria;
-            const link = document.querySelector(`.menu-categorias a[data-categoria="${cat}"]`);
-            if (link) link.click();
-        });
-    });
-
-    const precoMinInput = document.getElementById('precoMin');
-    const precoMaxInput = document.getElementById('precoMax');
-    const precoMinLabel = document.getElementById('precoMinLabel');
-    const precoMaxLabel = document.getElementById('precoMaxLabel');
-
-    precoMinInput.addEventListener('input', () => {
-        precoMin = parseInt(precoMinInput.value);
-        precoMinLabel.textContent = precoMin;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
-    precoMaxInput.addEventListener('input', () => {
-        precoMax = parseInt(precoMaxInput.value);
-        precoMaxLabel.textContent = precoMax;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
-
-    document.getElementById('ordenar').addEventListener('change', (e) => {
-        ordenacao = e.target.value;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
-
-    document.getElementById('carregarMais').addEventListener('click', () => {
+    // 5. Botão "Carregar mais"
+    document.getElementById('carregarMais').addEventListener('click', async () => {
         paginaAtual++;
-        aplicarFiltros(false);
-    });
-
-    document.getElementById('btnLimparHistorico').addEventListener('click', () => {
-        if (confirm('Deseja zerar o balanço e limpar o histórico de vendas da semana?')) {
-            localStorage.removeItem('aurora_historico_vendas');
-            renderizarBalancoSemanal();
-            mostrarToast('Histórico limpo!', 'sucesso');
+        const novos = await carregarProdutosPagina(categoriaAtiva, termoBusca, paginaAtual, ITENS_POR_PAGINA);
+        if (novos && novos.length > 0) {
+            catalogo = [...catalogo, ...novos];
+            renderizarGrade(novos, document.getElementById('gradeProdutos'), 1, ITENS_POR_PAGINA, true);
+            document.getElementById('carregarMais').textContent = 'Carregar mais';
+            document.getElementById('carregarMais').disabled = false;
+        } else {
+            document.getElementById('carregarMais').textContent = 'Fim do catálogo';
+            document.getElementById('carregarMais').disabled = true;
         }
     });
 
     renderizarBalancoSemanal();
-    aplicarFiltros();
 });
 
-function aplicarFiltros(resetPagina = true) {
-    if (resetPagina) paginaAtual = 1;
-    const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao);
-    const container = document.getElementById('gradeProdutos');
-    if (paginaAtual === 1) container.innerHTML = '';
-    renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA);
-    const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA);
-    const btn = document.getElementById('carregarMais');
-    if (btn) {
-        btn.textContent = paginaAtual < totalPaginas ? 'Carregar mais' : 'Todos carregados';
-        btn.disabled = paginaAtual >= totalPaginas;
-    }
+async function aplicarFiltros() {
+    paginaAtual = 1;
+    document.getElementById('gradeProdutos').innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Carregando...</p>';
+    const dados = await carregarProdutosPagina(categoriaAtiva, termoBusca, 1, ITENS_POR_PAGINA);
+    catalogo = dados || [];
+    document.getElementById('gradeProdutos').innerHTML = '';
+    renderizarGrade(catalogo, document.getElementById('gradeProdutos'), 1, ITENS_POR_PAGINA);
+    document.getElementById('carregarMais').disabled = false;
+    document.getElementById('carregarMais').textContent = 'Carregar mais';
 }
 
 function renderizarMaisComprados() {
@@ -155,37 +135,16 @@ function renderizarBalancoSemanal() {
 window.filtrarPorCategoria = function(categoria) {
     const link = document.querySelector(`.menu-categorias a[data-categoria="${categoria}"]`);
     if (link) link.click();
-    else { categoriaAtiva = categoria; paginaAtual = 1; aplicarFiltros(); }
-    document.getElementById('conteudo-principal').scrollIntoView({ behavior: 'smooth' });
+    else { categoriaAtiva = categoria; aplicarFiltros(); }
 };
 
 window.mudarSlide = function(direcao) {
     const slides = document.querySelectorAll('.slide');
     const indicadores = document.querySelectorAll('.indicador');
     let indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
-
     slides[indexAtual].classList.remove('ativo');
     indicadores[indexAtual].classList.remove('ativo');
-
     indexAtual = (indexAtual + direcao + slides.length) % slides.length;
-
     slides[indexAtual].classList.add('ativo');
     indicadores[indexAtual].classList.add('ativo');
-};
-
-document.querySelectorAll('.indicador').forEach((ind, i) => {
-    ind.addEventListener('click', () => {
-        const slides = document.querySelectorAll('.slide');
-        const indicadores = document.querySelectorAll('.indicador');
-        const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
-        slides[indexAtual].classList.remove('ativo');
-        indicadores[indexAtual].classList.remove('ativo');
-        slides[i].classList.add('ativo');
-        indicadores[i].classList.add('ativo');
-    });
-});
-
-window.shareProduct = function(nome, preco, link) {
-    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
 };

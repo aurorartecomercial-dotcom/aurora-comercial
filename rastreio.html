@@ -3,57 +3,73 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rastrear Pedido - Aurora</title>
+    <title>Rastrear Pedido - Aurora Comercial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
+
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <a href="index.html" class="logo">
-                <img src="logo auro.png" alt="Logo" />
+            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
             </a>
+            <div class="header-icones">
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
+            </div>
         </div>
+        <nav class="menu-categorias">
+            <ul id="menuCategorias">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="blog.html">📖 Blog</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <div style="max-width: 700px; margin: 60px auto; padding: 0 24px; text-align:center;">
-        <h1 style="color:var(--cor-esmeralda);">📦 Rastrear Pedido</h1>
-        <p style="color:#666; margin-bottom:20px;">Digite o código de rastreio que recebeu na sua fatura.</p>
+    <main style="max-width: 800px; margin: 40px auto; padding: 0 24px;">
+        <h1 style="color: var(--cor-esmeralda); text-align: center; margin-bottom: 20px;">📦 Rastrear Pedido</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 24px;">Digite o código de rastreio fornecido no seu pedido.</p>
         
-        <div style="display:flex; gap:10px; max-width:400px; margin:0 auto;">
-            <input type="text" id="inputRastreio" placeholder="Ex: AURORA-1234" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px;" />
-            <button id="btnRastrear" class="btn-admin" style="background:var(--cor-ouro); color:#000; margin:0;">🔍 Rastrear</button>
+        <div style="display: flex; gap: 12px; max-width: 500px; margin: 0 auto;">
+            <input type="text" id="inputRastreio" placeholder="Ex: AURORA-123456" style="flex: 1; padding: 12px 16px; border: 2px solid #ddd; border-radius: 40px; font-size: 16px; outline: none;" />
+            <button id="btnRastrear" style="background: var(--cor-ouro); color: #000; border: none; padding: 12px 30px; border-radius: 40px; font-weight: 700; cursor: pointer; font-size: 16px;">🔍 Rastrear</button>
         </div>
 
-        <div id="resultadoRastreio" style="display:none; margin-top:30px; background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card); text-align:left;">
-            <h3 id="rastreioNome" style="color:var(--cor-esmeralda);"></h3>
-            <p style="color:#888; font-size:14px; margin:4px 0;" id="rastreioData"></p>
+        <div id="erroRastreio" style="display: none; background: #fde8e8; color: #E74C3C; padding: 16px; border-radius: 12px; margin-top: 20px; text-align: center; border: 1px solid #E74C3C;">
+            ❌ Pedido não encontrado. Verifique o código e tente novamente.
+        </div>
+
+        <div id="resultadoRastreio" style="display: none; background: #fff; border-radius: 16px; padding: 24px; box-shadow: var(--sombra-card); margin-top: 20px; border: 1px solid var(--cor-ouro);">
+            <h2 id="rastreioNome" style="color: var(--cor-esmeralda);"></h2>
+            <p id="rastreioData" style="color: #888; font-size: 14px;"></p>
             
-            <div style="margin-top:20px; position:relative;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#999;">
-                    <span>✅ Confirmado</span>
-                    <span>🚚 Enviado</span>
-                    <span>📦 Entregue</span>
-                </div>
-                <div style="position:relative; height:4px; background:#eee; margin:8px 0; border-radius:4px;">
-                    <div id="barraProgresso" style="height:100%; background:var(--cor-esmeralda); border-radius:4px; width:0%; transition:width 0.5s;"></div>
-                </div>
-                <div id="statusAtualTexto" style="text-align:center; font-weight:700; color:var(--cor-esmeralda); margin-top:10px;">Pedido confirmado</div>
+            <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin: 16px 0;">
+                <strong>Produtos:</strong> <span id="rastreioProdutos"></span>
             </div>
 
-            <div id="rastreioItens" style="margin-top:20px; border-top:1px solid #eee; padding-top:16px; font-size:14px;">
-                <strong>Itens:</strong> <span id="rastreioProdutos"></span>
+            <div style="margin-top: 24px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 4px;">
+                    <span>Confirmado</span>
+                    <span>Enviado</span>
+                    <span>Entregue</span>
+                </div>
+                <div style="background: #eee; border-radius: 20px; height: 10px; overflow: hidden;">
+                    <div id="barraProgresso" style="background: var(--cor-esmeralda); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                </div>
+                <p id="statusAtualTexto" style="text-align: center; font-weight: 600; color: var(--cor-esmeralda); margin-top: 12px;"></p>
             </div>
-            <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--cor-esmeralda); font-weight:600;">← Voltar à loja</a>
         </div>
+    </main>
 
-        <div id="erroRastreio" style="display:none; margin-top:20px; color:#E74C3C; font-weight:600;">Código não encontrado. Verifique o número da fatura.</div>
-    </div>
+    <footer class="rodape-profissional" style="margin-top: 40px;">
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
 
     <script type="module">
-        import { CONFIG } from './js/config.js';
+        import { supabase } from './js/config.js';
 
         document.getElementById('btnRastrear').addEventListener('click', async () => {
             const codigo = document.getElementById('inputRastreio').value.trim();
@@ -63,13 +79,16 @@
             if(!codigo) return alert('Digite um código.');
 
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
-                    headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
-                });
-                const data = await res.json();
-                const vendas = data.record || [];
+                // Busca a venda no Supabase pelo código de rastreio
+                const { data: vendas, error } = await supabase
+                    .from('vendas')
+                    .select('*')
+                    .eq('codigo_rastreio', codigo);
 
-                const venda = vendas.find(v => v.codigoRastreio === codigo);
+                if (error) throw error;
+                
+                const venda = vendas && vendas[0];
+
                 if(!venda) {
                     erroDiv.style.display = 'block';
                     resultadoDiv.style.display = 'none';
@@ -79,9 +98,11 @@
                 erroDiv.style.display = 'none';
                 resultadoDiv.style.display = 'block';
 
-                document.getElementById('rastreioNome').textContent = `Olá, ${venda.nomeCliente}`;
-                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${venda.dataHora}`;
-                document.getElementById('rastreioProdutos').textContent = venda.produtosResumo;
+                document.getElementById('rastreioNome').textContent = `Olá, ${venda.cliente_nome}`;
+                // Formata a data do SQL (timestamp) para o formato legível
+                const dataFormatada = new Date(venda.data_hora).toLocaleString('pt-BR');
+                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${dataFormatada}`;
+                document.getElementById('rastreioProdutos').textContent = venda.produtos_resumo;
 
                 const status = venda.status || 'confirmado';
                 let progresso = 0;
@@ -95,6 +116,7 @@
                 document.getElementById('statusAtualTexto').textContent = texto;
 
             } catch(e) {
+                console.error(e);
                 alert('Erro ao buscar o pedido. Tente novamente.');
             }
         });

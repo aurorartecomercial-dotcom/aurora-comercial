@@ -1,32 +1,48 @@
-import { CONFIG } from './config.js';
+import { supabase } from './config.js';
 import { extrairValorNumerico } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
-import { obterAvaliacao } from './avaliacoes.js';
 
-export async function carregarCatalogo() {
-    const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
-    let cache = {};
-    if (cachedStr) {
-        try { cache = JSON.parse(cachedStr); } catch (e) {}
-    }
+export async function carregarProdutosPagina(categoria, busca, pagina = 1, itensPorPagina = 10) {
+    // 1. PLANO A (Garantido): Carrega o ficheiro JSON local para exibir os produtos agora
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
-        if (!res.ok) throw new Error('Erro ao buscar JSONbin');
-        const data = await res.json();
-        let serverData = data.record;
-        let novosProdutos = Array.isArray(serverData) ? serverData : serverData.data;
-        let versaoServer = serverData.version || 0;
-        if (!novosProdutos) throw new Error('Formato inválido dos produtos');
-        if (versaoServer > (cache.version || 0) || (Date.now() - (cache.timestamp || 0)) > CONFIG.CACHE_TTL) {
-            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, version: versaoServer, timestamp: Date.now() }));
-            return novosProdutos;
+        const respostaLocal = await fetch('produtos.json');
+        if (respostaLocal.ok) {
+            const dadosLocal = await respostaLocal.json();
+            // Guarda no cache do navegador para a próxima vez
+            localStorage.setItem('aurora_cache_pagina1', JSON.stringify({ data: dadosLocal, timestamp: Date.now() }));
+            return dadosLocal; // Retorna os produtos imediatamente!
         }
-        return cache.data;
-    } catch (e) {
-        console.warn('Falha ao buscar do JSONbin, usando cache ou fallback:', e);
-        if (cache.data) return cache.data;
-        const fallback = await fetch('produtos.json');
-        return fallback.json();
+    } catch (e) { console.warn('Erro a ler JSON local, a tentar cache antigo...'); }
+
+    // 2. PLANO B (Se não houver JSON local, tenta o cache antigo do navegador)
+    const cacheData = localStorage.getItem('aurora_cache_pagina1');
+    if (cacheData) {
+        try {
+            const parsed = JSON.parse(cacheData);
+            return parsed.data;
+        } catch(e) {}
+    }
+
+    return []; // Se não houver nada, devolve vazio
+}
+
+// Esta função é chamada em segundo plano para atualizar os produtos
+export async function buscarAtualizacaoSupabase(categoria, busca, pagina = 1, itensPorPagina = 10) {
+    try {
+        const offset = (pagina - 1) * itensPorPagina;
+        const { data, error } = await supabase
+            .rpc('get_paginated_products', {
+                p_categoria: categoria === 'todos' ? null : categoria,
+                p_busca: busca || null,
+                p_limite: itensPorPagina,
+                p_offset: offset
+            });
+
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.warn('Supabase offline, a manter cache local.');
+        return null; // Retorna null para indicar que falhou
     }
 }
 
@@ -37,12 +53,13 @@ export function criarCardProduto(prod) {
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+    let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+    if (imgSrc.includes('i.ibb.co') && !imgSrc.includes('format=webp')) {
+        imgSrc += '?format=webp';
+    }
 
-    // 👇 CORREÇÃO DO LINK DE PARTILHA AQUI
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
     const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
-    // 👆 FIM DA CORREÇÃO
 
     let html = `
         <div class="produto-imagem">
@@ -63,24 +80,18 @@ export function criarCardProduto(prod) {
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
     if (prod.freteGratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
 
-    let estoqueHtml = '';
     if (prod.estoque !== undefined) {
-        if (prod.estoque <= 0) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
-        else if (prod.estoque <= 5) estoqueHtml = `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
-        else estoqueHtml = `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
+        if (prod.estoque <= 0) html += `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;
+        else if (prod.estoque <= 5) html += `<span style="display:block; color:#E74C3C; font-weight:600; font-size:13px; margin-top:6px;">🔥 Últimas ${prod.estoque} unidades!</span>`;
+        else html += `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
-    html += estoqueHtml;
-
-    const avaliacao = obterAvaliacao(prod.id);
-    if (avaliacao.media > 0) { html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`; }
 
     html += `
         <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-add-carrinho-card" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
+            <button class="btn-add-carrinho-card" data-id="${prod.id}" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
                     style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
             </button>
-            <!-- 👇 BOTÃO DE PARTILHA COM O LINK CORRIGIDO -->
             <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${shareLink}')"
                     style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s;">
                 📤 Partilhar
@@ -94,43 +105,27 @@ export function criarCardProduto(prod) {
     if (btnAdd) {
         btnAdd.addEventListener('click', function(e) {
             e.stopPropagation(); e.preventDefault();
-            adicionarProdutoCarrinho(this.dataset.nome, this.dataset.preco, parseInt(this.dataset.estoque));
+            adicionarProdutoCarrinho(
+                parseInt(this.dataset.id), 
+                this.dataset.nome, 
+                this.dataset.preco, 
+                parseInt(this.dataset.estoque)
+            );
         });
     }
     return card;
 }
 
-export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao) {
-    let filtrados = produtos.filter(prod => {
-        const matchCategoria = categoria === 'todos' || prod.categoria === categoria;
-        const matchBusca = !busca || prod.nome.toLowerCase().includes(busca.toLowerCase()) || prod.tag.toLowerCase().includes(busca.toLowerCase()) || prod.categoria.toLowerCase().includes(busca.toLowerCase());
-        const precoNum = extrairValorNumerico(prod.preco);
-        const matchPreco = precoNum >= min && precoNum <= max;
-        return matchCategoria && matchBusca && matchPreco;
-    });
-
-    switch (ordenacao) {
-        case 'preco-asc': filtrados.sort((a, b) => extrairValorNumerico(a.preco) - extrairValorNumerico(b.preco)); break;
-        case 'preco-desc': filtrados.sort((a, b) => extrairValorNumerico(b.preco) - extrairValorNumerico(a.preco)); break;
-        case 'nome': filtrados.sort((a, b) => a.nome.localeCompare(b.nome)); break;
-        default: filtrados.sort((a, b) => (a.ordem || a.id) - (b.ordem || b.id));
-    }
-    return filtrados;
-}
-
-export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
+export function renderizarGrade(produtos, container, pagina = 1, itensPorPagina = 10, append = false) {
     if (!container) return;
-    const start = (pagina - 1) * itensPorPagina;
-    const end = start + itensPorPagina;
-    const paginaProdutos = produtosFiltrados.slice(start, end);
-
-    if (pagina === 1) container.innerHTML = '';
-    if (paginaProdutos.length === 0 && pagina === 1) {
+    if (!append && pagina === 1) container.innerHTML = '';
+    
+    if (produtos.length === 0 && pagina === 1) {
         container.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#999; font-size:16px;">Nenhum produto encontrado.</p>`;
         return;
     }
 
-    paginaProdutos.forEach(prod => {
+    produtos.forEach(prod => {
         const card = criarCardProduto(prod);
         container.appendChild(card);
     });

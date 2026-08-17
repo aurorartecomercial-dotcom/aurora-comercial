@@ -1,5 +1,5 @@
+import { supabase } from './config.js';
 import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura } from './utils.js';
-import { CONFIG } from './config.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -168,12 +168,12 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
+export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
-    const existente = carrinho.find(i => i.nome === nome);
+    const existente = carrinho.find(i => i.id === id);
     let quantidadeAtual = existente ? existente.quantidade : 0;
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) { mostrarToast('🚫 Estoque esgotado!', 'info'); return; }
-    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1 }); }
+    if (existente) { existente.quantidade += 1; } else { carrinho.push({ id, nome, preco, quantidade: 1 }); }
     atualizarCarrinho();
     mostrarToast('Produto adicionado!', 'sucesso');
 }
@@ -233,9 +233,6 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
     };
 }
 
-// ---------------------------
-// WHATSAPP E FATURA
-// ---------------------------
 async function enviarPedidoWhatsApp() {
     const { nome, telefone, nif, morada } = dadosVendaTemp;
     let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -283,70 +280,57 @@ function limparCarrinho() {
 }
 
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
-    let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
-    let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
-    if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
-    let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-    const agora = new Date();
-    const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const codigoRastreio = `AURORA-${Date.now().toString().slice(-6)}`;
-    const novaVenda = {
-        dataHora: dataHoraFormatada,
-        produtosResumo: produtosResumo,
-        valorTotal: valorTotalPedido,
-        totalItens: totalItensPedido,
-        nomeCliente: nomeCliente,
-        telefoneCliente: telefoneCliente,
-        nifCliente: nifCliente,
-        moradaCliente: moradaCliente,
-        codigoRastreio: codigoRastreio,
-        status: 'confirmado',
-        cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
-        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0
-    };
+    const itensArray = carrinho.map(item => ({
+        produto_id: item.id,
+        quantidade: item.quantidade,
+        preco: extrairValorNumerico(item.preco)
+    }));
 
-    try {
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
-        });
-        const data = await resGet.json();
-        let historico = data.record;
+    const { data, error } = await supabase.rpc('criar_venda', {
+        p_cliente_nome: nomeCliente,
+        p_cliente_telefone: telefoneCliente,
+        p_cliente_nif: nifCliente,
+        p_cliente_morada: moradaCliente,
+        p_itens: itensArray
+    });
 
-        if (!Array.isArray(historico)) {
-            console.warn('⚠️ O JSONbin devolveu algo que não era uma lista. A criar uma nova lista.');
-            historico = [];
-        }
-
-        historico.push(novaVenda);
-
-        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS },
-            body: JSON.stringify(historico)
-        });
-
-        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
-    } catch (e) {
-        console.error('Erro ao salvar venda:', e);
-        const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
-        historicoLocal.push(novaVenda);
-        localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-        alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
+    if (error || data.erro) {
+        console.error('Erro ao finalizar venda:', error || data.mensagem);
+        alert('❌ ' + (data.mensagem || 'Erro ao registrar a venda. Estoque pode estar insuficiente.'));
+        return;
     }
+
+    const { data: vendaCriada } = await supabase
+        .from('vendas')
+        .select('codigo_rastreio')
+        .eq('id', data.venda_id)
+        .single();
+
+    const codigoRastreio = vendaCriada?.codigo_rastreio || 'AURORA-' + Date.now();
+    
+    alert(`✅ Pedido registrado com sucesso!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente.`);
 }
 
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    await loadJSPDF();
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('Erro crítico: Biblioteca PDF não carregada. Verifique a sua conexão com a internet.');
+        throw new Error('jspdf not loaded');
+    }
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
+    
     try {
         const logoImg = new Image(); logoImg.src = 'logo auro.png';
-        await new Promise((resolve) => { logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; logoImg.onerror = resolve; });
+        await new Promise((resolve) => { 
+            logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; 
+            logoImg.onerror = resolve; 
+        });
     } catch (e) {}
 
     doc.setFontSize(24); doc.setTextColor(dourado); doc.setFont(undefined, 'bold'); doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
-    doc.setFontSize(9); doc.setTextColor('#444'); doc.setFont(undefined, 'normal'); doc.text('Contribuinte: 5000048151 | Tel: +244 925 328 181', 105, 28, { align: 'center' });
+    doc.setFontSize(9); doc.setTextColor('#444'); doc.setFont(undefined, 'normal'); doc.text('Contribuinte: 5000048151 | Tel: +244 933 677 628', 105, 28, { align: 'center' });
     doc.text('contacto@aurorarte.ao | Luanda - Angola', 105, 34, { align: 'center' });
     doc.setDrawColor(dourado); doc.setLineWidth(0.8); doc.line(20, 40, 190, 40);
 
@@ -391,23 +375,6 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
 }
 
-function loadJSPDF() {
-    return new Promise((resolve, reject) => {
-        if (window.jspdf && window.jspdf.jsPDF) { resolve(); return; }
-        const script1 = document.createElement('script');
-        script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script1.onload = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-            script2.onload = resolve; script2.onerror = reject; document.head.appendChild(script2);
-        };
-        script1.onerror = reject; document.head.appendChild(script1);
-    });
-}
-
-// ============================================================
-// FUNÇÕES DE NÚMERO POR EXTENSO
-// ============================================================
 function numeroPorExtenso(valor) {
     const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
     const dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
