@@ -148,3 +148,9 @@ window.mudarSlide = function(direcao) {
     slides[indexAtual].classList.add('ativo');
     indicadores[indexAtual].classList.add('ativo');
 };
+
+// 👇 FUNÇÃO DE PARTILHA ADICIONADA AQUI
+window.shareProduct = function(nome, preco, link) {
+    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+};

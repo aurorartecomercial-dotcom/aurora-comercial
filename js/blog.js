@@ -1,4 +1,4 @@
-import { carregarCatalogo } from './catalogo.js'; // Reutilizamos a mesma lógica de fetch do JSON, mas vamos buscar o blog.json
+// Linha de importação removida, pois não era usada.
 
 async function carregarBlog() {
     try {

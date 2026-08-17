@@ -21,8 +21,6 @@
         .btn-admin:hover { background: #b8960f; color: #fff; }
         .btn-admin-excluir { background: #e74c3c; color: #fff; }
         .btn-admin-excluir:hover { background: #c0392b; }
-        .btn-admin-jsonbin { background: #333; color: #D4AF37; border: 1px solid #D4AF37; }
-        .btn-admin-jsonbin:hover { background: #D4AF37; color: #000; }
         #previewImagens img { border: 1px solid #444; background: #222; }
         .produto-item { background: #121212; border-bottom: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: #e0e0e0; }
         .produto-item small { color: #888; }
@@ -127,16 +125,6 @@
                             <button type="button" class="btn-admin" id="btnCancelarEdicao" style="display:none; background:#444; color:#fff;">Cancelar</button>
                         </div>
                     </form>
-
-                    <div class="jsonbin-config" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
-                        <h3 style="color:#D4AF37;">☁️ Sincronizar com JSONbin</h3>
-                        <p style="font-size:12px; color:#888; margin-bottom:8px;">Configure o BIN ID e a chave mestra.</p>
-                        <input type="text" id="jsonbinId" placeholder="BIN ID" style="margin-bottom:6px;" />
-                        <input type="text" id="jsonbinKey" placeholder="X-Master-Key" style="margin-bottom:8px;" />
-                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnTestarJsonbin">🔌 Testar Conexão</button>
-                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnEnviarJsonbin">📤 Enviar Catálogo</button>
-                        <button type="button" class="btn-admin btn-admin-jsonbin" id="btnForcarCache">🔄 Forçar cache</button>
-                    </div>
                 </div>
 
                 <div class="lista-card">

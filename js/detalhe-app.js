@@ -3,14 +3,14 @@
 // ============================================================
 
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
-import { carregarCatalogo } from './catalogo.js';
+import { carregarProdutosPagina } from './catalogo.js'; // 👈 CORREÇÃO: importação correta
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
-    initMobileMenu(); // 👈 MENU CENTRALIZADO
+    initMobileMenu();
 
     const params = new URLSearchParams(window.location.search);
     const idProduto = parseInt(params.get('id'));
@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const catalogo = await carregarCatalogo();
-    if (!catalogo) {
+    // Carrega o catálogo usando a função correta (fallback JSON local + Supabase em background)
+    const catalogo = await carregarProdutosPagina('todos', '', 1, 100);
+    if (!catalogo || catalogo.length === 0) {
         mostrarErro('Erro ao carregar catálogo.');
         return;
     }
@@ -121,7 +122,7 @@ function renderizarDetalhes(prod) {
     });
 
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
-        adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
+        adicionarProdutoCarrinho(prod.id, prod.nome, prod.preco, prod.estoque);
     });
 
     document.getElementById('btnAvaliar').addEventListener('click', () => {
