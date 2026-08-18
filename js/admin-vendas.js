@@ -1,5 +1,5 @@
-import { supabase } from './config.js';
 import { extrairValorNumerico } from './utils.js';
+import { CONFIG } from './config.js'; // 👈 CORREÇÃO: importação do CONFIG
 
 let todasVendas = [];
 let catalogo = [];
@@ -31,15 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
     document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
-
-    // Filtros
-    const inputFiltro = document.getElementById('filtroPedidoCliente');
-    const selectStatus = document.getElementById('filtroStatus');
-    if (inputFiltro && selectStatus) {
-        const aplicarFiltro = () => renderizarTabelaPedidos(vendasFiltradasCache);
-        inputFiltro.addEventListener('input', aplicarFiltro);
-        selectStatus.addEventListener('change', aplicarFiltro);
-    }
 });
 
 let vendasFiltradasCache = [];
@@ -49,19 +40,19 @@ async function carregarDados() {
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
-        // Buscar vendas no Supabase
-        const { data: vendasData, error: vendasError } = await supabase.from('vendas').select('*').order('data_hora', { ascending: false });
-        if (vendasError) throw new Error(`Erro Vendas: ${vendasError.message}`);
-        todasVendas = vendasData || [];
+        // Buscar vendas no JSONbin
+        const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
+        if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
+        const dataVendas = await resVendas.json();
+        todasVendas = (dataVendas && Array.isArray(dataVendas.record)) ? dataVendas.record : [];
 
-        // Buscar produtos do localStorage (ou fallback)
-        const produtosLocal = localStorage.getItem('aurora_produtos_admin');
-        if (produtosLocal) {
-            try { catalogo = JSON.parse(produtosLocal); } catch (e) { catalogo = []; }
-        } else {
-            const fallback = await fetch('produtos.json');
-            catalogo = await fallback.json();
-        }
+        // Buscar produtos no JSONbin (para ter os dados mais atualizados)
+        const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
+        if (!resProdutos.ok) throw new Error(`Erro Produtos: ${resProdutos.status}`);
+        const dataProdutos = await resProdutos.json();
+        let serverData = dataProdutos.record;
+        catalogo = Array.isArray(serverData) ? serverData : (serverData && serverData.data ? serverData.data : []);
+        if (!Array.isArray(catalogo)) catalogo = [];
 
         gerarRelatorio('semana');
     } catch (e) {
@@ -82,39 +73,42 @@ function gerarRelatorio(periodo) {
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
         inicioSemana.setDate(agora.getDate() - agora.getDay());
-        vendasFiltradas = todasVendas.filter(v => new Date(v.data_hora) >= inicioSemana);
+        vendasFiltradas = todasVendas.filter(v => new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-')) >= inicioSemana);
     } else {
         vendasFiltradas = todasVendas.filter(v => {
-            const data = new Date(v.data_hora);
+            const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
             return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
         });
     }
     
     vendasFiltradasCache = vendasFiltradas;
 
-    const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valor_total || 0), 0);
+    const faturamento = vendasFiltradas.reduce((acc, v) => acc + v.valorTotal, 0);
     const pedidos = vendasFiltradas.length;
-    const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.total_itens || 0), 0);
+    const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + v.totalItens, 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
 
     let descontoTotal = 0;
     let lucroTotal = 0;
 
     vendasFiltradas.forEach(v => {
-        if (v.desconto_percentual) descontoTotal += (faturamento / (1 - (v.desconto_percentual/100))) * (v.desconto_percentual/100);
-
-        if (v.produtos_resumo) {
-            v.produtos_resumo.split(', ').forEach(item => {
-                const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1);
-                const prod = catalogo.find(p => p.nome === nome);
-                if (prod && prod.custo) {
-                    const precoFinal = extrairValorNumerico(prod.preco);
-                    const custo = extrairValorNumerico(prod.custo);
-                    lucroTotal += (precoFinal - custo) * qtd;
-                }
-            });
-        }
+        v.produtosResumo.split(', ').forEach(item => {
+            const nome = item.split(' (x')[0];
+            const qtd = parseInt(item.split('(x')[1]) || 1);
+            const prod = catalogo.find(p => p.nome === nome);
+            
+            if (prod && prod.precoAntigo) {
+                const precoFinal = extrairValorNumerico(prod.preco);
+                const precoAntigo = extrairValorNumerico(prod.precoAntigo);
+                if (precoAntigo > precoFinal) descontoTotal += (precoAntigo - precoFinal) * qtd;
+            }
+            if (prod && prod.custo) {
+                const precoFinal = extrairValorNumerico(prod.preco);
+                const custo = extrairValorNumerico(prod.custo);
+                lucroTotal += (precoFinal - custo) * qtd;
+            }
+        });
+        if (v.descontoCupom) descontoTotal += v.descontoCupom;
     });
 
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
@@ -127,13 +121,11 @@ function gerarRelatorio(periodo) {
     // Tabela Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
-        if (venda.produtos_resumo) {
-            venda.produtos_resumo.split(', ').forEach(item => {
-                const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1);
-                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-            });
-        }
+        venda.produtosResumo.split(', ').forEach(item => {
+            const nome = item.split(' (x')[0];
+            const qtd = parseInt(item.split('(x')[1]) || 1);
+            vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+        });
     });
     const corpoTabela = document.getElementById('corpoTabelaRelatorio');
     corpoTabela.innerHTML = '';
@@ -148,13 +140,9 @@ function gerarRelatorio(periodo) {
 
     renderizarTabelaPedidos(vendasFiltradas);
 
-    // Gráficos (Vendas por Dia)
+    // Gráficos
     const vendasPorDia = {};
-    vendasFiltradas.forEach(v => {
-        const dataObj = new Date(v.data_hora);
-        const dia = dataObj.toLocaleDateString('pt-BR');
-        vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valor_total || 0);
-    });
+    vendasFiltradas.forEach(v => { const dia = v.dataHora.split(' ')[0]; vendasPorDia[dia] = (vendasPorDia[dia] || 0) + v.valorTotal; });
     const dias = Object.keys(vendasPorDia);
     const valores = Object.values(vendasPorDia);
     if (graficoVendas) graficoVendas.destroy();
@@ -162,30 +150,29 @@ function gerarRelatorio(periodo) {
         graficoVendas = new Chart(document.getElementById('graficoVendas'), { type: 'bar', data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] } });
     } else { document.getElementById('graficoVendas').style.display = 'none'; }
 
-    // Gráfico Produtos Mais Vendidos
     const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]).slice(0, 5);
     if (graficoProdutos) graficoProdutos.destroy();
     if (topProdutos.length > 0) {
         graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
     } else { document.getElementById('graficoProdutos').style.display = 'none'; }
 
-    // Gráfico Comparativo Mensal
+    // Comparativo Mensal
     const mesAtual = agora.getMonth();
     const anoAtual = agora.getFullYear();
     const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
     const anoPassado = mesAtual === 0 ? anoAtual - 1 : anoAtual;
 
     const vendasMesAtual = todasVendas.filter(v => {
-        const data = new Date(v.data_hora);
+        const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
     });
     const vendasMesPassado = todasVendas.filter(v => {
-        const data = new Date(v.data_hora);
+        const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
         return data.getMonth() === mesPassado && data.getFullYear() === anoPassado;
     });
 
-    const faturamentoMesAtual = vendasMesAtual.reduce((acc, v) => acc + (v.valor_total || 0), 0);
-    const faturamentoMesPassado = vendasMesPassado.reduce((acc, v) => acc + (v.valor_total || 0), 0);
+    const faturamentoMesAtual = vendasMesAtual.reduce((acc, v) => acc + v.valorTotal, 0);
+    const faturamentoMesPassado = vendasMesPassado.reduce((acc, v) => acc + v.valorTotal, 0);
 
     if (graficoComparativo) graficoComparativo.destroy();
     graficoComparativo = new Chart(document.getElementById('graficoComparativo'), {
@@ -198,19 +185,20 @@ function gerarRelatorio(periodo) {
         }, options: { responsive: true, plugins: { legend: { position: 'top' } } }
     });
 
-    // Gráfico Mapa de Vendas
+    // Mapa de Vendas
     const regioes = {};
     vendasFiltradas.forEach(v => {
-        const morada = v.cliente_morada || '';
+        const morada = v.moradaCliente || '';
         const termos = morada.split(',');
         let cidade = '';
         if (termos.length > 1) cidade = termos[1].trim();
         if (!cidade) cidade = 'Desconhecida';
-        regioes[cidade] = (regioes[cidade] || 0) + (v.valor_total || 0);
+        regioes[cidade] = (regioes[cidade] || 0) + v.valorTotal;
     });
 
     const labelsMapa = Object.keys(regioes);
     const dataMapa = Object.values(regioes);
+
     if (graficoMapa) graficoMapa.destroy();
     if (labelsMapa.length > 0) {
         graficoMapa = new Chart(document.getElementById('graficoMapa'), {
@@ -231,7 +219,7 @@ function renderizarTabelaPedidos(vendas) {
     const filtroStatus = document.getElementById('filtroStatus').value;
 
     const vendasFiltradas = vendas.filter(v => {
-        const matchNome = (v.cliente_nome || '').toLowerCase().includes(filtroNome);
+        const matchNome = v.nomeCliente.toLowerCase().includes(filtroNome);
         const matchStatus = filtroStatus === 'todos' || v.status === filtroStatus;
         return matchNome && matchStatus;
     });
@@ -239,27 +227,26 @@ function renderizarTabelaPedidos(vendas) {
     vendasFiltradas.forEach(v => {
         const tr = document.createElement('tr');
         const statusMap = { confirmado: '🟡 Confirmado', enviado: '🔵 Enviado', entregue: '🟢 Entregue' };
-        const dataFormatada = new Date(v.data_hora).toLocaleString('pt-BR');
         tr.innerHTML = `
-            <td style="padding:8px;">${dataFormatada}</td>
-            <td style="padding:8px; font-weight:600;">${v.cliente_nome || 'N/A'}</td>
-            <td style="padding:8px;">${v.cliente_telefone || 'N/A'}</td>
-            <td style="padding:8px;">${v.cliente_nif || 'N/A'}</td>
-            <td style="padding:8px; font-size:11px;">${v.cliente_morada || 'N/A'}</td>
-            <td style="padding:8px; font-size:11px;">${v.produtos_resumo}</td>
-            <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valor_total || 0).toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px;">${v.dataHora}</td>
+            <td style="padding:8px; font-weight:600;">${v.nomeCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.moradaCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.produtosResumo}</td>
+            <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
             
             <td style="padding:8px; display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; gap:4px;">
                     <span style="font-size:11px; font-weight:700;">${statusMap[v.status] || '🟡 Confirmado'}</span>
                 </div>
                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                    <button onclick="window.atualizarStatus('${v.codigo_rastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
-                    <button onclick="window.atualizarStatus('${v.codigo_rastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
+                    <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
+                    <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
                 </div>
                 <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:2px;">
-                    <button onclick="window.gerarPDFCliente('${(v.cliente_nome || '').replace(/'/g, "\\'")}', '${(v.cliente_telefone || '').replace(/'/g, "\\'")}', '${(v.cliente_nif || '').replace(/'/g, "\\'")}', '${(v.cliente_morada || '').replace(/'/g, "\\'")}', '${(v.produtos_resumo || '').replace(/'/g, "\\'")}', ${v.valor_total || 0}, '${dataFormatada}')" style="background:#005A4C; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📄 Fatura</button>
-                    <button onclick="window.gerarPDFMotoboy('${(v.cliente_nome || '').replace(/'/g, "\\'")}', '${(v.cliente_telefone || '').replace(/'/g, "\\'")}', '${(v.cliente_nif || '').replace(/'/g, "\\'")}', '${(v.cliente_morada || '').replace(/'/g, "\\'")}', '${(v.produtos_resumo || '').replace(/'/g, "\\'")}', ${v.valor_total || 0})" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Roteiro</button>
+                    <button onclick="window.gerarPDFCliente('${(v.nomeCliente || '').replace(/'/g, "\\'")}', '${(v.telefoneCliente || '').replace(/'/g, "\\'")}', '${(v.nifCliente || '').replace(/'/g, "\\'")}', '${(v.moradaCliente || '').replace(/'/g, "\\'")}', '${(v.produtosResumo || '').replace(/'/g, "\\'")}', ${v.valorTotal || 0}, '${(v.dataHora || '').replace(/'/g, "\\'")}')" style="background:#005A4C; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📄 Fatura</button>
+                    <button onclick="window.gerarPDFMotoboy('${(v.nomeCliente || '').replace(/'/g, "\\'")}', '${(v.telefoneCliente || '').replace(/'/g, "\\'")}', '${(v.nifCliente || '').replace(/'/g, "\\'")}', '${(v.moradaCliente || '').replace(/'/g, "\\'")}', '${(v.produtosResumo || '').replace(/'/g, "\\'")}', ${v.valorTotal || 0})" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Roteiro</button>
                 </div>
             </td>
         `;
@@ -276,46 +263,32 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
 
     try {
-        const { data, error } = await supabase
-            .from('vendas')
-            .update({ status: novoStatus })
-            .eq('codigo_rastreio', codigoRastreio);
-        
-        if (error) throw new Error(error.message);
-
-        if (novoStatus === 'entregue') {
-            const { data: vendaData } = await supabase
-                .from('vendas')
-                .select('cliente_nome, cliente_telefone')
-                .eq('codigo_rastreio', codigoRastreio)
-                .single();
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
+        const data = await res.json();
+        let historico = data.record || [];
+        const index = historico.findIndex(v => v.codigoRastreio === codigoRastreio);
+        if(index !== -1) {
+            historico[index].status = novoStatus;
+            await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify(historico) });
             
-            if (vendaData && vendaData.cliente_telefone) {
-                const msg = `Olá ${vendaData.cliente_nome}! 🎉\nSeu pedido foi entregue com sucesso!\nAgradecemos pela preferência.\n\nPara nos ajudar a melhorar, dê uma nota (1 a 5) respondendo esta mensagem. 💛`;
-                window.open(`https://wa.me/244${vendaData.cliente_telefone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+            if (novoStatus === 'entregue') {
+                const tel = historico[index].telefoneCliente;
+                if (tel) {
+                    const msg = `Olá ${historico[index].nomeCliente}! 🎉\nSeu pedido foi entregue com sucesso!\nAgradecemos pela preferência.\n\nPara nos ajudar a melhorar, dê uma nota (1 a 5) respondendo esta mensagem. 💛`;
+                    window.open(`https://wa.me/244${tel.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                }
             }
-        }
 
-        alert('Status atualizado!');
-        location.reload();
-    } catch(e) { 
-        console.error(e);
-        alert('Erro ao atualizar status: ' + e.message); 
-    }
+            alert('Status atualizado! Recarregue a página de rastreio.');
+            location.reload();
+        } else alert('Pedido não encontrado.');
+    } catch(e) { alert('Erro ao atualizar status: ' + e.message); }
 };
 
 async function limparHistorico() {
     if (!confirm('Apagar TODO o histórico?')) return;
-    try {
-        const { error } = await supabase.rpc('limpar_vendas');
-        if (error) throw new Error(error.message);
-        todasVendas = [];
-        gerarRelatorio('semana');
-        alert('Histórico limpo!');
-    } catch (e) {
-        console.error(e);
-        alert('Erro ao limpar histórico: ' + e.message);
-    }
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify([]) });
+    if (res.ok) { todasVendas = []; gerarRelatorio('semana'); alert('Histórico limpo!'); } else alert('Erro ao limpar.');
 }
 
 async function exportarPDF() {
@@ -548,10 +521,6 @@ function exportarExcel() {
 }
 
 window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal, dataHora) {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert('Erro: Biblioteca PDF não carregada. Verifique sua conexão.');
-        return;
-    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
@@ -578,9 +547,9 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
         const nome = item.split(' (x')[0]; const qtd = item.split('(x')[1] ? item.split('(x')[1].replace(')', '') : '1';
         return [nome, qtd];
     });
-    
+    const body = itens.map(i => [i[0], i[1]]);
     doc.autoTable({
-        startY: y + 5, head: [['Descrição', 'Qtd']], body: itens, theme: 'grid',
+        startY: y + 5, head: [['Descrição', 'Qtd']], body: body, theme: 'grid',
         headStyles: { fillColor: verdeEscuro, textColor: '#FFF', fontSize: 9, halign: 'center' },
         bodyStyles: { fontSize: 9 },
         columnStyles: { 0: { cellWidth: 120 }, 1: { cellWidth: 30, halign: 'center' } },
@@ -590,14 +559,10 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.setFontSize(14); doc.setTextColor(verdeEscuro); doc.setFont('helvetica', 'bold'); doc.text(`Total a Pagar: ${valorTotal.toLocaleString('pt-AO')} Kz`, 190, finalY, { align: 'right' });
     doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont('helvetica', 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
-    alert('Fatura gerada com sucesso!');
+    alert('Fatura gerada com sucesso! Baixe o PDF e envie para o cliente.');
 };
 
 window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal) {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert('Erro: Biblioteca PDF não carregada. Verifique sua conexão.');
-        return;
-    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     doc.setFontSize(22); doc.setTextColor('#D4AF37'); doc.setFont('helvetica', 'bold'); doc.text('ROTEIRO DE ENTREGA - AURORA', 105, 20, { align: 'center' });
@@ -624,5 +589,5 @@ window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.text('4. Envie uma foto do cliente com a encomenda.', 25, y); y += 7;
     doc.setFontSize(8); doc.setTextColor('#999'); doc.text('Documento interno - AURORA COMERCIAL', 105, 280, { align: 'center' });
     doc.save(`Roteiro_Entrega_${new Date().toISOString().slice(0,10)}.pdf`);
-    alert('Roteiro gerado!');
+    alert('Roteiro gerado! Entregue o PDF ao motoboy ou imprima.');
 };

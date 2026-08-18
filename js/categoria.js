@@ -1,5 +1,5 @@
 import { initCarrinho } from './carrinho.js';
-import { carregarProdutosPagina, renderizarGrade } from './catalogo.js';
+import { carregarCatalogo, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!categoria) {
         document.getElementById('nenhumProduto').style.display = 'block';
+        document.getElementById('nenhumProduto').textContent = 'Nenhuma categoria foi selecionada.';
         document.getElementById('carregandoCategoria').style.display = 'none';
         return;
     }
@@ -20,17 +21,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tituloCategoria').textContent = `📦 ${nomeCategoria}`;
     document.getElementById('paginaTitulo').textContent = `${nomeCategoria} - Aurora Comercial`;
 
+    const catalogo = await carregarCatalogo();
     document.getElementById('carregandoCategoria').style.display = 'none';
-    
-    // Busca apenas os produtos desta categoria no servidor (RPC)
-    const dados = await carregarProdutosPagina(categoria, '', 1, 100); // 100 por segurança
-    const grid = document.getElementById('gradeCategoria');
-    grid.innerHTML = '';
 
-    if (!dados || dados.length === 0) {
+    if (!catalogo || catalogo.length === 0) {
         document.getElementById('nenhumProduto').style.display = 'block';
+        document.getElementById('nenhumProduto').textContent = 'Erro ao carregar o catálogo.';
         return;
     }
 
-    renderizarGrade(dados, grid, 1, 100);
+    const produtosFiltrados = catalogo.filter(prod => prod.categoria === categoria);
+    const grid = document.getElementById('gradeCategoria');
+    grid.innerHTML = '';
+
+    if (produtosFiltrados.length === 0) {
+        document.getElementById('nenhumProduto').style.display = 'block';
+        document.getElementById('nenhumProduto').textContent = 'Nenhum produto encontrado nesta categoria.';
+        return;
+    }
+
+    produtosFiltrados.forEach(prod => {
+        const card = criarCardProduto(prod);
+        grid.appendChild(card);
+    });
 });

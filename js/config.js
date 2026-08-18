@@ -1,14 +1,15 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// URL e chave anon do seu projeto Supabase
-const supabaseUrl = 'https://qcjbeivelpqiboibj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjanRiZWl2ZWxxb2xnYm9pcWJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2ODk4MjQsImV4cCI6MjEwMjI2NTgyNH0.Ou3NlfP-9LFgHNz_Tz--A9F20X4wKNj6U7mC4b66Ivk';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 export const CONFIG = {
-    NUMERO_WHATSAPP: '244933677628', // ✅ ÚNICO NÚMERO OFICIAL
-    ADMIN_SENHA: 'admin123',
+    // Configurações do Catálogo (Produtos)
+    BIN_ID: '6A6A120EF5F4AF5E29D1983A',
+    MASTER_KEY: '$2a$10$hF6Ctf0zhHdWGCY/1OsoJeuXfh9jtYTl3cL.ZmZwNBluOD7t8eKc6',
     CACHE_KEY: 'aurora_catalogo_cache',
-    CACHE_TTL: 60 * 60 * 1000 // 1 hora de cache
+    CACHE_TTL: 60 * 60 * 1000, // 1 hora
+    
+    // Configurações Gerais
+    NUMERO_WHATSAPP: '244933677628',
+    ADMIN_SENHA: 'admin123',
+
+    // Configurações do Bin de Vendas
+    BIN_ID_VENDAS: '6a71c4a3f5f4af5e29e94b57',
+    MASTER_KEY_VENDAS: '$2a$10$hF6Ctf0zhHdWGCY/1OsoJeuXfh9jtYTl3cL.ZmZwNBluOD7t8eKc6'
 };

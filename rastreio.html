@@ -1,125 +1,46 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rastrear Pedido - Aurora Comercial</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
-</head>
-<body>
+<script type="module">
+    import { CONFIG } from './js/config.js';
 
-    <header class="header-principal" role="banner">
-        <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo auro.png" alt="Logo Aurora Comercial" />
-                <span>Aurora<br /><span>Comercial</span></span>
-            </a>
-            <div class="header-icones">
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
-            </div>
-        </div>
-        <nav class="menu-categorias">
-            <ul id="menuCategorias">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="blog.html">📖 Blog</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main style="max-width: 800px; margin: 40px auto; padding: 0 24px;">
-        <h1 style="color: var(--cor-esmeralda); text-align: center; margin-bottom: 20px;">📦 Rastrear Pedido</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 24px;">Digite o código de rastreio fornecido no seu pedido.</p>
+    document.getElementById('btnRastrear').addEventListener('click', async () => {
+        const codigo = document.getElementById('inputRastreio').value.trim();
+        const resultadoDiv = document.getElementById('resultadoRastreio');
+        const erroDiv = document.getElementById('erroRastreio');
         
-        <div style="display: flex; gap: 12px; max-width: 500px; margin: 0 auto;">
-            <input type="text" id="inputRastreio" placeholder="Ex: AURORA-123456" style="flex: 1; padding: 12px 16px; border: 2px solid #ddd; border-radius: 40px; font-size: 16px; outline: none;" />
-            <button id="btnRastrear" style="background: var(--cor-ouro); color: #000; border: none; padding: 12px 30px; border-radius: 40px; font-weight: 700; cursor: pointer; font-size: 16px;">🔍 Rastrear</button>
-        </div>
+        if(!codigo) return alert('Digite um código.');
 
-        <div id="erroRastreio" style="display: none; background: #fde8e8; color: #E74C3C; padding: 16px; border-radius: 12px; margin-top: 20px; text-align: center; border: 1px solid #E74C3C;">
-            ❌ Pedido não encontrado. Verifique o código e tente novamente.
-        </div>
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
+            const data = await res.json();
+            const vendas = data.record || [];
+            const venda = vendas.find(v => v.codigoRastreio === codigo);
 
-        <div id="resultadoRastreio" style="display: none; background: #fff; border-radius: 16px; padding: 24px; box-shadow: var(--sombra-card); margin-top: 20px; border: 1px solid var(--cor-ouro);">
-            <h2 id="rastreioNome" style="color: var(--cor-esmeralda);"></h2>
-            <p id="rastreioData" style="color: #888; font-size: 14px;"></p>
-            
-            <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin: 16px 0;">
-                <strong>Produtos:</strong> <span id="rastreioProdutos"></span>
-            </div>
-
-            <div style="margin-top: 24px;">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 4px;">
-                    <span>Confirmado</span>
-                    <span>Enviado</span>
-                    <span>Entregue</span>
-                </div>
-                <div style="background: #eee; border-radius: 20px; height: 10px; overflow: hidden;">
-                    <div id="barraProgresso" style="background: var(--cor-esmeralda); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
-                </div>
-                <p id="statusAtualTexto" style="text-align: center; font-weight: 600; color: var(--cor-esmeralda); margin-top: 12px;"></p>
-            </div>
-        </div>
-    </main>
-
-    <footer class="rodape-profissional" style="margin-top: 40px;">
-        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
-    </footer>
-
-    <script type="module">
-        import { supabase } from './js/config.js';
-
-        document.getElementById('btnRastrear').addEventListener('click', async () => {
-            const codigo = document.getElementById('inputRastreio').value.trim();
-            const resultadoDiv = document.getElementById('resultadoRastreio');
-            const erroDiv = document.getElementById('erroRastreio');
-            
-            if(!codigo) return alert('Digite um código.');
-
-            try {
-                // Busca a venda no Supabase pelo código de rastreio
-                const { data: vendas, error } = await supabase
-                    .from('vendas')
-                    .select('*')
-                    .eq('codigo_rastreio', codigo);
-
-                if (error) throw error;
-                
-                const venda = vendas && vendas[0];
-
-                if(!venda) {
-                    erroDiv.style.display = 'block';
-                    resultadoDiv.style.display = 'none';
-                    return;
-                }
-
-                erroDiv.style.display = 'none';
-                resultadoDiv.style.display = 'block';
-
-                document.getElementById('rastreioNome').textContent = `Olá, ${venda.cliente_nome}`;
-                // Formata a data do SQL (timestamp) para o formato legível
-                const dataFormatada = new Date(venda.data_hora).toLocaleString('pt-BR');
-                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${dataFormatada}`;
-                document.getElementById('rastreioProdutos').textContent = venda.produtos_resumo;
-
-                const status = venda.status || 'confirmado';
-                let progresso = 0;
-                let texto = '';
-
-                if(status === 'confirmado') { progresso = 0; texto = '✅ Pedido confirmado'; }
-                else if(status === 'enviado') { progresso = 50; texto = '🚚 Pedido saiu para entrega'; }
-                else if(status === 'entregue') { progresso = 100; texto = '📦 Pedido entregue com sucesso!'; }
-
-                document.getElementById('barraProgresso').style.width = progresso + '%';
-                document.getElementById('statusAtualTexto').textContent = texto;
-
-            } catch(e) {
-                console.error(e);
-                alert('Erro ao buscar o pedido. Tente novamente.');
+            if(!venda) {
+                erroDiv.style.display = 'block';
+                resultadoDiv.style.display = 'none';
+                return;
             }
-        });
-    </script>
-</body>
-</html>
+
+            erroDiv.style.display = 'none';
+            resultadoDiv.style.display = 'block';
+
+            document.getElementById('rastreioNome').textContent = `Olá, ${venda.nomeCliente}`;
+            document.getElementById('rastreioData').textContent = `Pedido realizado em: ${venda.dataHora}`;
+            document.getElementById('rastreioProdutos').textContent = venda.produtosResumo;
+
+            const status = venda.status || 'confirmado';
+            let progresso = 0;
+            let texto = '';
+
+            if(status === 'confirmado') { progresso = 0; texto = '✅ Pedido confirmado'; }
+            else if(status === 'enviado') { progresso = 50; texto = '🚚 Pedido saiu para entrega'; }
+            else if(status === 'entregue') { progresso = 100; texto = '📦 Pedido entregue com sucesso!'; }
+
+            document.getElementById('barraProgresso').style.width = progresso + '%';
+            document.getElementById('statusAtualTexto').textContent = texto;
+
+        } catch(e) {
+            console.error(e);
+            alert('Erro ao buscar o pedido. Tente novamente.');
+        }
+    });
+</script>
