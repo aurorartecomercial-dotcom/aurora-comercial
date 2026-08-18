@@ -1,5 +1,5 @@
 import { extrairValorNumerico } from './utils.js';
-import { CONFIG } from './config.js'; // 👈 CORREÇÃO: importação do CONFIG
+import { CONFIG } from './config.js'; // Importação obrigatória
 
 let todasVendas = [];
 let catalogo = [];
@@ -31,6 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
     document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
+
+    const inputFiltro = document.getElementById('filtroPedidoCliente');
+    const selectStatus = document.getElementById('filtroStatus');
+    if (inputFiltro && selectStatus) {
+        const aplicarFiltro = () => renderizarTabelaPedidos(vendasFiltradasCache);
+        inputFiltro.addEventListener('input', aplicarFiltro);
+        selectStatus.addEventListener('change', aplicarFiltro);
+    }
 });
 
 let vendasFiltradasCache = [];
@@ -40,13 +48,11 @@ async function carregarDados() {
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
-        // Buscar vendas no JSONbin
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
         if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
         const dataVendas = await resVendas.json();
         todasVendas = (dataVendas && Array.isArray(dataVendas.record)) ? dataVendas.record : [];
 
-        // Buscar produtos no JSONbin (para ter os dados mais atualizados)
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
         if (!resProdutos.ok) throw new Error(`Erro Produtos: ${resProdutos.status}`);
         const dataProdutos = await resProdutos.json();
@@ -118,7 +124,6 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiDesconto').textContent = descontoTotal.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiLucro').textContent = lucroTotal.toLocaleString('pt-AO') + ' Kz';
 
-    // Tabela Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         venda.produtosResumo.split(', ').forEach(item => {
@@ -140,7 +145,6 @@ function gerarRelatorio(periodo) {
 
     renderizarTabelaPedidos(vendasFiltradas);
 
-    // Gráficos
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => { const dia = v.dataHora.split(' ')[0]; vendasPorDia[dia] = (vendasPorDia[dia] || 0) + v.valorTotal; });
     const dias = Object.keys(vendasPorDia);
@@ -156,7 +160,6 @@ function gerarRelatorio(periodo) {
         graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
     } else { document.getElementById('graficoProdutos').style.display = 'none'; }
 
-    // Comparativo Mensal
     const mesAtual = agora.getMonth();
     const anoAtual = agora.getFullYear();
     const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
@@ -185,7 +188,6 @@ function gerarRelatorio(periodo) {
         }, options: { responsive: true, plugins: { legend: { position: 'top' } } }
     });
 
-    // Mapa de Vendas
     const regioes = {};
     vendasFiltradas.forEach(v => {
         const morada = v.moradaCliente || '';
@@ -210,7 +212,6 @@ function gerarRelatorio(periodo) {
     } else { document.getElementById('graficoMapa').style.display = 'none'; }
 }
 
-// Tabela de Pedidos com Filtro
 function renderizarTabelaPedidos(vendas) {
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
