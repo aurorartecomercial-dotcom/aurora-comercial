@@ -1,5 +1,5 @@
 import { extrairValorNumerico } from './utils.js';
-import { CONFIG } from './config.js'; // Importação obrigatória
+import { CONFIG } from './config.js';
 
 let todasVendas = [];
 let catalogo = [];
@@ -16,15 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLoginVendas');
 
     btnLogin.addEventListener('click', () => {
-        if (senhaInput.value === CONFIG.ADMIN_SENHA) {
+        // 👈 CORREÇÃO: usa trim() para ignorar espaços na senha
+        if (senhaInput.value.trim() === CONFIG.ADMIN_SENHA) {
             loginDiv.style.display = 'none';
             conteudoDiv.style.display = 'block';
             carregarDados();
         } else {
             erroLogin.style.display = 'block';
+            setTimeout(() => { erroLogin.style.display = 'none'; }, 3000); // Some após 3s
         }
     });
-    senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
+    
+    senhaInput.addEventListener('keydown', (e) => { 
+        if (e.key === 'Enter') btnLogin.click(); 
+    });
 
     document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
     document.getElementById('btnRelatorioMensal').addEventListener('click', () => gerarRelatorio('mes'));
