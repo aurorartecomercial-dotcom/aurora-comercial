@@ -36,22 +36,35 @@ async function carregarDados() {
     if (erroDiv) erroDiv.innerHTML = '';
 
     try {
+        // 1. Buscar vendas
         const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
         if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
         const dataVendas = await resVendas.json();
-        todasVendas = (dataVendas && Array.isArray(dataVendas.record)) ? dataVendas.record : [];
 
+        // 💡 CORREÇÃO: Tratar os possíveis formatos do JSONbin
+        let vendasRaw = dataVendas.record;
+        if (vendasRaw && !Array.isArray(vendasRaw) && vendasRaw.data) {
+            vendasRaw = vendasRaw.data;
+        }
+        todasVendas = Array.isArray(vendasRaw) ? vendasRaw : [];
+
+        // 2. Buscar produtos
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
         if (!resProdutos.ok) throw new Error(`Erro Produtos: ${resProdutos.status}`);
         const dataProdutos = await resProdutos.json();
         let serverData = dataProdutos.record;
-        catalogo = Array.isArray(serverData) ? serverData : (serverData && serverData.data ? serverData.data : []);
-        if (!Array.isArray(catalogo)) catalogo = [];
+        
+        // 💡 CORREÇÃO: Formato flexível
+        if (serverData && !Array.isArray(serverData) && serverData.data) {
+            serverData = serverData.data;
+        }
+        catalogo = Array.isArray(serverData) ? serverData : [];
 
+        // 3. Gerar relatório
         gerarRelatorio('semana');
     } catch (e) {
         console.error('ERRO:', e);
@@ -189,13 +202,28 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
         const data = await res.json();
-        let historico = data.record || [];
+        let historico = data.record;
+
+        // 💡 CORREÇÃO: Formato flexível
+        if (historico && !Array.isArray(historico) && historico.data) {
+            historico = historico.data;
+        }
+        if (!Array.isArray(historico)) historico = [];
+
         const index = historico.findIndex(v => v.codigoRastreio === codigoRastreio);
         if(index !== -1) {
             historico[index].status = novoStatus;
-            await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, body: JSON.stringify(historico) });
-            alert('Status atualizado! Recarregue a página de rastreio.');
-            location.reload();
+            const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }, 
+                body: JSON.stringify(historico) 
+            });
+            if (resPut.ok) {
+                alert('Status atualizado!');
+                location.reload();
+            } else {
+                alert('Erro ao atualizar status.');
+            }
         } else alert('Pedido não encontrado.');
     } catch(e) { alert('Erro ao atualizar status: ' + e.message); }
 };
@@ -433,49 +461,101 @@ function exportarExcel() {
     XLSX.writeFile(wb, `Relatorio_Vendas_Admin_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
+// ============================================================
+// GERAR FATURA DO CLIENTE (CORRIGIDO)
+// ============================================================
 window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal, dataHora) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('A biblioteca jsPDF não está carregada!');
+        return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
-    try {
-        const logoImg = new Image(); logoImg.src = 'logo auro.png';
-        logoImg.onload = () => doc.addImage(logoImg, 'PNG', 15, 10, 20, 20);
-    } catch (e) {}
-    doc.setFontSize(24); doc.setTextColor(dourado); doc.setFont('helvetica', 'bold'); doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
-    doc.setFontSize(9); doc.setTextColor('#444'); doc.setFont('helvetica', 'normal'); doc.text('Contribuinte: 5000048151 | Tel: +244 925 328 181', 105, 28, { align: 'center' });
-    doc.text('contacto@aurorarte.ao | Luanda - Angola', 105, 34, { align: 'center' });
-    doc.setDrawColor(dourado); doc.setLineWidth(0.8); doc.line(20, 40, 190, 40);
+    const verdeEscuro = '#005A4C';
+    const dourado = '#D4AF37';
 
+    // Cabeçalho
+    doc.setFillColor(verdeEscuro);
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setFillColor(dourado);
+    doc.rect(0, 30, 210, 2, 'F');
+    
+    doc.setTextColor('#FFFFFF');
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('AURORA COMERCIAL', 105, 18, { align: 'center' });
+
+    doc.setTextColor('#000000');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('NIF: 5000048151 | Tel: +244 933 677 628', 105, 40, { align: 'center' });
+    doc.text('contacto@aurorarte.ao | Luanda - Angola', 105, 45, { align: 'center' });
+    
+    // Número da fatura
     const numeroFatura = `FR-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${Math.floor(Math.random()*9999)}`;
-    doc.setFontSize(10); doc.setTextColor('#333'); doc.setFont('helvetica', 'bold'); doc.text(`Nº: ${numeroFatura}`, 20, 48);
-    doc.setFont('helvetica', 'normal'); doc.text(`Data: ${dataHora}`, 120, 48);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(`Fatura Nº: ${numeroFatura}`, 15, 60);
+    doc.text(`Data: ${dataHora || new Date().toLocaleDateString('pt-BR')}`, 140, 60);
 
-    let y = 58;
-    doc.setFontSize(10); doc.text('Cliente:', 20, y); doc.setFont('helvetica', 'bold'); doc.text(nomeCliente || 'N/A', 50, y); y += 7;
-    doc.setFont('helvetica', 'normal'); doc.text('Telefone:', 20, y); doc.setFont('helvetica', 'bold'); doc.text(telefoneCliente || 'N/A', 50, y); y += 7;
-    doc.setFont('helvetica', 'normal'); doc.text('NIF:', 20, y); doc.setFont('helvetica', 'bold'); doc.text(nifCliente || 'N/A', 50, y); y += 7;
-    doc.setFont('helvetica', 'normal'); doc.text('Morada:', 20, y); doc.setFont('helvetica', 'bold'); doc.text(moradaCliente || 'N/A', 50, y); y += 10;
+    // Dados do cliente
+    let y = 75;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DADOS DO CLIENTE', 15, y);
+    y += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nome: ${nomeCliente || 'N/A'}`, 15, y);
+    y += 7;
+    doc.text(`Telefone: ${telefoneCliente || 'N/A'}`, 15, y);
+    y += 7;
+    doc.text(`NIF: ${nifCliente || 'N/A'}`, 15, y);
+    y += 7;
+    doc.text(`Morada: ${moradaCliente || 'N/A'}`, 15, y);
+    y += 12;
 
+    // Tabela de produtos
     const itens = produtosResumo.split(', ').map(item => {
-        const nome = item.split(' (x')[0]; const qtd = item.split('(x')[1] ? item.split('(x')[1].replace(')', '') : '1';
+        const nome = item.split(' (x')[0];
+        const qtd = item.split('(x')[1] ? item.split('(x')[1].replace(')', '') : '1';
         return [nome, qtd];
     });
-    const body = itens.map(i => [i[0], i[1]]);
+
     doc.autoTable({
-        startY: y + 5, head: [['Descrição', 'Qtd']], body: body, theme: 'grid',
-        headStyles: { fillColor: verdeEscuro, textColor: '#FFF', fontSize: 9, halign: 'center' },
+        startY: y,
+        head: [['Descrição', 'Qtd']],
+        body: itens,
+        theme: 'grid',
+        headStyles: { fillColor: verdeEscuro, textColor: '#FFFFFF', fontSize: 9, halign: 'center' },
         bodyStyles: { fontSize: 9 },
-        columnStyles: { 0: { cellWidth: 120 }, 1: { cellWidth: 30, halign: 'center' } },
-        margin: { left: 20, right: 20 }
+        columnStyles: { 0: { cellWidth: 130 }, 1: { cellWidth: 30, halign: 'center' } },
+        margin: { left: 15, right: 15 }
     });
+
+    // Total
     const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(14); doc.setTextColor(verdeEscuro); doc.setFont('helvetica', 'bold'); doc.text(`Total a Pagar: ${valorTotal.toLocaleString('pt-AO')} Kz`, 190, finalY, { align: 'right' });
-    doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont('helvetica', 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setTextColor(verdeEscuro);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total a Pagar: ${valorTotal.toLocaleString('pt-AO')} Kz`, 190, finalY, { align: 'right' });
+
+    // Rodapé
+    doc.setFontSize(8);
+    doc.setTextColor('#888888');
+    doc.setFont('helvetica', 'italic');
+    doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
+
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
     alert('Fatura gerada com sucesso! Baixe o PDF e envie para o cliente.');
 };
 
 window.gerarPDFMotoboy = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('A biblioteca jsPDF não está carregada!');
+        return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     doc.setFontSize(22); doc.setTextColor('#D4AF37'); doc.setFont('helvetica', 'bold'); doc.text('ROTEIRO DE ENTREGA - AURORA', 105, 20, { align: 'center' });

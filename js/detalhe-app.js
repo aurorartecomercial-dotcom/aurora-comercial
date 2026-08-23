@@ -2,7 +2,7 @@ import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
-import { atualizarMetaTags, mostrarToast } from './utils.js';
+import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initCarrinho();
@@ -53,7 +53,9 @@ function renderizarDetalhes(prod) {
     if (prodName) prodName.textContent = prod.nome;
 
     let miniaturasHtml = prod.imagens.map((src, i) =>
-        `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" class="${i === 0 ? 'ativa' : ''}" onerror="this.src='placeholder.jpg'">`
+        `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" 
+              class="${i === 0 ? 'ativa' : ''}" 
+              onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">`
     ).join('');
 
     const avaliacao = obterAvaliacao(prod.id);
@@ -70,7 +72,8 @@ function renderizarDetalhes(prod) {
     container.innerHTML = `
         <div class="detalhes-grid">
             <div class="detalhes-imagem-principal">
-                <img id="detalhesImg" src="${prod.imagens[0]}" alt="${prod.nome}" onerror="this.src='placeholder.jpg'" />
+                <img id="detalhesImg" src="${prod.imagens[0]}" alt="${prod.nome}" 
+                     onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
                 <div class="detalhes-miniaturas" id="miniaturas">${miniaturasHtml}</div>
             </div>
             <div class="detalhes-info">

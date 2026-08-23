@@ -1,4 +1,4 @@
-import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura } from './utils.js';
+import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura, IMAGEM_FALLBACK } from './utils.js';
 import { CONFIG } from './config.js';
 
 let carrinho = [];
@@ -279,6 +279,9 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
+// ============================================================
+// 💾 CORREÇÃO DA FUNÇÃO salvarVendaNoHistorico
+// ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -303,40 +306,60 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     };
 
     try {
+        // 1. Busca o histórico atual
         const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
         });
+        
+        if (!resGet.ok) throw new Error(`Erro ao buscar vendas: ${resGet.status}`);
+        
         const data = await resGet.json();
         let historico = data.record;
 
+        // 💡 CORREÇÃO: Se data.record for um objeto com propriedade 'data', extrai
+        if (historico && !Array.isArray(historico) && historico.data) {
+            historico = historico.data;
+        }
+        // Se ainda não for array, cria um novo
         if (!Array.isArray(historico)) {
-            console.warn('⚠️ O JSONbin devolveu algo que não era uma lista. A criar uma nova lista.');
+            console.warn('⚠️ JSONbin devolveu formato inesperado. A criar nova lista.');
             historico = [];
         }
 
+        // 2. Adiciona a nova venda
         historico.push(novaVenda);
 
-        await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
+        // 3. Envia de volta para o JSONbin
+        const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS },
             body: JSON.stringify(historico)
         });
 
+        if (!resPut.ok) throw new Error(`Erro ao gravar venda: ${resPut.status}`);
+
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
+        
+        // Fallback: salva localmente
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
+        
         alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
     }
 }
 
+// ============================================================
+// ✨ GERAÇÃO DE FATURA PDF (CORRIGIDO)
+// ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    await loadJSPDF();
+    // A biblioteca já está carregada no HTML (ver index.html)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const verdeEscuro = '#005A4C'; const dourado = '#D4AF37';
+    const verdeEscuro = '#005A4C';
+    const dourado = '#D4AF37';
     try {
         const logoImg = new Image(); logoImg.src = 'logo auro.png';
         await new Promise((resolve) => { logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; logoImg.onerror = resolve; });
@@ -363,11 +386,21 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     });
 
     doc.autoTable({
-        startY: y + 5, head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']], body: body, theme: 'grid',
+        startY: y + 5,
+        head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']],
+        body: body,
+        theme: 'grid',
         headStyles: { fillColor: verdeEscuro, textColor: '#FFFFFF', fontSize: 9, halign: 'center', fontStyle: 'bold' },
         bodyStyles: { textColor: '#333', fontSize: 9 },
-        columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 20, halign: 'center' }, 2: { cellWidth: 35, halign: 'right' }, 3: { cellWidth: 35, halign: 'right' } },
-        margin: { left: 20, right: 20 }, tableWidth: 170, styles: { lineColor: dourado, lineWidth: 0.2 }
+        columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 35, halign: 'right' },
+            3: { cellWidth: 35, halign: 'right' }
+        },
+        margin: { left: 20, right: 20 },
+        tableWidth: 170,
+        styles: { lineColor: dourado, lineWidth: 0.2 }
     });
 
     const finalY = doc.lastAutoTable.finalY + 8;
@@ -386,20 +419,6 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
 
     doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont(undefined, 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
     doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
-}
-
-function loadJSPDF() {
-    return new Promise((resolve, reject) => {
-        if (window.jspdf && window.jspdf.jsPDF) { resolve(); return; }
-        const script1 = document.createElement('script');
-        script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script1.onload = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-            script2.onload = resolve; script2.onerror = reject; document.head.appendChild(script2);
-        };
-        script1.onerror = reject; document.head.appendChild(script1);
-    });
 }
 
 function numeroPorExtenso(valor) {

@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js';
-import { extrairValorNumerico } from './utils.js';
+import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
@@ -37,14 +37,15 @@ export function criarCardProduto(prod) {
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : 'placeholder.jpg';
+    let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : IMAGEM_FALLBACK;
 
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
     const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
 
     let html = `
         <div class="produto-imagem">
-            <img src="${imgSrc}" alt="${prod.nome}" loading="lazy" decoding="async" onerror="this.src='placeholder.jpg'">
+            <img src="${imgSrc}" alt="${prod.nome}" loading="lazy" decoding="async" 
+                 onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">
         </div>
         <div class="produto-info">
             <span class="categoria-tag">${prod.tag || prod.categoria}</span>

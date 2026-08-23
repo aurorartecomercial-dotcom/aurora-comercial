@@ -121,8 +121,11 @@
                     throw new Error('Formato de dados inválido.');
                 }
 
-                // Busca o pedido ignorando espaços extras
-                const venda = vendas.find(v => v.codigoRastreio && v.codigoRastreio.trim() === codigo);
+                // 💡 CORREÇÃO: Normalizar código antes de buscar (case-insensitive)
+                const codigoNormalizado = codigo.toUpperCase();
+
+                // Busca o pedido ignorando maiúsculas/minúsculas e espaços
+                const venda = vendas.find(v => v.codigoRastreio && v.codigoRastreio.trim().toUpperCase() === codigoNormalizado);
 
                 if (!venda) {
                     erroRastreio.style.display = 'block';

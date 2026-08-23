@@ -1,4 +1,4 @@
-// Linha de importação removida, pois não era usada.
+import { IMAGEM_FALLBACK } from './utils.js';
 
 async function carregarBlog() {
     try {
@@ -19,7 +19,8 @@ function renderizarPosts(posts) {
         card.href = `post.html?id=${post.id}`;
         card.innerHTML = `
             <div class="produto-imagem">
-                <img src="${post.imagem}" alt="${post.titulo}" onerror="this.src='placeholder.jpg'" />
+                <img src="${post.imagem}" alt="${post.titulo}" 
+                     onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
             </div>
             <div class="produto-info">
                 <span style="color:var(--cor-esmeralda); font-size:11px; font-weight:600;">${post.data}</span>

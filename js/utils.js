@@ -1,8 +1,58 @@
+// ==============================
+// js/utils.js
+// ==============================
+
+// Constante de imagem placeholder (fallback universal)
+export const IMAGEM_FALLBACK = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5TZW0gSW1hZ2VtPC90ZXh0Pjwvc3ZnPg==';
+
+/**
+ * Extrai valor numérico de um preço formatado.
+ * Suporta formatos:
+ * - Angolano/Brasileiro: "Kz 12.500,00" → 12500.00
+ * - Americano: "$12,500.00" → 12500.00
+ * - Simples: "1500" → 1500
+ */
 export function extrairValorNumerico(precoString) {
     if (!precoString) return 0;
-    let valor = precoString.replace(/[^0-9,]/g, '');
-    valor = valor.replace(/\./g, '');
-    valor = valor.replace(',', '.');
+
+    // Remove tudo que não é número, ponto ou vírgula
+    let valor = precoString.replace(/[^0-9.,]/g, '');
+
+    if (!valor) return 0;
+
+    // Detecta o último separador (vírgula ou ponto)
+    const ultimaVirgula = valor.lastIndexOf(',');
+    const ultimoPonto = valor.lastIndexOf('.');
+
+    if (ultimaVirgula > ultimoPonto) {
+        // Formato angolano/brasileiro: "1.234,56"
+        // Remove pontos (milhares) e troca vírgula por ponto (decimal)
+        valor = valor.replace(/\./g, '').replace(',', '.');
+    } else if (ultimoPonto > ultimaVirgula) {
+        // Formato americano: "1,234.56"
+        // Remove vírgulas (milhares) e mantém ponto (decimal)
+        valor = valor.replace(/,/g, '');
+    } else {
+        // Apenas um separador, ou nenhum
+        if (ultimaVirgula !== -1 && ultimoPonto === -1) {
+            // Apenas vírgula: pode ser decimal (12,50) ou milhar (12,000)
+            // Se tem mais de uma vírgula, é milhar (1,000,000)
+            if (valor.split(',').length > 2) {
+                valor = valor.replace(/,/g, '');
+            } else {
+                // Assume decimal
+                valor = valor.replace(',', '.');
+            }
+        } else if (ultimoPonto !== -1 && ultimaVirgula === -1) {
+            // Apenas ponto: pode ser decimal (12.50) ou milhar (12.000)
+            // Se tem mais de um ponto, é milhar (12.000.000)
+            if (valor.split('.').length > 2) {
+                valor = valor.replace(/\./g, '');
+            }
+            // Se tem apenas um ponto, já é decimal
+        }
+    }
+
     return parseFloat(valor) || 0;
 }
 
