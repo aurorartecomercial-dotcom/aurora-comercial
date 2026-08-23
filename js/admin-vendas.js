@@ -1,8 +1,8 @@
 import { extrairValorNumerico } from './utils.js';
 import { CONFIG } from './config.js';
 
-let todasVendas = [];
-let catalogo = [];
+let todasVendas = []; // Array de vendas
+let catalogo = [];    // Array de produtos
 let graficoVendas = null;
 let graficoProdutos = null;
 
@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             erroLogin.style.display = 'block';
         }
     });
+
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
     document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
@@ -48,9 +49,10 @@ async function carregarDados() {
         if (vendasRaw && !Array.isArray(vendasRaw) && vendasRaw.data) {
             vendasRaw = vendasRaw.data;
         }
+        // Se ainda não for array, inicia como array vazio
         todasVendas = Array.isArray(vendasRaw) ? vendasRaw : [];
 
-        // 2. Buscar produtos
+        // 2. Buscar produtos (catálogo)
         const resProdutos = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
             headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
         });
@@ -64,7 +66,7 @@ async function carregarDados() {
         }
         catalogo = Array.isArray(serverData) ? serverData : [];
 
-        // 3. Gerar relatório
+        // 3. Gerar relatório inicial (esta semana)
         gerarRelatorio('semana');
     } catch (e) {
         console.error('ERRO:', e);
@@ -81,50 +83,78 @@ function gerarRelatorio(periodo) {
     const agora = new Date();
     let vendasFiltradas = [];
 
+    // Filtrar por período
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
         inicioSemana.setDate(agora.getDate() - agora.getDay());
-        vendasFiltradas = todasVendas.filter(v => new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-')) >= inicioSemana);
-    } else {
         vendasFiltradas = todasVendas.filter(v => {
+            if (!v.dataHora) return false;
+            const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
+            return data >= inicioSemana;
+        });
+    } else if (periodo === 'mes') {
+        vendasFiltradas = todasVendas.filter(v => {
+            if (!v.dataHora) return false;
             const data = new Date(v.dataHora.split(' ')[0].split('/').reverse().join('-'));
             return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
         });
+    } else {
+        // Se for "todos", mostra todas as vendas
+        vendasFiltradas = todasVendas;
     }
 
-    const faturamento = vendasFiltradas.reduce((acc, v) => acc + v.valorTotal, 0);
+    // Cálculo dos KPIs
+    const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidos = vendasFiltradas.length;
-    const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + v.totalItens, 0);
+    const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
 
     let descontoTotal = 0;
+    let lucroTotal = 0;
+    
     vendasFiltradas.forEach(v => {
-        v.produtosResumo.split(', ').forEach(item => {
-            const nome = item.split(' (x')[0];
-            const qtd = parseInt(item.split('(x')[1]) || 1;
-            const prod = catalogo.find(p => p.nome === nome);
-            if (prod && prod.precoAntigo) {
-                const precoFinal = extrairValorNumerico(prod.preco);
-                const precoAntigo = extrairValorNumerico(prod.precoAntigo);
-                if (precoAntigo > precoFinal) descontoTotal += (precoAntigo - precoFinal) * qtd;
-            }
-        });
+        // Calcula desconto e lucro por item vendido
+        if (v.produtosResumo) {
+            const itens = v.produtosResumo.split(', ');
+            itens.forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                const prod = catalogo.find(p => p.nome === nome);
+                if (prod) {
+                    const precoFinal = extrairValorNumerico(prod.preco);
+                    const precoAntigo = prod.precoAntigo ? extrairValorNumerico(prod.precoAntigo) : precoFinal;
+                    const custo = prod.custo ? extrairValorNumerico(prod.custo) : 0;
+                    
+                    // Desconto (se houver preço antigo)
+                    if (precoAntigo > precoFinal) {
+                        descontoTotal += (precoAntigo - precoFinal) * qtd;
+                    }
+                    
+                    // Lucro = (Preço Final - Custo) * Qtd
+                    lucroTotal += (precoFinal - custo) * qtd;
+                }
+            });
+        }
     });
 
+    // Atualizar KPIs no DOM
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
     document.getElementById('kpiDesconto').textContent = descontoTotal.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiLucro').textContent = lucroTotal.toLocaleString('pt-AO') + ' Kz';
 
     // Tabela Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
-        venda.produtosResumo.split(', ').forEach(item => {
-            const nome = item.split(' (x')[0];
-            const qtd = parseInt(item.split('(x')[1]) || 1;
-            vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-        });
+        if (venda.produtosResumo) {
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        }
     });
     const corpoTabela = document.getElementById('corpoTabelaRelatorio');
     corpoTabela.innerHTML = '';
@@ -144,7 +174,7 @@ function gerarRelatorio(periodo) {
         const tr = document.createElement('tr');
         const statusMap = { confirmado: '🟡 Confirmado', enviado: '🔵 Enviado', entregue: '🟢 Entregue' };
         tr.innerHTML = `
-            <td style="padding:8px;">${v.dataHora}</td>
+            <td style="padding:8px;">${v.dataHora || 'N/A'}</td>
             <td style="padding:8px; font-weight:600;">${v.nomeCliente || 'N/A'}</td>
             <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
             <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
@@ -170,20 +200,83 @@ function gerarRelatorio(periodo) {
     });
 
     // Gráficos
+    // 1. Vendas por Dia
     const vendasPorDia = {};
-    vendasFiltradas.forEach(v => { const dia = v.dataHora.split(' ')[0]; vendasPorDia[dia] = (vendasPorDia[dia] || 0) + v.valorTotal; });
+    vendasFiltradas.forEach(v => { 
+        if (v.dataHora) {
+            const dia = v.dataHora.split(' ')[0]; 
+            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0); 
+        }
+    });
     const dias = Object.keys(vendasPorDia);
     const valores = Object.values(vendasPorDia);
     if (graficoVendas) graficoVendas.destroy();
     if (dias.length > 0) {
-        graficoVendas = new Chart(document.getElementById('graficoVendas'), { type: 'bar', data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] } });
-    } else { document.getElementById('graficoVendas').style.display = 'none'; }
+        graficoVendas = new Chart(document.getElementById('graficoVendas'), { 
+            type: 'bar', 
+            data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    } else {
+        document.getElementById('graficoVendas').style.display = 'none';
+        document.getElementById('graficoVendas').parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sem dados para gráfico</p>';
+    }
 
+    // 2. Produtos Mais Vendidos
     const topProdutos = Object.entries(vendasPorProduto).sort((a, b) => b[1] - a[1]).slice(0, 5);
     if (graficoProdutos) graficoProdutos.destroy();
     if (topProdutos.length > 0) {
-        graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { type: 'pie', data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] } });
-    } else { document.getElementById('graficoProdutos').style.display = 'none'; }
+        graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { 
+            type: 'pie', 
+            data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    } else {
+        document.getElementById('graficoProdutos').style.display = 'none';
+        document.getElementById('graficoProdutos').parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sem dados para gráfico</p>';
+    }
+
+    // 3. Comparativo Mensal (Gráfico de Linhas - dados fictícios ou reais)
+    // Exemplo: Vendas dos últimos 6 meses
+    const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
+    const valoresMensais = [0, 0, 0, 0, 0, 0]; // Você pode preencher com dados reais se tiver
+    // Se quiser dados reais, teria que percorrer todas as vendas e agrupar por mês
+
+    const ctxComparativo = document.getElementById('graficoComparativo');
+    if (ctxComparativo) {
+        new Chart(ctxComparativo, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Vendas (Kz)',
+                    data: valoresMensais,
+                    borderColor: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // 4. Mapa de Vendas (Simulação)
+    const ctxMapa = document.getElementById('graficoMapa');
+    if (ctxMapa) {
+        new Chart(ctxMapa, {
+            type: 'bar',
+            data: {
+                labels: ['Luanda', 'Benguela', 'Huambo', 'Lubango'],
+                datasets: [{
+                    label: 'Pedidos',
+                    data: [12, 5, 3, 2],
+                    backgroundColor: '#005A4C'
+                }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+        });
+    }
 }
 
 async function limparHistorico() {
@@ -274,6 +367,7 @@ async function exportarPDF() {
     const itens = document.getElementById('kpiItens').textContent;
     const estoque = document.getElementById('kpiEstoque').textContent;
     const desconto = document.getElementById('kpiDesconto').textContent;
+    const lucro = document.getElementById('kpiLucro').textContent;
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -289,6 +383,7 @@ async function exportarPDF() {
     doc.text('Itens Vendidos:', 20, 82);
     doc.text('Estoque Restante:', 110, 82);
     doc.text('Desconto Total:', 20, 92);
+    doc.text('Lucro Total:', 110, 92);
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -298,6 +393,7 @@ async function exportarPDF() {
     doc.text(itens, 70, 82, { align: 'right' });
     doc.text(estoque, 160, 82, { align: 'right' });
     doc.text(desconto, 70, 92, { align: 'right' });
+    doc.text(lucro, 160, 92, { align: 'right' });
 
     let yGrafico = 105;
 
@@ -434,7 +530,8 @@ function exportarExcel() {
         ['Pedidos Realizados', document.getElementById('kpiPedidos').textContent],
         ['Itens Vendidos', document.getElementById('kpiItens').textContent],
         ['Estoque Restante', document.getElementById('kpiEstoque').textContent],
-        ['Desconto Total', document.getElementById('kpiDesconto').textContent]
+        ['Desconto Total', document.getElementById('kpiDesconto').textContent],
+        ['Lucro Total', document.getElementById('kpiLucro').textContent]
     ];
 
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
