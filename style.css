@@ -108,7 +108,6 @@ body {
 .filtros-sidebar select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .grade-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
 .produto-card { background: #FFF; border-radius: var(--raio-borda); overflow: hidden; box-shadow: var(--sombra-card); transition: 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.2);
-    /* 👇 OTIMIZAÇÃO DE RENDERIZAÇÃO (MANTIDA) */
     content-visibility: auto;
     contain-intrinsic-size: 280px 400px;
 }
@@ -690,4 +689,23 @@ body {
 }
 .btn-add-carrinho-card:active {
     transform: scale(0.95);
+}
+
+/* ============================================================
+   👇 NOVAS REGRAS PARA CORRIGIR GRÁFICOS ESTICADOS 👇
+   ============================================================ */
+#graficoVendas,
+#graficoProdutos,
+#graficoComparativo,
+#graficoMapa {
+    max-height: 250px !important;
+    max-width: 100% !important;
+    height: 250px !important;
+    width: 100% !important;
+}
+
+/* Para o admin-vendas, os divs que envolvem os gráficos */
+#conteudoVendas > div[style*="background:#FFF"] {
+    max-height: 320px;
+    overflow: hidden;
 }

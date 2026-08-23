@@ -44,12 +44,10 @@ async function carregarDados() {
         if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
         const dataVendas = await resVendas.json();
 
-        // 💡 CORREÇÃO: Tratar os possíveis formatos do JSONbin
         let vendasRaw = dataVendas.record;
         if (vendasRaw && !Array.isArray(vendasRaw) && vendasRaw.data) {
             vendasRaw = vendasRaw.data;
         }
-        // Se ainda não for array, inicia como array vazio
         todasVendas = Array.isArray(vendasRaw) ? vendasRaw : [];
 
         // 2. Buscar produtos (catálogo)
@@ -60,13 +58,12 @@ async function carregarDados() {
         const dataProdutos = await resProdutos.json();
         let serverData = dataProdutos.record;
         
-        // 💡 CORREÇÃO: Formato flexível
         if (serverData && !Array.isArray(serverData) && serverData.data) {
             serverData = serverData.data;
         }
         catalogo = Array.isArray(serverData) ? serverData : [];
 
-        // 3. Gerar relatório inicial (esta semana)
+        // 3. Gerar relatório inicial
         gerarRelatorio('semana');
     } catch (e) {
         console.error('ERRO:', e);
@@ -83,7 +80,6 @@ function gerarRelatorio(periodo) {
     const agora = new Date();
     let vendasFiltradas = [];
 
-    // Filtrar por período
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
         inicioSemana.setDate(agora.getDate() - agora.getDay());
@@ -99,11 +95,9 @@ function gerarRelatorio(periodo) {
             return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
         });
     } else {
-        // Se for "todos", mostra todas as vendas
         vendasFiltradas = todasVendas;
     }
 
-    // Cálculo dos KPIs
     const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidos = vendasFiltradas.length;
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
@@ -113,7 +107,6 @@ function gerarRelatorio(periodo) {
     let lucroTotal = 0;
     
     vendasFiltradas.forEach(v => {
-        // Calcula desconto e lucro por item vendido
         if (v.produtosResumo) {
             const itens = v.produtosResumo.split(', ');
             itens.forEach(item => {
@@ -125,19 +118,16 @@ function gerarRelatorio(periodo) {
                     const precoAntigo = prod.precoAntigo ? extrairValorNumerico(prod.precoAntigo) : precoFinal;
                     const custo = prod.custo ? extrairValorNumerico(prod.custo) : 0;
                     
-                    // Desconto (se houver preço antigo)
                     if (precoAntigo > precoFinal) {
                         descontoTotal += (precoAntigo - precoFinal) * qtd;
                     }
                     
-                    // Lucro = (Preço Final - Custo) * Qtd
                     lucroTotal += (precoFinal - custo) * qtd;
                 }
             });
         }
     });
 
-    // Atualizar KPIs no DOM
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
@@ -199,7 +189,7 @@ function gerarRelatorio(periodo) {
         corpoTabelaPedidos.appendChild(tr);
     });
 
-    // Gráficos
+    // Gráficos com altura controlada
     // 1. Vendas por Dia
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => { 
@@ -215,7 +205,12 @@ function gerarRelatorio(periodo) {
         graficoVendas = new Chart(document.getElementById('graficoVendas'), { 
             type: 'bar', 
             data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                aspectRatio: 2,
+                scales: { y: { beginAtZero: true } }
+            }
         });
     } else {
         document.getElementById('graficoVendas').style.display = 'none';
@@ -229,39 +224,42 @@ function gerarRelatorio(periodo) {
         graficoProdutos = new Chart(document.getElementById('graficoProdutos'), { 
             type: 'pie', 
             data: { labels: topProdutos.map(p => p[0]), datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }] },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
         });
     } else {
         document.getElementById('graficoProdutos').style.display = 'none';
         document.getElementById('graficoProdutos').parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sem dados para gráfico</p>';
     }
 
-    // 3. Comparativo Mensal (Gráfico de Linhas - dados fictícios ou reais)
-    // Exemplo: Vendas dos últimos 6 meses
-    const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
-    const valoresMensais = [0, 0, 0, 0, 0, 0]; // Você pode preencher com dados reais se tiver
-    // Se quiser dados reais, teria que percorrer todas as vendas e agrupar por mês
-
+    // 3. Comparativo Mensal
     const ctxComparativo = document.getElementById('graficoComparativo');
     if (ctxComparativo) {
         new Chart(ctxComparativo, {
             type: 'line',
             data: {
-                labels: meses,
+                labels: ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'],
                 datasets: [{
                     label: 'Vendas (Kz)',
-                    data: valoresMensais,
+                    data: [0, 0, 0, 0, 0, 0],
                     borderColor: '#D4AF37',
                     backgroundColor: 'rgba(212, 175, 55, 0.2)',
                     fill: true,
                     tension: 0.4
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
         });
     }
 
-    // 4. Mapa de Vendas (Simulação)
+    // 4. Mapa de Vendas
     const ctxMapa = document.getElementById('graficoMapa');
     if (ctxMapa) {
         new Chart(ctxMapa, {
@@ -274,7 +272,12 @@ function gerarRelatorio(periodo) {
                     backgroundColor: '#005A4C'
                 }]
             },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+            options: { 
+                indexAxis: 'y', 
+                responsive: true, 
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
         });
     }
 }
@@ -297,7 +300,6 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
         const data = await res.json();
         let historico = data.record;
 
-        // 💡 CORREÇÃO: Formato flexível
         if (historico && !Array.isArray(historico) && historico.data) {
             historico = historico.data;
         }
@@ -322,7 +324,7 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
 };
 
 // ============================================================
-// EXPORTAÇÕES E PDFS COMPLETOS (CORRIGIDO)
+// EXPORTAÇÕES E PDFS COMPLETOS
 // ============================================================
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
@@ -333,7 +335,6 @@ async function exportarPDF() {
     const corTexto = '#333333';
     const corCinza = '#999999';
 
-    // Logo
     try {
         const logoImg = new Image();
         logoImg.src = 'logo auro.png';
@@ -559,7 +560,7 @@ function exportarExcel() {
 }
 
 // ============================================================
-// GERAR FATURA DO CLIENTE (CORRIGIDO)
+// GERAR FATURA DO CLIENTE
 // ============================================================
 window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, moradaCliente, produtosResumo, valorTotal, dataHora) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -572,7 +573,6 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     const verdeEscuro = '#005A4C';
     const dourado = '#D4AF37';
 
-    // Cabeçalho
     doc.setFillColor(verdeEscuro);
     doc.rect(0, 0, 210, 30, 'F');
     doc.setFillColor(dourado);
@@ -589,14 +589,12 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.text('NIF: 5000048151 | Tel: +244 933 677 628', 105, 40, { align: 'center' });
     doc.text('contacto@aurorarte.ao | Luanda - Angola', 105, 45, { align: 'center' });
     
-    // Número da fatura
     const numeroFatura = `FR-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${Math.floor(Math.random()*9999)}`;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text(`Fatura Nº: ${numeroFatura}`, 15, 60);
     doc.text(`Data: ${dataHora || new Date().toLocaleDateString('pt-BR')}`, 140, 60);
 
-    // Dados do cliente
     let y = 75;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
@@ -612,7 +610,6 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
     doc.text(`Morada: ${moradaCliente || 'N/A'}`, 15, y);
     y += 12;
 
-    // Tabela de produtos
     const itens = produtosResumo.split(', ').map(item => {
         const nome = item.split(' (x')[0];
         const qtd = item.split('(x')[1] ? item.split('(x')[1].replace(')', '') : '1';
@@ -630,14 +627,12 @@ window.gerarPDFCliente = function(nomeCliente, telefoneCliente, nifCliente, mora
         margin: { left: 15, right: 15 }
     });
 
-    // Total
     const finalY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(14);
     doc.setTextColor(verdeEscuro);
     doc.setFont('helvetica', 'bold');
     doc.text(`Total a Pagar: ${valorTotal.toLocaleString('pt-AO')} Kz`, 190, finalY, { align: 'right' });
 
-    // Rodapé
     doc.setFontSize(8);
     doc.setTextColor('#888888');
     doc.setFont('helvetica', 'italic');
