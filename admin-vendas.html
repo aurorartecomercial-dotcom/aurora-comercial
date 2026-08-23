@@ -33,6 +33,7 @@
             <div id="erroMensagem" style="display:none;"></div>
 
             <div style="margin: 20px 0; display:flex; flex-wrap:wrap; gap:10px;">
+                <button id="btnRelatorioTodos" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Todos</button>
                 <button id="btnRelatorioSemanal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Esta Semana</button>
                 <button id="btnRelatorioMensal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Este Mês</button>
                 <button id="btnExportarPDF" class="btn-admin" style="background:#25D366; color:#FFF;">📄 Exportar PDF</button>
@@ -67,26 +68,26 @@
                 </div>
             </div>
 
-            <!-- 👇 GRÁFICOS COM ALTURA CONTROLADA -->
+            <!-- GRÁFICOS COM ALTURA CONTROLADA (classe chart-container) -->
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
-                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); max-height: 300px; overflow: hidden;">
+                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                     <h3 style="color:var(--cor-esmeralda);">Vendas por Dia</h3>
-                    <canvas id="graficoVendas" height="200"></canvas>
+                    <canvas id="graficoVendas"></canvas>
                 </div>
-                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); max-height: 300px; overflow: hidden;">
+                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                     <h3 style="color:var(--cor-esmeralda);">Produtos Mais Vendidos</h3>
-                    <canvas id="graficoProdutos" height="200"></canvas>
+                    <canvas id="graficoProdutos"></canvas>
                 </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
-                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); max-height: 300px; overflow: hidden;">
+                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                     <h3 style="color:var(--cor-esmeralda);">📈 Comparativo Mensal</h3>
-                    <canvas id="graficoComparativo" height="200"></canvas>
+                    <canvas id="graficoComparativo"></canvas>
                 </div>
-                <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); max-height: 300px; overflow: hidden;">
+                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                     <h3 style="color:var(--cor-esmeralda);">📍 Mapa de Vendas (Regiões)</h3>
-                    <canvas id="graficoMapa" height="200"></canvas>
+                    <canvas id="graficoMapa"></canvas>
                 </div>
             </div>
 
@@ -118,7 +119,7 @@
 
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                 <h3 style="color:var(--cor-esmeralda);">📦 Lista de Pedidos (Clientes)</h3>
-                <div id="containerTabelaPedidos">
+                <div id="containerTabelaPedidos" style="max-height: 600px; overflow-y: auto;">
                     <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                         <thead>
                             <tr style="background:var(--cor-ouro); color:#000;">

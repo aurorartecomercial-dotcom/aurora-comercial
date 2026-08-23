@@ -692,7 +692,7 @@ body {
 }
 
 /* ============================================================
-   👇 NOVAS REGRAS PARA CORRIGIR GRÁFICOS ESTICADOS 👇
+   ✅ REGRAS CORRETAS PARA GRÁFICOS (SEM CORTAR TABELAS)
    ============================================================ */
 #graficoVendas,
 #graficoProdutos,
@@ -704,8 +704,8 @@ body {
     width: 100% !important;
 }
 
-/* Para o admin-vendas, os divs que envolvem os gráficos */
-#conteudoVendas > div[style*="background:#FFF"] {
-    max-height: 320px;
+/* Apenas os contêineres dos gráficos terão altura limitada */
+.chart-container {
+    max-height: 300px;
     overflow: hidden;
 }
