@@ -4,29 +4,26 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
+    // Tenta usar cache primeiro
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
     let cache = {};
     if (cachedStr) {
         try { cache = JSON.parse(cachedStr); } catch (e) {}
     }
+
     try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } });
-        if (!res.ok) throw new Error('Erro ao buscar JSONbin');
+        const res = await fetch(`${CONFIG.API_BASE}/produtos.php`);
+        if (!res.ok) throw new Error('Erro ao buscar produtos');
         const data = await res.json();
-        let serverData = data.record;
-        let novosProdutos = Array.isArray(serverData) ? serverData : serverData.data;
-        let versaoServer = serverData.version || 0;
-        if (!novosProdutos) throw new Error('Formato inválido dos produtos');
-        if (versaoServer > (cache.version || 0) || (Date.now() - (cache.timestamp || 0)) > CONFIG.CACHE_TTL) {
-            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, version: versaoServer, timestamp: Date.now() }));
-            return novosProdutos;
-        }
-        return cache.data;
+        let novosProdutos = data.data; // O PHP devolve { data: [...] }
+        
+        // Atualiza cache
+        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, timestamp: Date.now() }));
+        return novosProdutos;
     } catch (e) {
-        console.warn('Falha ao buscar do JSONbin, usando cache ou fallback:', e);
+        console.warn('Falha ao buscar da API, usando cache:', e);
         if (cache.data) return cache.data;
-        const fallback = await fetch('produtos.json');
-        return fallback.json();
+        return []; // Se não houver cache, retorna vazio
     }
 }
 

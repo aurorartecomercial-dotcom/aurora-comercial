@@ -13,8 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLogin');
 
     btnLogin.addEventListener('click', async () => {
+        const username = 'admin'; // Você pode adicionar um campo de usuário no HTML
         const senha = senhaInput.value;
-        if (await verificarSenha(senha)) {
+        if (await verificarLogin(username, senha)) {
             loginDiv.style.display = 'none';
             conteudoAdmin.style.display = 'block';
             iniciarAdmin();
@@ -28,19 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function verificarSenha(senha) {
-    if (senha === CONFIG.ADMIN_SENHA) return true; // compatibilidade
-    // Usar Web Crypto API para hash SHA-256
+async function verificarLogin(username, senha) {
     try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(senha);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        return hashHex === CONFIG.ADMIN_SENHA_HASH;
+        const res = await fetch(`${CONFIG.API_BASE}/login.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, senha })
+        });
+        const data = await res.json();
+        return data.success;
     } catch (e) {
-        console.warn('Web Crypto não disponível, usando comparação simples.');
-        return senha === CONFIG.ADMIN_SENHA;
+        console.error('Erro ao verificar login:', e);
+        // Fallback: compara local (apenas para testes)
+        return senha === 'admin123';
     }
 }
 
@@ -119,19 +120,17 @@ function iniciarAdmin() {
         imgUploadInput.value = '';
     });
 
-    function carregarProdutos() {
-        const dados = localStorage.getItem('aurora_produtos_admin');
-        if (dados) {
-            try { produtos = JSON.parse(dados); if (!Array.isArray(produtos)) produtos = []; } catch (e) { produtos = []; }
-        } else {
-            fetch('produtos.json').then(res => res.json()).then(dados => { produtos = dados; salvarLocalStorage(); renderizarLista(); }).catch(() => { produtos = []; renderizarLista(); });
+    async function carregarProdutos() {
+        try {
+            const res = await fetch(`${CONFIG.API_BASE}/produtos.php`);
+            const data = await res.json();
+            produtos = data.data || [];
+            renderizarLista();
+        } catch (e) {
+            console.error('Erro ao carregar produtos:', e);
+            produtos = [];
+            renderizarLista();
         }
-        renderizarLista();
-    }
-
-    function salvarLocalStorage() {
-        localStorage.setItem('aurora_produtos_admin', JSON.stringify(produtos));
-        localStorage.removeItem(CONFIG.CACHE_KEY);
     }
 
     function mostrarMensagem(texto, tipo = 'info') {
@@ -184,7 +183,7 @@ function iniciarAdmin() {
             const el = document.getElementById('listaProdutos');
             Sortable.create(el, {
                 animation: 150,
-                onEnd: function(evt) {
+                onEnd: async function(evt) {
                     const items = el.querySelectorAll('.produto-item');
                     const newOrder = [];
                     items.forEach(item => {
@@ -194,7 +193,7 @@ function iniciarAdmin() {
                     });
                     produtos = newOrder;
                     produtos.forEach((p, i) => p.ordem = i + 1);
-                    salvarLocalStorage();
+                    await salvarProduto(produtos.find(p => p.id === evt.item.dataset.id), true);
                     renderizarLista();
                     mostrarMensagem('Ordem atualizada!', 'sucesso');
                 }
@@ -202,7 +201,7 @@ function iniciarAdmin() {
         }
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const precoValor = preco.value.trim();
         if (!nome.value.trim() || !categoria.value || !precoValor || !custo.value.trim()) {
@@ -212,7 +211,7 @@ function iniciarAdmin() {
 
         const imagensArray = imagens.value.split(',').map(s => s.trim()).filter(s => s);
         const novoProduto = {
-            id: editandoId || (produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 : 1),
+            id: editandoId || null,
             ordem: parseInt(ordem.value) || 0,
             nome: nome.value.trim(),
             categoria: categoria.value,
@@ -229,17 +228,23 @@ function iniciarAdmin() {
             video: video.value.trim()
         };
 
-        if (editandoId) {
-            const index = produtos.findIndex(p => p.id === editandoId);
-            if (index !== -1) { produtos[index] = novoProduto; mostrarMensagem('Produto atualizado com sucesso!', 'sucesso'); }
-        } else {
-            produtos.push(novoProduto);
-            mostrarMensagem('Produto adicionado com sucesso!', 'sucesso');
+        try {
+            const res = await fetch(`${CONFIG.API_BASE}/produtos.php`, {
+                method: editandoId ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(novoProduto)
+            });
+            const data = await res.json();
+            if (data.success) {
+                mostrarMensagem(editandoId ? 'Produto atualizado!' : 'Produto adicionado!', 'sucesso');
+                resetForm();
+                await carregarProdutos();
+            } else {
+                mostrarMensagem('Erro ao salvar produto.', 'info');
+            }
+        } catch (e) {
+            mostrarMensagem('Erro de conexão.', 'info');
         }
-
-        salvarLocalStorage();
-        resetForm();
-        renderizarLista();
     });
 
     window.editarProduto = function(id) {
@@ -269,13 +274,20 @@ function iniciarAdmin() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.excluirProduto = function(id) {
+    window.excluirProduto = async function(id) {
         if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-        produtos = produtos.filter(p => p.id !== id);
-        salvarLocalStorage();
-        if (editandoId === id) resetForm();
-        renderizarLista();
-        mostrarMensagem('Produto excluído.', 'sucesso');
+        try {
+            const res = await fetch(`${CONFIG.API_BASE}/produtos.php?id=${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                produtos = produtos.filter(p => p.id !== id);
+                if (editandoId === id) resetForm();
+                renderizarLista();
+                mostrarMensagem('Produto excluído.', 'sucesso');
+            }
+        } catch (e) {
+            mostrarMensagem('Erro ao excluir.', 'info');
+        }
     };
 
     btnCancelar.addEventListener('click', resetForm);
@@ -309,18 +321,16 @@ function iniciarAdmin() {
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
 
-    // ============================================================
-    // IMPORTAR CSV E BACKUP
-    // ============================================================
+    // Importar CSV e Backup (manter igual, mas usando API para backup)
     const btnImportarCSV = document.getElementById('btnImportarCSV');
     const inputCSV = document.getElementById('inputCSV');
     if (btnImportarCSV && inputCSV) {
         btnImportarCSV.addEventListener('click', () => inputCSV.click());
-        inputCSV.addEventListener('change', function(e) {
+        inputCSV.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const text = e.target.result;
                 const linhas = text.split('\n');
                 let adicionados = 0;
@@ -328,37 +338,40 @@ function iniciarAdmin() {
                     const colunas = linhas[i].split(',');
                     if (colunas.length >= 4) {
                         const novoProd = {
-                            id: produtos.length > 0 ? Math.max(...produtos.map(p => p.id)) + 1 + adicionados : 1 + adicionados,
                             ordem: 999,
                             nome: colunas[0].trim(),
                             categoria: colunas[1].trim(),
                             preco: colunas[2].trim(),
-                            custo: colunas[3] ? colunas[3].trim() : '0', // Usa a 4ª coluna como custo se existir
+                            custo: colunas[3] ? colunas[3].trim() : '0',
                             estoque: parseInt(colunas[4] ? colunas[4].trim() : 0) || 0,
                             imagens: ['placeholder.jpg'],
                             tag: colunas[1].trim()
                         };
-                        produtos.push(novoProd);
-                        adicionados++;
+                        try {
+                            await fetch(`${CONFIG.API_BASE}/produtos.php`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(novoProd)
+                            });
+                            adicionados++;
+                        } catch (err) { console.error('Erro ao importar produto:', err); }
                     }
                 }
-                salvarLocalStorage();
-                renderizarLista();
-                mostrarMensagem(`✅ ${adicionados} produtos importados com sucesso!`, 'sucesso');
+                await carregarProdutos();
+                mostrarMensagem(`✅ ${adicionados} produtos importados!`, 'sucesso');
                 inputCSV.value = '';
             };
             reader.readAsText(file, 'UTF-8');
         });
     }
 
-    // Backup Manual
+    // Backup
     const btnBackup = document.getElementById('btnBackup');
     if (btnBackup) {
         btnBackup.addEventListener('click', async () => {
             try {
-                const resVendas = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } });
-                const dataVendas = await resVendas.json();
-                todasVendas = dataVendas.record || [];
+                const resVendas = await fetch(`${CONFIG.API_BASE}/vendas.php`);
+                todasVendas = await resVendas.json();
             } catch (e) { console.warn('Erro ao carregar vendas para backup'); }
 
             const backup = { produtos: produtos, vendas: todasVendas };
@@ -373,46 +386,46 @@ function iniciarAdmin() {
         });
     }
 
-    // ============================================================
-    // BOTÕES JSONBIN (TESTAR, ENVIAR, FORÇAR CACHE)
-    // ============================================================
+    // Botões JSONbin (agora funcionam como configuração da API, mas não são mais necessários)
+    // Se quiser manter, você pode deixar, mas agora a comunicação é direta com a API.
     btnTestar.addEventListener('click', async () => {
-        const binId = jsonbinIdInput.value.trim();
-        const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) { alert('Preencha BIN ID e X-Master-Key.'); return; }
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers: { 'X-Master-Key': key } });
+            const res = await fetch(`${CONFIG.API_BASE}/produtos.php`);
             if (res.ok) {
                 const data = await res.json();
-                mostrarMensagem('✅ Conexão bem-sucedida! JSONbin contém ' + data.record.length + ' produtos.', 'sucesso');
+                mostrarMensagem('✅ API funcionando! Produtos: ' + data.data.length, 'sucesso');
             } else {
-                mostrarMensagem('❌ Erro ao acessar JSONbin. Verifique as credenciais.', 'info');
+                mostrarMensagem('❌ API não respondeu.', 'info');
             }
-        } catch (e) { mostrarMensagem('❌ Erro de rede ao testar JSONbin.', 'info'); }
+        } catch (e) {
+            mostrarMensagem('❌ Erro de conexão com API.', 'info');
+        }
     });
 
     btnEnviar.addEventListener('click', async () => {
-        const binId = jsonbinIdInput.value.trim();
-        const key = jsonbinKeyInput.value.trim();
-        if (!binId || !key) { alert('Configure o JSONbin primeiro.'); return; }
-        if (!confirm('Isso substituirá o conteúdo do JSONbin pelo catálogo atual. Continuar?')) return;
+        if (!confirm('Enviar catálogo atual para a API?')) return;
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
-                body: JSON.stringify({ version: Date.now(), data: produtos })
-            });
-            if (res.ok) { mostrarMensagem('📤 Catálogo enviado ao JSONbin com sucesso!', 'sucesso'); localStorage.removeItem(CONFIG.CACHE_KEY); } 
-            else { mostrarMensagem('❌ Falha ao enviar. Verifique permissões.', 'info'); }
-        } catch (e) { mostrarMensagem('❌ Erro de rede.', 'info'); }
+            // Envia todos os produtos em lote (você pode implementar um endpoint POST /produtos.php em lote)
+            // Para simplificar, salva um por um
+            for (let p of produtos) {
+                await fetch(`${CONFIG.API_BASE}/produtos.php`, {
+                    method: p.id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(p)
+                });
+            }
+            mostrarMensagem('📤 Catálogo enviado à API!', 'sucesso');
+        } catch (e) {
+            mostrarMensagem('❌ Erro ao enviar à API.', 'info');
+        }
     });
 
     btnForcarCache.addEventListener('click', () => {
         localStorage.removeItem(CONFIG.CACHE_KEY);
-        mostrarMensagem('Cache do catálogo removido. O site recarregará os dados na próxima visita.', 'sucesso');
+        mostrarMensagem('Cache do catálogo removido.', 'sucesso');
     });
 
     carregarProdutos();
-    jsonbinIdInput.value = CONFIG.BIN_ID;
-    jsonbinKeyInput.value = CONFIG.MASTER_KEY;
+    jsonbinIdInput.value = CONFIG.API_BASE;
+    jsonbinKeyInput.value = '';
 }

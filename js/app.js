@@ -2,6 +2,7 @@ import { initCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
+import { CONFIG } from './config.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -13,7 +14,6 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Evitar dupla inicialização do carrinho
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;

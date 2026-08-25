@@ -178,11 +178,21 @@ export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
     mostrarToast('Produto adicionado!', 'sucesso');
 }
 
-export function aplicarCupom(codigoCupom) {
-    const cuponsValidos = { 'BEMVINDO10': 10, 'AURORA20': 20, 'FRETE50': 50 };
-    const desconto = cuponsValidos[codigoCupom.toUpperCase()];
-    if (desconto) { cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto }; mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${desconto}% OFF`, 'sucesso'); atualizarCarrinho(); } 
-    else { mostrarToast('Cupom inválido!', 'info'); }
+export async function aplicarCupom(codigoCupom) {
+    if (!codigoCupom) return;
+    try {
+        const res = await fetch(`${CONFIG.API_BASE}/cupons.php?codigo=${codigoCupom}`);
+        const data = await res.json();
+        if (data.success) {
+            cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: data.percentual };
+            mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${data.percentual}% OFF`, 'sucesso');
+            atualizarCarrinho();
+        } else {
+            mostrarToast('Cupom inválido!', 'info');
+        }
+    } catch (e) {
+        mostrarToast('Erro ao validar cupom. Tente novamente.', 'info');
+    }
 }
 
 function abrirModalCliente() {
@@ -279,9 +289,6 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
-// ============================================================
-// 💾 CORREÇÃO DA FUNÇÃO salvarVendaNoHistorico
-// ============================================================
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -289,9 +296,14 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const codigoRastreio = `AURORA-${Date.now().toString().slice(-6)}`;
+
+    const itensParaAPI = carrinho.map(item => ({
+        nome: item.nome,
+        quantidade: item.quantidade,
+        preco: extrairValorNumerico(item.preco)
+    }));
+
     const novaVenda = {
-        dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
         totalItens: totalItensPedido,
@@ -299,49 +311,28 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         telefoneCliente: telefoneCliente,
         nifCliente: nifCliente,
         moradaCliente: moradaCliente,
-        codigoRastreio: codigoRastreio,
-        status: 'confirmado',
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
-        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0
+        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
+        itens: itensParaAPI
     };
 
     try {
-        // 1. Busca o histórico atual
-        const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, {
-            headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS }
-        });
-        
-        if (!resGet.ok) throw new Error(`Erro ao buscar vendas: ${resGet.status}`);
-        
-        const data = await resGet.json();
-        let historico = data.record;
-
-        // 💡 CORREÇÃO: Se data.record for um objeto com propriedade 'data', extrai
-        if (historico && !Array.isArray(historico) && historico.data) {
-            historico = historico.data;
-        }
-        // Se ainda não for array, cria um novo
-        if (!Array.isArray(historico)) {
-            console.warn('⚠️ JSONbin devolveu formato inesperado. A criar nova lista.');
-            historico = [];
-        }
-
-        // 2. Adiciona a nova venda
-        historico.push(novaVenda);
-
-        // 3. Envia de volta para o JSONbin
-        const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS },
-            body: JSON.stringify(historico)
+        const res = await fetch(`${CONFIG.API_BASE}/vendas.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novaVenda)
         });
 
-        if (!resPut.ok) throw new Error(`Erro ao gravar venda: ${resPut.status}`);
+        if (!res.ok) throw new Error(`Erro ao gravar venda: ${res.status}`);
 
-        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Pedido registrado!\nCódigo de rastreio: ${data.codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
+        } else {
+            throw new Error('Falha ao registar venda');
+        }
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
-        
         // Fallback: salva localmente
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
@@ -351,11 +342,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     }
 }
 
-// ============================================================
-// ✨ GERAÇÃO DE FATURA PDF (CORRIGIDO)
-// ============================================================
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    // A biblioteca já está carregada no HTML (ver index.html)
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C';

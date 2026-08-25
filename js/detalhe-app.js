@@ -3,6 +3,7 @@ import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
+import { CONFIG } from './config.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
@@ -40,7 +41,7 @@ function mostrarErro(mensagem) {
     `;
 }
 
-function renderizarDetalhes(prod) {
+async function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
     const catLink = document.getElementById('breadcrumbCat');
@@ -57,7 +58,7 @@ function renderizarDetalhes(prod) {
               onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">`
     ).join('');
 
-    const avaliacao = obterAvaliacao(prod.id);
+    const avaliacao = await obterAvaliacao(prod.id);
 
     let videoHtml = '';
     if (prod.video) {
@@ -122,11 +123,11 @@ function renderizarDetalhes(prod) {
         adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
     });
 
-    document.getElementById('btnAvaliar').addEventListener('click', () => {
+    document.getElementById('btnAvaliar').addEventListener('click', async () => {
         const nota = parseInt(document.getElementById('notaAvaliacao').value);
-        adicionarAvaliacao(prod.id, nota);
+        await adicionarAvaliacao(prod.id, nota);
         mostrarToast('Avaliação registada!', 'sucesso');
-        const novaAval = obterAvaliacao(prod.id);
+        const novaAval = await obterAvaliacao(prod.id);
         document.querySelector('.avaliacao span').textContent = `⭐ ${novaAval.media.toFixed(1)} (${novaAval.total} avaliações)`;
     });
 }
