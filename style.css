@@ -708,4 +708,36 @@ body {
 .chart-container {
     max-height: 300px;
     overflow: hidden;
+}/* ============================================================
+   RESPONSIVIDADE DA TABELA DE PEDIDOS (ADMIN)
+   ============================================================ */
+@media (max-width: 768px) {
+    #tabelaPedidos,
+    #tabelaRelatorio {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    #tabelaPedidos th, #tabelaPedidos td,
+    #tabelaRelatorio th, #tabelaRelatorio td {
+        min-width: 120px;
+    }
+    .painel-faturamento {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    .chart-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Melhorias gerais de acessibilidade */
+button:focus-visible {
+    outline: 3px solid var(--cor-ouro);
+    outline-offset: 2px;
+}
+
+a:focus-visible {
+    outline: 3px solid var(--cor-ouro);
+    outline-offset: 2px;
 }

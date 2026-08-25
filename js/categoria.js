@@ -1,9 +1,7 @@
-import { initCarrinho } from './carrinho.js';
 import { carregarCatalogo, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initCarrinho();
     initMobileMenu();
 
     const params = new URLSearchParams(window.location.search);

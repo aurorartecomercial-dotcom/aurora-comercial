@@ -1,11 +1,10 @@
-import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
+import { adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initCarrinho();
     initMobileMenu();
 
     const params = new URLSearchParams(window.location.search);

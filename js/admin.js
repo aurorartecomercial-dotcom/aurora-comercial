@@ -12,8 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const senhaInput = document.getElementById('senhaAdmin');
     const erroLogin = document.getElementById('erroLogin');
 
-    btnLogin.addEventListener('click', () => {
-        if (senhaInput.value === CONFIG.ADMIN_SENHA) {
+    btnLogin.addEventListener('click', async () => {
+        const senha = senhaInput.value;
+        if (await verificarSenha(senha)) {
             loginDiv.style.display = 'none';
             conteudoAdmin.style.display = 'block';
             iniciarAdmin();
@@ -26,6 +27,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') btnLogin.click();
     });
 });
+
+async function verificarSenha(senha) {
+    if (senha === CONFIG.ADMIN_SENHA) return true; // compatibilidade
+    // Usar Web Crypto API para hash SHA-256
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(senha);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex === CONFIG.ADMIN_SENHA_HASH;
+    } catch (e) {
+        console.warn('Web Crypto não disponível, usando comparação simples.');
+        return senha === CONFIG.ADMIN_SENHA;
+    }
+}
 
 function iniciarAdmin() {
     const form = document.getElementById('formProduto');
@@ -293,7 +310,7 @@ function iniciarAdmin() {
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
 
     // ============================================================
-    // IDEIAS 1 e 4: IMPORTAR CSV E BACKUP
+    // IMPORTAR CSV E BACKUP
     // ============================================================
     const btnImportarCSV = document.getElementById('btnImportarCSV');
     const inputCSV = document.getElementById('inputCSV');

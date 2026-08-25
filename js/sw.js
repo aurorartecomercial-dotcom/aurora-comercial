@@ -1,16 +1,30 @@
-const CACHE_NAME = 'aurora-cache-v1';
+const CACHE_NAME = 'aurora-cache-v2';
 const urlsToCache = [
     '/',
     '/index.html',
     '/detalhe.html',
     '/blog.html',
+    '/categoria.html',
+    '/rastreio.html',
     '/style.css',
     '/logo auro.png',
     '/manifest.json',
-    '/produtos.json' // 👈 ADICIONADO AQUI
+    '/produtos.json',
+    '/js/app.js',
+    '/js/carrinho.js',
+    '/js/catalogo.js',
+    '/js/config.js',
+    '/js/utils.js',
+    '/js/menu.js',
+    '/js/avaliacoes.js',
+    '/js/blog.js',
+    '/js/post.js',
+    '/js/detalhe-app.js',
+    '/js/categoria.js',
+    '/js/admin.js',
+    '/js/admin-vendas.js'
 ];
 
-// Instalação do Service Worker
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -18,7 +32,14 @@ self.addEventListener('install', event => {
     );
 });
 
-// Intercepta requisições e serve do cache se disponível
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(keys => Promise.all(
+            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        ))
+    );
+});
+
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)

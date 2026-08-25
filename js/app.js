@@ -13,7 +13,11 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initCarrinho();
+    // Evitar dupla inicialização do carrinho
+    if (!window.__carrinhoInicializado) {
+        initCarrinho();
+        window.__carrinhoInicializado = true;
+    }
     initMobileMenu();
 
     catalogo = await carregarCatalogo();
