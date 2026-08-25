@@ -1,6 +1,5 @@
 import { CONFIG } from './config.js';
 
-// Função para obter avaliações de um produto (usa API com fallback para localStorage)
 export async function obterAvaliacao(prodId) {
     try {
         const res = await fetch(`${CONFIG.API_BASE}/avaliacoes.php?produto_id=${prodId}`);
@@ -12,7 +11,6 @@ export async function obterAvaliacao(prodId) {
             return { media: 0, total: 0 };
         }
     } catch (e) {
-        // Fallback para localStorage (se API não estiver acessível)
         const avaliacoes = JSON.parse(localStorage.getItem('aurora_avaliacoes') || '{}');
         const prodAval = avaliacoes[prodId] || [];
         if (prodAval.length === 0) return { media: 0, total: 0 };
@@ -21,7 +19,6 @@ export async function obterAvaliacao(prodId) {
     }
 }
 
-// Função para adicionar avaliação (usa API com fallback para localStorage)
 export async function adicionarAvaliacao(prodId, nota) {
     try {
         const res = await fetch(`${CONFIG.API_BASE}/avaliacoes.php`, {

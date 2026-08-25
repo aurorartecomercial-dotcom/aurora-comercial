@@ -3,7 +3,6 @@ import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
-import { CONFIG } from './config.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();

@@ -4,7 +4,6 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
-    // Tenta usar cache primeiro
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
     let cache = {};
     if (cachedStr) {
@@ -17,7 +16,6 @@ export async function carregarCatalogo() {
         const data = await res.json();
         let novosProdutos = data.data; // O PHP devolve { data: [...] }
         
-        // Atualiza cache
         localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, timestamp: Date.now() }));
         return novosProdutos;
     } catch (e) {
