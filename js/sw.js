@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v2';
+const CACHE_NAME = 'aurora-cache-v3';  // Atualize a versão
 const urlsToCache = [
     '/',
     '/index.html',
@@ -9,7 +9,7 @@ const urlsToCache = [
     '/style.css',
     '/logo auro.png',
     '/manifest.json',
-    '/produtos.json',
+    // '/produtos.json',  // REMOVIDO
     '/js/app.js',
     '/js/carrinho.js',
     '/js/catalogo.js',

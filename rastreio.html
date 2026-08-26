@@ -73,7 +73,6 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <!-- ✅ SCRIPT MELHORADO DO RASTREIO -->
     <script type="module">
         import { CONFIG } from './js/config.js';
 
@@ -96,53 +95,28 @@
                 return;
             }
 
-            // Desabilitar botão enquanto carrega
             btnRastrear.disabled = true;
             btnRastrear.textContent = '⏳ Buscando...';
 
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID_VENDAS}/latest`, { 
-                    headers: { 'X-Master-Key': CONFIG.MASTER_KEY_VENDAS } 
-                });
-
-                if (!res.ok) {
-                    throw new Error(`Erro HTTP ${res.status}`);
-                }
-
+                const res = await fetch(`${CONFIG.API_BASE}/vendas.php?codigo=${encodeURIComponent(codigo)}`);
                 const data = await res.json();
-                
-                // 📌 CORREÇÃO: O JSONbin pode devolver os dados em 'record' ou 'data'. Vamos verificar ambos!
-                let vendas = [];
-                if (data.record && Array.isArray(data.record)) {
-                    vendas = data.record;
-                } else if (data.data && Array.isArray(data.data)) {
-                    vendas = data.data;
-                } else {
-                    throw new Error('Formato de dados inválido.');
-                }
 
-                // 💡 CORREÇÃO: Normalizar código antes de buscar (case-insensitive)
-                const codigoNormalizado = codigo.toUpperCase();
-
-                // Busca o pedido ignorando maiúsculas/minúsculas e espaços
-                const venda = vendas.find(v => v.codigoRastreio && v.codigoRastreio.trim().toUpperCase() === codigoNormalizado);
-
-                if (!venda) {
+                if (data.error || !data.codigo_rastreio) {
                     erroRastreio.style.display = 'block';
                     btnRastrear.disabled = false;
                     btnRastrear.textContent = '🔍 Rastrear';
                     return;
                 }
 
-                // Se encontrou, exibe os dados
                 erroRastreio.style.display = 'none';
                 resultadoDiv.style.display = 'block';
 
-                document.getElementById('rastreioNome').textContent = `Olá, ${venda.nomeCliente || 'Cliente'}`;
-                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${venda.dataHora || 'Data não disponível'}`;
-                document.getElementById('rastreioProdutos').textContent = venda.produtosResumo || 'Nenhum produto listado';
+                document.getElementById('rastreioNome').textContent = `Olá, ${data.nome_cliente || 'Cliente'}`;
+                document.getElementById('rastreioData').textContent = `Pedido realizado em: ${data.data_hora || 'Data não disponível'}`;
+                document.getElementById('rastreioProdutos').textContent = data.itens?.map(item => `${item.nome} (x${item.quantidade})`).join(', ') || 'Nenhum produto listado';
 
-                const status = venda.status || 'confirmado';
+                const status = data.status || 'confirmado';
                 let progresso = 0;
                 let texto = '';
 
@@ -158,17 +132,13 @@
                 erroRede.style.display = 'block';
                 erroRede.innerHTML = `⚠️ Erro ao buscar o pedido: ${e.message || 'Verifique sua internet.'}`;
             } finally {
-                // Reabilitar botão
                 btnRastrear.disabled = false;
                 btnRastrear.textContent = '🔍 Rastrear';
             }
         });
 
-        // Permitir pesquisar com Enter
         inputRastreio.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                btnRastrear.click();
-            }
+            if (e.key === 'Enter') btnRastrear.click();
         });
     </script>
 </body>

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLoginVendas');
 
     btnLogin.addEventListener('click', async () => {
-        const username = 'admin'; // Você pode adicionar campo de usuário
+        const username = 'admin';
         if (await verificarLogin(username, senhaInput.value)) {
             loginDiv.style.display = 'none';
             conteudoDiv.style.display = 'block';
@@ -26,7 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
+    senhaInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnLogin.click();
+    });
 
     document.getElementById('btnRelatorioTodos').addEventListener('click', () => gerarRelatorio('todos'));
     document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
@@ -35,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
     document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
 
-    // Filtro de cliente e status
+    // Filtros
     const filtroCliente = document.getElementById('filtroPedidoCliente');
     const filtroStatus = document.getElementById('filtroStatus');
 
@@ -75,7 +77,8 @@ async function verificarLogin(username, senha) {
         const data = await res.json();
         return data.success;
     } catch (e) {
-        return senha === 'admin123'; // Fallback
+        // Fallback apenas para testes locais (senha real é 'password')
+        return senha === 'password';
     }
 }
 
@@ -89,7 +92,7 @@ async function carregarDados() {
         if (!resVendas.ok) throw new Error(`Erro Vendas: ${resVendas.status}`);
         todasVendas = await resVendas.json();
 
-        // Carregar produtos (para calcular lucro, etc.)
+        // Carregar produtos
         const resProdutos = await fetch(`${CONFIG.API_BASE}/produtos.php`);
         if (!resProdutos.ok) throw new Error(`Erro Produtos: ${resProdutos.status}`);
         const dataProdutos = await resProdutos.json();
@@ -194,7 +197,7 @@ function gerarRelatorio(periodo) {
     // Tabela Pedidos
     renderizarPedidos(vendasFiltradas);
 
-    // Gráficos (simplificado, pode adaptar)
+    // Gráficos
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => { 
         if (v.data_hora) {
@@ -213,8 +216,6 @@ function gerarRelatorio(periodo) {
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
         });
     }
-
-    // (Os outros gráficos podem ser mantidos ou simplificados)
 }
 
 function renderizarPedidos(vendasFiltradas) {
@@ -251,8 +252,6 @@ function renderizarPedidos(vendasFiltradas) {
 
 async function limparHistorico() {
     if (!confirm('Apagar TODO o histórico?')) return;
-    // Como não há um endpoint DELETE para todas as vendas, você pode deixar uma opção no PHP
-    // Ou simplesmente recarregar os dados. Vamos apenas limpar localmente para demonstração.
     todasVendas = [];
     gerarRelatorio('todos');
     alert('Histórico limpo (apenas local)');
