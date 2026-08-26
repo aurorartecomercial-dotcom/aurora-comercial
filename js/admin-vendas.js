@@ -1,11 +1,11 @@
 import { auth, db, CONFIG } from './config.js';
 import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { extrairValorNumerico } from './utils.js'; // ⚠️ ESTA LINHA ESTAVA EM FALTA!
 
 let todasVendas = [];
 let catalogo = [];
 let graficoVendas = null;
-let graficoProdutos = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginVendas');
@@ -37,11 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function carregarDados() {
     try {
-        // Buscar vendas
         const vendasSnap = await getDocs(collection(db, 'vendas'));
         todasVendas = vendasSnap.docs.map(doc => doc.data());
         
-        // Buscar produtos
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         catalogo = produtosSnap.docs.map(doc => doc.data());
 
@@ -57,7 +55,6 @@ function gerarRelatorio(periodo) {
     const agora = new Date();
     let vendasFiltradas = todasVendas;
 
-    // Filtrar por período
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
         inicioSemana.setDate(agora.getDate() - agora.getDay());
@@ -85,7 +82,7 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
 
-    // Tabela de Pedidos (Lista de Clientes)
+    // Tabela de Pedidos
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
 
@@ -112,7 +109,7 @@ function gerarRelatorio(periodo) {
         corpoTabelaPedidos.appendChild(tr);
     });
 
-    // Tabela de Detalhamento por Produto
+    // Tabela de Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         if (venda.itens && Array.isArray(venda.itens)) {
@@ -122,7 +119,6 @@ function gerarRelatorio(periodo) {
                 vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
             });
         } else if (venda.produtosResumo) {
-            // Fallback para o formato antigo
             venda.produtosResumo.split(', ').forEach(item => {
                 const nome = item.split(' (x')[0];
                 const qtd = parseInt(item.split('(x')[1]) || 1;
@@ -146,11 +142,11 @@ function gerarRelatorio(periodo) {
     renderizarGraficos(vendasFiltradas);
 }
 
-// Função para renderizar os gráficos (Vendas por Dia)
 function renderizarGraficos(vendasFiltradas) {
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => { 
         if (v.dataHora) {
+            // Extrair apenas a data (ex: "26/08/2026")
             const dia = v.dataHora.split(' ')[0]; 
             vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0); 
         }
@@ -167,11 +163,13 @@ function renderizarGraficos(vendasFiltradas) {
                 data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] },
                 options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
             });
+        } else {
+            // Se não houver dados, limpar o canvas
+            ctxVendas.getContext('2d').clearRect(0, 0, ctxVendas.width, ctxVendas.height);
         }
     }
 }
 
-// Atualizar status do pedido
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
@@ -189,7 +187,6 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
-// Exportar PDF
 function exportarPDF() {
     const doc = new jspdf.jsPDF();
     doc.setFontSize(16);
