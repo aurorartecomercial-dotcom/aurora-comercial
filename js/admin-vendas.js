@@ -1,11 +1,14 @@
 import { auth, db, CONFIG } from './config.js';
 import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { extrairValorNumerico } from './utils.js'; // Importação essencial!
+import { extrairValorNumerico } from './utils.js';
 
 let todasVendas = [];
 let catalogo = [];
 let graficoVendas = null;
+let graficoProdutos = null;
+let graficoComparativo = null;
+let graficoMapa = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginVendas');
@@ -39,7 +42,7 @@ async function carregarDados() {
     try {
         const vendasSnap = await getDocs(collection(db, 'vendas'));
         todasVendas = vendasSnap.docs.map(doc => doc.data());
-        
+
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         catalogo = produtosSnap.docs.map(doc => doc.data());
 
@@ -138,33 +141,140 @@ function gerarRelatorio(periodo) {
         corpoTabelaRelatorio.appendChild(tr);
     });
 
-    // Renderizar Gráfico de Vendas por Dia
-    renderizarGraficos(vendasFiltradas);
+    // Renderizar todos os gráficos
+    renderizarGraficoVendasPorDia(vendasFiltradas);
+    renderizarGraficoProdutosMaisVendidos(vendasPorProduto);
+    renderizarGraficoComparativoMensal(vendasFiltradas);
+    renderizarGraficoMapaVendas(vendasFiltradas);
 }
 
-function renderizarGraficos(vendasFiltradas) {
+function renderizarGraficoVendasPorDia(vendasFiltradas) {
     const vendasPorDia = {};
-    vendasFiltradas.forEach(v => { 
+    vendasFiltradas.forEach(v => {
         if (v.dataHora) {
-            const dia = v.dataHora.split(' ')[0]; 
-            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0); 
+            const dia = v.dataHora.split(' ')[0];
+            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0);
         }
     });
+
     const dias = Object.keys(vendasPorDia);
     const valores = Object.values(vendasPorDia);
 
-    const ctxVendas = document.getElementById('graficoVendas');
-    if (ctxVendas) {
+    const ctx = document.getElementById('graficoVendas');
+    if (ctx) {
         if (graficoVendas) graficoVendas.destroy();
         if (dias.length > 0) {
-            graficoVendas = new Chart(ctxVendas, { 
-                type: 'bar', 
-                data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] },
+            graficoVendas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dias,
+                    datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
+                },
                 options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
             });
         } else {
-            ctxVendas.getContext('2d').clearRect(0, 0, ctxVendas.width, ctxVendas.height);
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
         }
+    }
+}
+
+function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
+    // Ordenar por quantidade vendida (desc)
+    const topProdutos = Object.entries(vendasPorProduto)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const ctx = document.getElementById('graficoProdutos');
+    if (ctx) {
+        if (graficoProdutos) graficoProdutos.destroy();
+        if (topProdutos.length > 0) {
+            graficoProdutos = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: topProdutos.map(p => p[0]),
+                    datasets: [{
+                        data: topProdutos.map(p => p[1]),
+                        backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+            });
+        } else {
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        }
+    }
+}
+
+function renderizarGraficoComparativoMensal(vendasFiltradas) {
+    // Simular dados mensais (últimos 6 meses) baseados nas vendas
+    const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
+    const dados = [0, 0, 0, 0, 0, 0];
+
+    vendasFiltradas.forEach(v => {
+        if (v.dataHora) {
+            const data = new Date(v.dataHora);
+            const mesIndex = data.getMonth(); // 0-11
+            // Mapear para os últimos 6 meses (índices 2 a 7)
+            if (mesIndex >= 2 && mesIndex <= 7) {
+                dados[mesIndex - 2] += (v.valorTotal || 0);
+            }
+        }
+    });
+
+    const ctx = document.getElementById('graficoComparativo');
+    if (ctx) {
+        if (graficoComparativo) graficoComparativo.destroy();
+        graficoComparativo = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Vendas (Kz)',
+                    data: dados,
+                    borderColor: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+        });
+    }
+}
+
+function renderizarGraficoMapaVendas(vendasFiltradas) {
+    // Simular vendas por região (Luanda, Benguela, Huambo, Lubango)
+    const regioes = ['Luanda', 'Benguela', 'Huambo', 'Lubango'];
+    const dados = [0, 0, 0, 0];
+
+    vendasFiltradas.forEach(v => {
+        const morada = (v.moradaCliente || '').toLowerCase();
+        if (morada.includes('luanda')) dados[0]++;
+        else if (morada.includes('benguela')) dados[1]++;
+        else if (morada.includes('huambo')) dados[2]++;
+        else if (morada.includes('lubango')) dados[3]++;
+    });
+
+    const ctx = document.getElementById('graficoMapa');
+    if (ctx) {
+        if (graficoMapa) graficoMapa.destroy();
+        graficoMapa = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: regioes,
+                datasets: [{
+                    label: 'Pedidos',
+                    data: dados,
+                    backgroundColor: '#005A4C'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
+        });
     }
 }
 
@@ -196,11 +306,9 @@ function exportarPDF() {
     doc.text(`Total de Pedidos: ${document.getElementById('kpiPedidos').textContent}`, 14, 32);
     doc.text(`Faturamento Total: ${document.getElementById('kpiFaturamento').textContent}`, 14, 38);
 
-    // Criar array de dados a partir do catálogo e vendas (sem depender do HTML)
     const dadosProdutos = [];
     const vendasPorProduto = {};
 
-    // Recalcular vendas por produto (mesma lógica do gerarRelatorio)
     todasVendas.forEach(venda => {
         if (venda.itens && Array.isArray(venda.itens)) {
             venda.itens.forEach(item => {
