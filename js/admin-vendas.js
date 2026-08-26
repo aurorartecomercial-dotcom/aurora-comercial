@@ -4,12 +4,14 @@ import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/1
 
 let todasVendas = [];
 let catalogo = [];
+let graficoVendas = null;
+let graficoProdutos = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginVendas');
     const conteudoDiv = document.getElementById('conteudoVendas');
     const btnLogin = document.getElementById('btnLoginVendas');
-    const emailInput = document.getElementById('emailVendas'); // Adicione no HTML
+    const emailInput = document.getElementById('emailVendas');
     const senhaInput = document.getElementById('senhaVendas');
     const erroLogin = document.getElementById('erroLoginVendas');
 
@@ -27,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
-    document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio());
+    document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio('todos'));
     document.getElementById('btnExportarPDF')?.addEventListener('click', exportarPDF);
 });
 
@@ -39,7 +41,7 @@ async function carregarDados() {
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         catalogo = produtosSnap.docs.map(doc => doc.data());
 
-        gerarRelatorio();
+        gerarRelatorio('todos');
     } catch (e) {
         console.error('Erro ao carregar dados:', e);
         document.getElementById('erroMensagem').style.display = 'block';
@@ -47,11 +49,63 @@ async function carregarDados() {
     }
 }
 
-function gerarRelatorio() {
-    // Lógica de cálculo e renderização (adaptar para Firestore)
-    const faturamento = todasVendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+function gerarRelatorio(periodo) {
+    const agora = new Date();
+    let vendasFiltradas = todasVendas;
+
+    if (periodo === 'semana') {
+        const inicioSemana = new Date(agora);
+        inicioSemana.setDate(agora.getDate() - agora.getDay());
+        vendasFiltradas = todasVendas.filter(v => {
+            if (!v.dataHora) return false;
+            const data = new Date(v.dataHora);
+            return data >= inicioSemana;
+        });
+    } else if (periodo === 'mes') {
+        vendasFiltradas = todasVendas.filter(v => {
+            if (!v.dataHora) return false;
+            const data = new Date(v.dataHora);
+            return data.getMonth() === agora.getMonth() && data.getFullYear() === agora.getFullYear();
+        });
+    }
+
+    // Calcular totais
+    const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const pedidos = vendasFiltradas.length;
+    const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
+    const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
+
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
-    // ... (restante lógica de tabelas e gráficos igual ao antigo, mas usando dados do Firestore)
+    document.getElementById('kpiPedidos').textContent = pedidos;
+    document.getElementById('kpiItens').textContent = itensVendidos;
+    document.getElementById('kpiEstoque').textContent = estoqueTotal;
+
+    // Renderizar pedidos
+    const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
+    corpoTabelaPedidos.innerHTML = '';
+
+    vendasFiltradas.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px;">${v.dataHora || 'N/A'}</td>
+            <td style="padding:8px; font-weight:600;">${v.nomeCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.moradaCliente || 'N/A'}</td>
+            <td style="padding:8px; font-size:11px;">${v.produtosResumo || 'N/A'}</td>
+            <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; gap:4px;">
+                    <span style="font-size:11px; font-weight:700;">${v.status === 'enviado' ? '🔵 Enviado' : v.status === 'entregue' ? '🟢 Entregue' : '🟡 Confirmado'}</span>
+                </div>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                    <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
+                    <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
+                </div>
+            </td>
+        `;
+        corpoTabelaPedidos.appendChild(tr);
+    });
 }
 
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
@@ -71,4 +125,17 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
-// ... (funções de exportação PDF/Excel mantêm-se iguais)
+function exportarPDF() {
+    const doc = new jspdf.jsPDF();
+    doc.setFontSize(16);
+    doc.text('Relatório de Vendas - Aurora Comercial', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 26);
+    doc.autoTable({
+        startY: 32,
+        html: '#tabelaRelatorio',
+        headStyles: { fillColor: [0, 90, 76] },
+        styles: { fontSize: 9 }
+    });
+    doc.save('Relatorio_Vendas_Aurora.pdf');
+}
