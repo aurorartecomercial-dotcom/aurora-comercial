@@ -1,9 +1,11 @@
-import { CONFIG } from './config.js';
+import { db, CONFIG } from './config.js';
+import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
+    // Tenta usar cache primeiro
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
     let cache = {};
     if (cachedStr) {
@@ -11,17 +13,15 @@ export async function carregarCatalogo() {
     }
 
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/produtos.php`);
-        if (!res.ok) throw new Error('Erro ao buscar produtos');
-        const data = await res.json();
-        let novosProdutos = data.data; // O PHP devolve { data: [...] }
+        const snapshot = await getDocs(collection(db, 'produtos'));
+        const novosProdutos = snapshot.docs.map(doc => doc.data());
         
         localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, timestamp: Date.now() }));
         return novosProdutos;
     } catch (e) {
-        console.warn('Falha ao buscar da API, usando cache:', e);
+        console.warn('Falha ao buscar do Firestore, usando cache:', e);
         if (cache.data) return cache.data;
-        return []; // Se não houver cache, retorna vazio
+        return [];
     }
 }
 

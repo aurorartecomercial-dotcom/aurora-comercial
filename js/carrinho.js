@@ -1,5 +1,6 @@
 import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura, IMAGEM_FALLBACK } from './utils.js';
-import { CONFIG } from './config.js';
+import { db, CONFIG } from './config.js';
+import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -181,16 +182,22 @@ export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
 export async function aplicarCupom(codigoCupom) {
     if (!codigoCupom) return;
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/cupons.php?codigo=${codigoCupom}`);
-        const data = await res.json();
-        if (data.success) {
-            cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: data.percentual };
-            mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${data.percentual}% OFF`, 'sucesso');
-            atualizarCarrinho();
+        const q = query(collection(db, 'cupons'), where('codigo', '==', codigoCupom));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const cupom = snapshot.docs[0].data();
+            if (cupom.ativo) {
+                cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: cupom.percentual };
+                mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${cupom.percentual}% OFF`, 'sucesso');
+                atualizarCarrinho();
+            } else {
+                mostrarToast('Cupom inválido!', 'info');
+            }
         } else {
             mostrarToast('Cupom inválido!', 'info');
         }
     } catch (e) {
+        console.error('Erro ao validar cupom:', e);
         mostrarToast('Erro ao validar cupom. Tente novamente.', 'info');
     }
 }
@@ -297,13 +304,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const itensParaAPI = carrinho.map(item => ({
-        nome: item.nome,
-        quantidade: item.quantidade,
-        preco: extrairValorNumerico(item.preco)
-    }));
-
     const novaVenda = {
+        dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
         totalItens: totalItensPedido,
@@ -313,31 +315,21 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         moradaCliente: moradaCliente,
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
         descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
-        itens: itensParaAPI
+        status: 'confirmado',
+        itens: carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }))
     };
 
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/vendas.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(novaVenda)
-        });
-
-        if (!res.ok) throw new Error(`Erro ao gravar venda: ${res.status}`);
-
-        const data = await res.json();
-        if (data.success) {
-            alert(`✅ Pedido registrado!\nCódigo de rastreio: ${data.codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
-        } else {
-            throw new Error('Falha ao registar venda');
-        }
+        const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
+        const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
+        await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
+        
+        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
-        // Fallback: salva localmente
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-        
         alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
     }
 }
