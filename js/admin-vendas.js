@@ -1,7 +1,7 @@
 import { auth, db, CONFIG } from './config.js';
 import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { extrairValorNumerico } from './utils.js'; // ⚠️ ESTA LINHA ESTAVA EM FALTA!
+import { extrairValorNumerico } from './utils.js'; // Importação essencial!
 
 let todasVendas = [];
 let catalogo = [];
@@ -82,7 +82,7 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
 
-    // Tabela de Pedidos
+    // Tabela de Pedidos (Clientes)
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
 
@@ -109,7 +109,7 @@ function gerarRelatorio(periodo) {
         corpoTabelaPedidos.appendChild(tr);
     });
 
-    // Tabela de Produtos
+    // Tabela de Detalhamento por Produto
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         if (venda.itens && Array.isArray(venda.itens)) {
@@ -138,7 +138,7 @@ function gerarRelatorio(periodo) {
         corpoTabelaRelatorio.appendChild(tr);
     });
 
-    // Renderizar Gráficos
+    // Renderizar Gráfico de Vendas por Dia
     renderizarGraficos(vendasFiltradas);
 }
 
@@ -146,7 +146,6 @@ function renderizarGraficos(vendasFiltradas) {
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => { 
         if (v.dataHora) {
-            // Extrair apenas a data (ex: "26/08/2026")
             const dia = v.dataHora.split(' ')[0]; 
             vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0); 
         }
@@ -164,7 +163,6 @@ function renderizarGraficos(vendasFiltradas) {
                 options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
             });
         } else {
-            // Se não houver dados, limpar o canvas
             ctxVendas.getContext('2d').clearRect(0, 0, ctxVendas.width, ctxVendas.height);
         }
     }
@@ -190,14 +188,56 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
 function exportarPDF() {
     const doc = new jspdf.jsPDF();
     doc.setFontSize(16);
+    doc.setTextColor(0, 90, 76);
     doc.text('Relatório de Vendas - Aurora Comercial', 14, 20);
     doc.setFontSize(10);
+    doc.setTextColor(100);
     doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 26);
-    doc.autoTable({
-        startY: 32,
-        html: '#tabelaRelatorio',
-        headStyles: { fillColor: [0, 90, 76] },
-        styles: { fontSize: 9 }
+    doc.text(`Total de Pedidos: ${document.getElementById('kpiPedidos').textContent}`, 14, 32);
+    doc.text(`Faturamento Total: ${document.getElementById('kpiFaturamento').textContent}`, 14, 38);
+
+    // Criar array de dados a partir do catálogo e vendas (sem depender do HTML)
+    const dadosProdutos = [];
+    const vendasPorProduto = {};
+
+    // Recalcular vendas por produto (mesma lógica do gerarRelatorio)
+    todasVendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        } else if (venda.produtosResumo) {
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        }
     });
+
+    catalogo.forEach(prod => {
+        const qtdVendida = vendasPorProduto[prod.nome] || 0;
+        const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
+        const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
+        dadosProdutos.push([prod.nome, qtdVendida, totalVendido.toLocaleString('pt-AO') + ' Kz', desconto + '%', prod.estoque || 0]);
+    });
+
+    doc.autoTable({
+        startY: 45,
+        head: [['Produto', 'Qtd Vendida', 'Total (Kz)', 'Desconto', 'Estoque']],
+        body: dadosProdutos.length > 0 ? dadosProdutos : [['Sem produtos vendidos', '-', '-', '-', '-']],
+        headStyles: { fillColor: [0, 90, 76], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+        columnStyles: {
+            0: { cellWidth: 60 },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 35, halign: 'right' },
+            3: { cellWidth: 20, halign: 'center' },
+            4: { cellWidth: 20, halign: 'center' }
+        }
+    });
+
     doc.save('Relatorio_Vendas_Aurora.pdf');
 }
