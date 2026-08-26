@@ -1,7 +1,7 @@
 import { auth, db, CONFIG } from './config.js';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { extrairValorNumerico, mostrarToast } from './utils.js';
+import { extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
 
 let produtos = [];
 let editandoId = null;
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
     const conteudoAdmin = document.getElementById('conteudoAdmin');
     const btnLogin = document.getElementById('btnLoginAdmin');
-    const emailInput = document.getElementById('emailAdmin'); // Adicione este campo no HTML
+    const emailInput = document.getElementById('emailAdmin');
     const senhaInput = document.getElementById('senhaAdmin');
     const erroLogin = document.getElementById('erroLogin');
 
@@ -60,7 +60,7 @@ function iniciarAdmin() {
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
-    const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69'; // (pode mover para o backend depois)
+    const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69'; // Substitua se necessário
 
     async function uploadParaImgBB(file) {
         const formData = new FormData();
@@ -134,7 +134,6 @@ function iniciarAdmin() {
                         <small style="color:#888; display:block;">
                             ${prod.categoria} | ${prod.preco} | Custo: ${prod.custo || 'N/A'}
                             ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
-                            ${prod.video ? '| 🎬 Vídeo' : ''}
                         </small>
                     </div>
                     <div class="acoes">
@@ -155,9 +154,13 @@ function iniciarAdmin() {
             return;
         }
 
-        const imagensArray = imagens.value.split(',').map(s => s.trim()).filter(s => s);
+        // Limpar e obter URLs de imagens
+        const imagensArray = imagens.value.split(',').map(s => s.trim()).filter(s => s && !s.includes('placeholder'));
+        // Se não houver imagens, usar fallback (mas NÃO colocar placeholder no campo)
+        const imagensFinal = imagensArray.length > 0 ? imagensArray : [IMAGEM_FALLBACK];
+
         const novoProduto = {
-            id: editandoId || crypto.randomUUID(),
+            id: editandoId || crypto.randomUUID(), // Garante ID único
             ordem: parseInt(ordem.value) || 0,
             nome: nome.value.trim(),
             categoria: categoria.value,
@@ -168,7 +171,7 @@ function iniciarAdmin() {
             parcelas: parcelas.value.trim() || '',
             freteGratis: freteGratis.checked,
             descricao: descricao.value.trim(),
-            imagens: imagensArray.length > 0 ? imagensArray : ['placeholder.jpg'],
+            imagens: imagensFinal,
             tag: tag.value.trim() || categoria.value,
             estoque: parseInt(estoque.value) || 0,
             video: video.value.trim()
@@ -185,7 +188,8 @@ function iniciarAdmin() {
             resetForm();
             await carregarProdutos();
         } catch (e) {
-            mostrarMensagem('Erro ao salvar produto.', 'info');
+            console.error('Erro ao salvar produto:', e);
+            mostrarMensagem('Erro ao salvar produto: ' + e.message, 'info');
         }
     });
 
@@ -204,7 +208,7 @@ function iniciarAdmin() {
         parcelas.value = prod.parcelas || '';
         freteGratis.checked = prod.freteGratis || false;
         descricao.value = prod.descricao || '';
-        imagens.value = Array.isArray(prod.imagens) ? prod.imagens.join(', ') : '';
+        imagens.value = Array.isArray(prod.imagens) ? prod.imagens.filter(i => !i.includes('placeholder')).join(', ') : '';
         ordem.value = prod.ordem || 0;
         estoque.value = prod.estoque || 0;
         video.value = prod.video || '';
@@ -243,12 +247,13 @@ function iniciarAdmin() {
         btnSalvar.textContent = '💾 Salvar Produto';
         btnCancelar.style.display = 'none';
         previewImagens.innerHTML = '';
+        imagens.value = '';
     }
 
     imagens.addEventListener('input', () => { atualizarPreview(imagens.value); });
 
     function atualizarPreview(texto) {
-        const urls = texto.split(',').map(s => s.trim()).filter(s => s);
+        const urls = texto.split(',').map(s => s.trim()).filter(s => s && !s.includes('placeholder'));
         previewImagens.innerHTML = '';
         urls.forEach(url => {
             const img = document.createElement('img');
@@ -259,15 +264,6 @@ function iniciarAdmin() {
     }
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
-
-    // Botões simples (remover ou adaptar)
-    document.getElementById('btnTestarJsonbin')?.addEventListener('click', async () => {
-        try { const snap = await getDocs(collection(db, 'produtos')); mostrarMensagem('✅ Firestore OK! ' + snap.size + ' produtos', 'sucesso'); }
-        catch(e) { mostrarMensagem('❌ Erro: ' + e.message, 'info'); }
-    });
-
-    document.getElementById('btnEnviarJsonbin')?.addEventListener('click', () => { mostrarMensagem('Dados já no Firestore.', 'sucesso'); });
-    document.getElementById('btnForcarCache')?.addEventListener('click', () => { localStorage.removeItem(CONFIG.CACHE_KEY); mostrarMensagem('Cache limpo.', 'sucesso'); });
 
     carregarProdutos();
 }
