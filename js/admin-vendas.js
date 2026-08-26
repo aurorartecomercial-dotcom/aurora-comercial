@@ -30,14 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
     document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio('todos'));
+    document.getElementById('btnRelatorioSemanal')?.addEventListener('click', () => gerarRelatorio('semana'));
+    document.getElementById('btnRelatorioMensal')?.addEventListener('click', () => gerarRelatorio('mes'));
     document.getElementById('btnExportarPDF')?.addEventListener('click', exportarPDF);
 });
 
 async function carregarDados() {
     try {
+        // Buscar vendas
         const vendasSnap = await getDocs(collection(db, 'vendas'));
         todasVendas = vendasSnap.docs.map(doc => doc.data());
         
+        // Buscar produtos
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         catalogo = produtosSnap.docs.map(doc => doc.data());
 
@@ -53,6 +57,7 @@ function gerarRelatorio(periodo) {
     const agora = new Date();
     let vendasFiltradas = todasVendas;
 
+    // Filtrar por período
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
         inicioSemana.setDate(agora.getDate() - agora.getDay());
@@ -69,7 +74,7 @@ function gerarRelatorio(periodo) {
         });
     }
 
-    // Calcular totais
+    // KPIs
     const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidos = vendasFiltradas.length;
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
@@ -80,7 +85,7 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
 
-    // Renderizar pedidos
+    // Tabela de Pedidos (Lista de Clientes)
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
 
@@ -106,8 +111,67 @@ function gerarRelatorio(periodo) {
         `;
         corpoTabelaPedidos.appendChild(tr);
     });
+
+    // Tabela de Detalhamento por Produto
+    const vendasPorProduto = {};
+    vendasFiltradas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        } else if (venda.produtosResumo) {
+            // Fallback para o formato antigo
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        }
+    });
+
+    const corpoTabelaRelatorio = document.getElementById('corpoTabelaRelatorio');
+    corpoTabelaRelatorio.innerHTML = '';
+    catalogo.forEach(prod => {
+        const qtdVendida = vendasPorProduto[prod.nome] || 0;
+        const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
+        const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="padding:8px;">${prod.nome}</td><td style="padding:8px; text-align:center;">${qtdVendida}</td><td style="padding:8px; text-align:right;">${totalVendido.toLocaleString('pt-AO')}</td><td style="padding:8px; text-align:center;">${desconto}%</td><td style="padding:8px; text-align:center;">${prod.estoque || 0}</td>`;
+        corpoTabelaRelatorio.appendChild(tr);
+    });
+
+    // Renderizar Gráficos
+    renderizarGraficos(vendasFiltradas);
 }
 
+// Função para renderizar os gráficos (Vendas por Dia)
+function renderizarGraficos(vendasFiltradas) {
+    const vendasPorDia = {};
+    vendasFiltradas.forEach(v => { 
+        if (v.dataHora) {
+            const dia = v.dataHora.split(' ')[0]; 
+            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0); 
+        }
+    });
+    const dias = Object.keys(vendasPorDia);
+    const valores = Object.values(vendasPorDia);
+
+    const ctxVendas = document.getElementById('graficoVendas');
+    if (ctxVendas) {
+        if (graficoVendas) graficoVendas.destroy();
+        if (dias.length > 0) {
+            graficoVendas = new Chart(ctxVendas, { 
+                type: 'bar', 
+                data: { labels: dias, datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
+            });
+        }
+    }
+}
+
+// Atualizar status do pedido
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
@@ -125,6 +189,7 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
+// Exportar PDF
 function exportarPDF() {
     const doc = new jspdf.jsPDF();
     doc.setFontSize(16);
