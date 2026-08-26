@@ -8,19 +8,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
 
     const params = new URLSearchParams(window.location.search);
-    const idProduto = parseInt(params.get('id'));
-    if (!idProduto || isNaN(idProduto)) {
+    const idProduto = params.get('id'); // ⚠️ NÃO usar parseInt aqui!
+    
+    if (!idProduto) {
         mostrarErro('Nenhum ID de produto foi informado.');
         return;
     }
 
     const catalogo = await carregarCatalogo();
-    if (!catalogo) {
+    if (!catalogo || catalogo.length === 0) {
         mostrarErro('Erro ao carregar catálogo.');
         return;
     }
 
-    const prod = catalogo.find(p => p.id === idProduto);
+    // ⚠️ Comparar como string
+    const prod = catalogo.find(p => String(p.id) === String(idProduto));
+
     if (!prod) {
         mostrarErro('Produto não encontrado.');
         return;
