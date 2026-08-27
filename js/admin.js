@@ -1,11 +1,13 @@
 import { auth, db } from './config.js';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 import { extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
 
 let produtos = [];
 let editandoId = null;
+
+// Chave ImgBB (a sua)
+const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
@@ -62,13 +64,52 @@ function iniciarAdmin() {
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
 
-    // Storage
-    const storage = getStorage();
+    async function uploadParaImgBB(file) {
+        // Verificar tipo e tamanho
+        const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!tiposPermitidos.includes(file.type)) {
+            throw new Error(`Formato não suportado: ${file.type}. Use JPG, PNG, GIF ou WEBP.`);
+        }
+        if (file.size > 32 * 1024 * 1024) {
+            throw new Error(`Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo 32MB.`);
+        }
 
-    // Upload para Firebase Storage
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', file);
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30 segundos
+
+        try {
+            const res = await fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData,
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(`Erro ${res.status}: ${errData.error?.message || 'Falha no upload'}`);
+            }
+            const data = await res.json();
+            return data.data.display_url || data.data.url;
+        } catch (e) {
+            clearTimeout(timeout);
+            if (e.name === 'AbortError') {
+                throw new Error('Tempo esgotado. Verifique sua conexão ou tente novamente.');
+            }
+            throw e;
+        }
+    }
+
     btnUploadImg.addEventListener('click', async () => {
         const files = imgUploadInput.files;
-        if (!files.length) { alert('Selecione pelo menos uma imagem.'); return; }
+        if (!files.length) {
+            alert('Selecione pelo menos uma imagem.');
+            return;
+        }
 
         const imagensAtuais = imagens.value.split(',').map(s => s.trim()).filter(s => s);
         btnUploadImg.disabled = true;
@@ -76,29 +117,36 @@ function iniciarAdmin() {
         uploadProgress.textContent = '0/' + files.length;
 
         let sucesso = 0;
+        let erros = [];
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const storageRef = ref(storage, `produtos/${Date.now()}-${file.name}`);
             try {
-                await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(storageRef);
+                const url = await uploadParaImgBB(file);
                 imagensAtuais.push(url);
                 sucesso++;
+                uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
             } catch (e) {
-                console.error('Erro no upload da imagem', i, e);
+                console.error(`Erro no arquivo ${file.name}:`, e);
+                erros.push(`${file.name}: ${e.message}`);
             }
-            uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
         }
 
         imagens.value = imagensAtuais.join(', ');
         atualizarPreview(imagens.value);
         btnUploadImg.disabled = false;
-        btnUploadImg.textContent = '⬆ Enviar para Firebase Storage';
+        btnUploadImg.textContent = '⬆ Enviar para ImgBB';
         uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
-        setTimeout(() => uploadProgress.textContent = '', 3000);
+
+        if (erros.length > 0) {
+            alert(`Alguns uploads falharam:\n\n${erros.join('\n')}\n\n💡 Dica: Você pode colar manualmente as URLs das imagens no campo "Imagens".`);
+        }
+
+        setTimeout(() => uploadProgress.textContent = '', 4000);
         imgUploadInput.value = '';
     });
 
+    // ... resto do código (carregarProdutos, editar, excluir, salvar, etc.)
     async function carregarProdutos() {
         try {
             const snapshot = await getDocs(collection(db, 'produtos'));
@@ -147,6 +195,7 @@ function iniciarAdmin() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        // ... lógica de salvar produto
         const precoValor = preco.value.trim();
         if (!nome.value.trim() || !categoria.value || !precoValor || !custo.value.trim()) {
             alert('Preencha Nome, Categoria, Preço e Preço de Custo obrigatoriamente.');
