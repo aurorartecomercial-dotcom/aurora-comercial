@@ -6,7 +6,7 @@ import { extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK } from './utils.js'
 let produtos = [];
 let editandoId = null;
 
-// Chave ImgBB (a sua)
+// ⚠️ Substitua pela SUA chave do ImgBB (https://api.imgbb.com)
 const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -64,6 +64,7 @@ function iniciarAdmin() {
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
 
+    // Função de upload para ImgBB
     async function uploadParaImgBB(file) {
         // Verificar tipo e tamanho
         const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -195,7 +196,6 @@ function iniciarAdmin() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        // ... lógica de salvar produto
         const precoValor = preco.value.trim();
         if (!nome.value.trim() || !categoria.value || !precoValor || !custo.value.trim()) {
             alert('Preencha Nome, Categoria, Preço e Preço de Custo obrigatoriamente.');
