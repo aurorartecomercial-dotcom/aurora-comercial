@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ✅ Tenta carregar do cache local primeiro (instantâneo)
+    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
     let catalogo = [];
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {}
     }
 
-    // Se não tem cache, busca do Firebase
+    // ✅ 2. Se não tem cache, busca do Firebase, mas agora com tempo limite
     if (catalogo.length === 0) {
         catalogo = await carregarCatalogo();
     }
@@ -42,8 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // ✅ 3. Renderiza o produto IMEDIATAMENTE (sem esperar avaliação)
     renderizarDetalhes(prod);
     atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
+
+    // ✅ 4. Carrega a avaliação em segundo plano e atualiza o DOM
+    carregarAvaliacaoAsync(prod.id);
 });
 
 function mostrarErro(mensagem) {
@@ -56,7 +60,8 @@ function mostrarErro(mensagem) {
     `;
 }
 
-async function renderizarDetalhes(prod) {
+// ✅ Função de renderização SEM `await` (síncrona)
+function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
     const catLink = document.getElementById('breadcrumbCat');
@@ -70,20 +75,20 @@ async function renderizarDetalhes(prod) {
     let miniaturasHtml = prod.imagens.map((src, i) =>
         `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" 
               class="${i === 0 ? 'ativa' : ''}" 
+              loading="lazy"
               onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">`
     ).join('');
-
-    const avaliacao = await obterAvaliacao(prod.id);
 
     let videoHtml = '';
     if (prod.video) {
         videoHtml = `
             <div class="video-container">
-                <iframe src="${prod.video}" frameborder="0" allowfullscreen></iframe>
+                <iframe src="${prod.video}" frameborder="0" allowfullscreen loading="lazy"></iframe>
             </div>
         `;
     }
 
+    // ✅ Define um placeholder para a avaliação
     container.innerHTML = `
         <div class="detalhes-grid">
             <div class="detalhes-imagem-principal">
@@ -105,25 +110,15 @@ async function renderizarDetalhes(prod) {
                 
                 ${videoHtml}
 
-                <div class="avaliacao">
-                    <span>⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total} avaliações)</span>
-                    <div>
-                        <label for="notaAvaliacao">Sua nota: </label>
-                        <select id="notaAvaliacao">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5" selected>5</option>
-                        </select>
-                        <button id="btnAvaliar" class="btn-avaliar" style="background:var(--cor-botao); border:none; padding:4px 12px; border-radius:8px; cursor:pointer; color:#000; font-weight:600;">Avaliar</button>
-                    </div>
+                <div class="avaliacao" id="avaliacaoContainer">
+                    <span>⭐ Carregando avaliações...</span>
                 </div>
                 <button class="btn-comprar-grande" id="btnComprarDetalhe">🛒 Adicionar à Sacola</button>
             </div>
         </div>
     `;
 
+    // ✅ Configura miniaturas
     const miniaturas = document.querySelectorAll('#miniaturas img');
     const imgPrincipal = document.getElementById('detalhesImg');
     miniaturas.forEach(img => {
@@ -134,15 +129,47 @@ async function renderizarDetalhes(prod) {
         });
     });
 
+    // ✅ Botão de comprar
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
         adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
     });
+}
 
-    document.getElementById('btnAvaliar').addEventListener('click', async () => {
-        const nota = parseInt(document.getElementById('notaAvaliacao').value);
-        await adicionarAvaliacao(prod.id, nota);
-        mostrarToast('Avaliação registada!', 'sucesso');
-        const novaAval = await obterAvaliacao(prod.id);
-        document.querySelector('.avaliacao span').textContent = `⭐ ${novaAval.media.toFixed(1)} (${novaAval.total} avaliações)`;
-    });
+// ✅ Carrega avaliação sem bloquear a renderização
+async function carregarAvaliacaoAsync(prodId) {
+    try {
+        const avaliacao = await obterAvaliacao(prodId);
+        const containerAvaliacao = document.getElementById('avaliacaoContainer');
+        if (containerAvaliacao) {
+            let html = `<span>⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total} avaliações)</span>`;
+            html += `
+                <div>
+                    <label for="notaAvaliacao">Sua nota: </label>
+                    <select id="notaAvaliacao">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5" selected>5</option>
+                    </select>
+                    <button id="btnAvaliar" class="btn-avaliar" style="background:var(--cor-botao); border:none; padding:4px 12px; border-radius:8px; cursor:pointer; color:#000; font-weight:600;">Avaliar</button>
+                </div>
+            `;
+            containerAvaliacao.innerHTML = html;
+
+            document.getElementById('btnAvaliar').addEventListener('click', async () => {
+                const nota = parseInt(document.getElementById('notaAvaliacao').value);
+                await adicionarAvaliacao(prodId, nota);
+                mostrarToast('Avaliação registada!', 'sucesso');
+                const novaAval = await obterAvaliacao(prodId);
+                containerAvaliacao.innerHTML = `<span>⭐ ${novaAval.media.toFixed(1)} (${novaAval.total} avaliações)</span>`;
+            });
+        }
+    } catch (e) {
+        console.warn('Erro ao carregar avaliação:', e);
+        const containerAvaliacao = document.getElementById('avaliacaoContainer');
+        if (containerAvaliacao) {
+            containerAvaliacao.innerHTML = '<span>⭐ Sem avaliações</span>';
+        }
+    }
 }
