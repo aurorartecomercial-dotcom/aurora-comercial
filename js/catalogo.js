@@ -4,58 +4,46 @@ import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
-// ✅ CACHE EM MEMÓRIA (evita múltiplas buscas no mesmo carregamento)
+// Cache em memória para buscas rápidas
 let cacheMemoria = null;
 let catalogoPromise = null;
 
-// ✅ Carrega do localStorage imediatamente e depois atualiza do Firebase
 export async function carregarCatalogo() {
-    // Se já tem cache em memória, retorna instantaneamente
     if (cacheMemoria) return cacheMemoria;
-
-    // Se já está em andamento, retorna a promise existente
     if (catalogoPromise) return catalogoPromise;
 
-    // Cria a promise para buscar do Firebase e do cache local
     catalogoPromise = new Promise(async (resolve) => {
-        // 1. Primeiro tenta do localStorage (instantâneo)
+        // 1. LocalStorage (instantâneo)
         try {
             const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
             if (cachedStr) {
                 const cache = JSON.parse(cachedStr);
-                // Usa cache se tiver menos de 30 minutos
-                if (cache.data && (Date.now() - cache.timestamp < 30 * 60 * 1000)) {
+                if (cache.data && cache.data.length > 0) {
                     cacheMemoria = cache.data;
                     resolve(cacheMemoria);
-                    // Atualiza em segundo plano (não bloqueia)
                     atualizarDoFirebase();
                     return;
                 }
             }
-        } catch (e) { console.warn('Cache inválido:', e); }
+        } catch (e) {}
 
-        // 2. Sem cache válido, busca do Firebase
+        // 2. Firebase
         try {
             const snapshot = await getDocs(collection(db, 'produtos'));
             const produtos = snapshot.docs.map(doc => doc.data());
             cacheMemoria = produtos;
-            // Salva no localStorage
             localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
             resolve(produtos);
         } catch (e) {
-            console.warn('Falha ao buscar do Firestore, usando cache:', e);
-            if (cacheMemoria) {
-                resolve(cacheMemoria);
-            } else {
-                resolve([]);
-            }
+            console.warn('Falha ao buscar do Firestore:', e);
+            if (cacheMemoria) resolve(cacheMemoria);
+            else resolve([]);
         }
     });
 
     return catalogoPromise;
 }
 
-// ✅ Atualiza do Firebase em segundo plano sem bloquear a UI
 async function atualizarDoFirebase() {
     try {
         const snapshot = await getDocs(collection(db, 'produtos'));
@@ -67,7 +55,6 @@ async function atualizarDoFirebase() {
     }
 }
 
-// ✅ Criação de card OTIMIZADA (sem await para avaliação)
 export function criarCardProduto(prod) {
     const card = document.createElement('a');
     card.className = 'produto-card';
@@ -106,8 +93,6 @@ export function criarCardProduto(prod) {
         else html += `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
 
-    // ✅ Avaliação carregada de forma assíncrona (não bloqueia o card)
-    // Usamos um atributo data-avaliacao e depois preenchemos
     html += `<div class="avaliacao-card" data-produto-id="${prod.id}" style="margin-top:6px; font-size:13px; min-height:18px;"></div>`;
 
     html += `
@@ -125,7 +110,6 @@ export function criarCardProduto(prod) {
     html += `</div>`;
     card.innerHTML = html;
 
-    // ✅ Carrega avaliação de forma assíncrona (sem bloquear)
     obterAvaliacao(prod.id).then(avaliacao => {
         const avaliacaoDiv = card.querySelector('.avaliacao-card');
         if (avaliacaoDiv && avaliacao.media > 0) {
@@ -154,7 +138,6 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao)
     return filtrados;
 }
 
-// ✅ Renderiza a grade sem usar Promise.all (mais rápido)
 export async function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
     if (!container) return;
     const start = (pagina - 1) * itensPorPagina;
@@ -167,7 +150,6 @@ export async function renderizarGrade(produtosFiltrados, container, pagina = 1, 
         return;
     }
 
-    // ✅ Cria todos os cards de uma vez (síncrono)
     const fragment = document.createDocumentFragment();
     for (const prod of paginaProdutos) {
         const card = criarCardProduto(prod);
