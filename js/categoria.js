@@ -38,8 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    produtosFiltrados.forEach(prod => {
-        const card = criarCardProduto(prod);
-        grid.appendChild(card);
-    });
+    // ✅ Criar cards com await
+    const cards = await Promise.all(produtosFiltrados.map(prod => criarCardProduto(prod)));
+    cards.forEach(card => grid.appendChild(card));
 });

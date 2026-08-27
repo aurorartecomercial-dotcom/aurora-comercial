@@ -1,8 +1,7 @@
-import { initCarrinho } from './carrinho.js';
-import { carregarCatalogo, filtrarEOrdenar, renderizarGrade } from './catalogo.js';
+import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
+import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
-import { CONFIG } from './config.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -93,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     renderizarBalancoSemanal();
-    aplicarFiltros();
+    await aplicarFiltros(); // ✅ aguardar a renderização
 
     // Delegação de eventos para grade (adicionar e partilhar)
     document.getElementById('gradeProdutos').addEventListener('click', async (e) => {
@@ -115,12 +114,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-function aplicarFiltros(resetPagina = true) {
+async function aplicarFiltros(resetPagina = true) {
     if (resetPagina) paginaAtual = 1;
     const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao);
     const container = document.getElementById('gradeProdutos');
     if (paginaAtual === 1) container.innerHTML = '';
-    renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA);
+    await renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA); // ✅ await
     const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA);
     const btn = document.getElementById('carregarMais');
     if (btn) {
@@ -132,13 +131,12 @@ function aplicarFiltros(resetPagina = true) {
 async function renderizarMaisComprados() {
     const grid = document.getElementById('maisCompradosGrid');
     if (!grid) return;
-    // Usar ordem (campos numéricos) para selecionar os "mais comprados"
     const ordens = [1, 2, 3, 4, 5, 6, 7, 8];
     const produtos = catalogo
         .filter(p => ordens.includes(p.ordem))
         .sort((a, b) => a.ordem - b.ordem);
     grid.innerHTML = '';
-    const cards = await Promise.all(produtos.map(prod => criarCardProduto(prod)));
+    const cards = await Promise.all(produtos.map(prod => criarCardProduto(prod))); // ✅ criando cards
     cards.forEach(card => grid.appendChild(card));
 }
 
