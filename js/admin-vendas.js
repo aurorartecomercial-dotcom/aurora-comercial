@@ -7,8 +7,15 @@ let todasVendas = [];
 let catalogo = [];
 let graficoVendas = null;
 let graficoProdutos = null;
-let graficoComparativo = null;
-let graficoMapa = null;
+
+// Estado dos filtros atuais
+let filtroAtual = {
+    mes: '',
+    semana: '',
+    dia: '',
+    dataInicio: '',
+    dataFim: ''
+};
 
 function chartDisponivel() {
     return typeof Chart !== 'undefined';
@@ -36,16 +43,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
-    document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio('todos'));
-    document.getElementById('btnRelatorioSemanal')?.addEventListener('click', () => gerarRelatorio('semana'));
-    document.getElementById('btnRelatorioMensal')?.addEventListener('click', () => gerarRelatorio('mes'));
+    // Botões rápidos
+    document.getElementById('btnRelatorioTodos').addEventListener('click', () => {
+        limparFiltros();
+        gerarRelatorio('todos');
+    });
+    document.getElementById('btnRelatorioSemanal').addEventListener('click', () => gerarRelatorio('semana'));
+    document.getElementById('btnRelatorioMensal').addEventListener('click', () => gerarRelatorio('mes'));
 
-    // ✅ Botões de exportação
-    document.getElementById('btnExportarPDF')?.addEventListener('click', exportarPDF);
-    document.getElementById('btnExportarExcel')?.addEventListener('click', exportarExcel);
+    // Filtros específicos
+    document.getElementById('btnAplicarFiltro').addEventListener('click', () => {
+        filtroAtual.mes = document.getElementById('selectMes').value;
+        filtroAtual.semana = document.getElementById('selectSemana').value;
+        filtroAtual.dia = document.getElementById('inputDia').value;
+        gerarRelatorioComFiltros();
+    });
 
-    // ✅ Botão Limpar (reset de filtros)
-    document.getElementById('btnLimparHistorico')?.addEventListener('click', limparFiltros);
+    document.getElementById('btnLimparFiltro').addEventListener('click', () => {
+        document.getElementById('selectMes').value = '';
+        document.getElementById('selectSemana').value = '';
+        document.getElementById('inputDia').value = '';
+        filtroAtual = { mes: '', semana: '', dia: '', dataInicio: '', dataFim: '' };
+        gerarRelatorio('todos');
+    });
+
+    // Período personalizado
+    document.getElementById('btnAplicarPeriodo').addEventListener('click', () => {
+        filtroAtual.dataInicio = document.getElementById('dataInicio').value;
+        filtroAtual.dataFim = document.getElementById('dataFim').value;
+        gerarRelatorioComFiltros();
+    });
+
+    document.getElementById('btnLimparPeriodo').addEventListener('click', () => {
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('dataFim').value = '';
+        filtroAtual.dataInicio = '';
+        filtroAtual.dataFim = '';
+        gerarRelatorio('todos');
+    });
+
+    document.getElementById('btnExportarPDF').addEventListener('click', exportarPDF);
+    document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
+    document.getElementById('btnLimparHistorico').addEventListener('click', limparFiltros);
 });
 
 async function carregarDados() {
@@ -64,9 +103,10 @@ async function carregarDados() {
     }
 }
 
+// Função principal para gerar relatório com período básico
 function gerarRelatorio(periodo) {
-    const agora = new Date();
     let vendasFiltradas = todasVendas;
+    const agora = new Date();
 
     if (periodo === 'semana') {
         const inicioSemana = new Date(agora);
@@ -84,17 +124,79 @@ function gerarRelatorio(periodo) {
         });
     }
 
+    document.getElementById('tabelaDiasMensal').style.display = 'none';
+    renderizarTudo(vendasFiltradas);
+}
+
+// Função para gerar relatório com filtros específicos (mês, semana, dia, período)
+function gerarRelatorioComFiltros() {
+    let vendasFiltradas = todasVendas.filter(v => {
+        if (!v.dataHora) return false;
+        const data = new Date(v.dataHora);
+
+        // Filtro por mês (0-11)
+        if (filtroAtual.mes !== '') {
+            if (data.getMonth() !== parseInt(filtroAtual.mes)) return false;
+        }
+
+        // Filtro por semana do mês (1-5)
+        if (filtroAtual.semana !== '') {
+            const diaMes = data.getDate();
+            const semanaCalculada = Math.floor((diaMes - 1) / 7) + 1;
+            if (semanaCalculada !== parseInt(filtroAtual.semana)) return false;
+        }
+
+        // Filtro por dia específico (YYYY-MM-DD)
+        if (filtroAtual.dia !== '') {
+            const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+            if (dataStr !== filtroAtual.dia) return false;
+        }
+
+        // Filtro por período personalizado (dataInicio e dataFim)
+        if (filtroAtual.dataInicio !== '' && filtroAtual.dataFim !== '') {
+            const inicio = new Date(filtroAtual.dataInicio + 'T00:00:00');
+            const fim = new Date(filtroAtual.dataFim + 'T23:59:59');
+            if (data < inicio || data > fim) return false;
+        }
+
+        return true;
+    });
+
+    // Mostra tabela de dias mensais apenas se um mês for selecionado
+    const tabelaDiasMensal = document.getElementById('tabelaDiasMensal');
+    if (filtroAtual.mes !== '') {
+        tabelaDiasMensal.style.display = 'block';
+        renderizarTabelaDiasMensal(parseInt(filtroAtual.mes), vendasFiltradas);
+    } else {
+        tabelaDiasMensal.style.display = 'none';
+    }
+
+    renderizarTudo(vendasFiltradas);
+}
+
+// Renderiza todos os componentes
+function renderizarTudo(vendasFiltradas) {
     const faturamento = vendasFiltradas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidos = vendasFiltradas.length;
     const itensVendidos = vendasFiltradas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
     const estoqueTotal = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
+    const ticketMedio = pedidos > 0 ? faturamento / pedidos : 0;
 
     document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itensVendidos;
+    document.getElementById('kpiTicketMedio').textContent = ticketMedio.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
 
-    // Tabela de Pedidos
+    renderizarTabelaPedidos(vendasFiltradas);
+    renderizarTabelaProdutos(vendasFiltradas);
+
+    renderizarGraficoVendasPorDia(vendasFiltradas);
+    renderizarGraficoProdutosMaisVendidos(vendasFiltradas);
+}
+
+// Renderiza a tabela de pedidos
+function renderizarTabelaPedidos(vendasFiltradas) {
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
 
@@ -119,8 +221,10 @@ function gerarRelatorio(periodo) {
         `;
         corpoTabelaPedidos.appendChild(tr);
     });
+}
 
-    // Tabela de Produtos
+// Renderiza a tabela de produtos com ID, Lucro e Alerta de Estoque
+function renderizarTabelaProdutos(vendasFiltradas) {
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         if (venda.itens && Array.isArray(venda.itens)) {
@@ -143,20 +247,53 @@ function gerarRelatorio(periodo) {
     catalogo.forEach(prod => {
         const qtdVendida = vendasPorProduto[prod.nome] || 0;
         const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
+        const custoUnitario = extrairValorNumerico(prod.custo) || 0;
+        const lucroEstimado = qtdVendida * (extrairValorNumerico(prod.preco) - custoUnitario);
         const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
+        const estoque = prod.estoque || 0;
+        const estoqueBaixo = estoque <= 5 ? 'background:#ffe0e0;' : '';
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="padding:8px;">${prod.nome}</td><td style="padding:8px; text-align:center;">${qtdVendida}</td><td style="padding:8px; text-align:right;">${totalVendido.toLocaleString('pt-AO')}</td><td style="padding:8px; text-align:center;">${desconto}%</td><td style="padding:8px; text-align:center;">${prod.estoque || 0}</td>`;
+        tr.innerHTML = `
+            <td style="padding:8px; font-weight:600;">${prod.id || 'N/A'}</td>
+            <td style="padding:8px;">${prod.nome}</td>
+            <td style="padding:8px; text-align:center;">${qtdVendida}</td>
+            <td style="padding:8px; text-align:right;">${totalVendido.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${lucroEstimado.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:center;">${desconto}%</td>
+            <td style="padding:8px; text-align:center; ${estoqueBaixo}">${estoque}</td>
+        `;
         corpoTabelaRelatorio.appendChild(tr);
     });
-
-    // Renderizar gráficos
-    renderizarGraficoVendasPorDia(vendasFiltradas);
-    renderizarGraficoProdutosMaisVendidos(vendasPorProduto);
-    renderizarGraficoComparativoMensal(vendasFiltradas);
-    renderizarGraficoMapaVendas(vendasFiltradas);
 }
 
-// ✅ IMPRIMIR FATURA DO CLIENTE (HTML)
+// Renderiza a tabela de dias mensais
+function renderizarTabelaDiasMensal(mesIndex, vendasFiltradas) {
+    const tbody = document.getElementById('corpoTabelaDiasMensal');
+    tbody.innerHTML = '';
+
+    const diasNoMes = new Date(2026, mesIndex + 1, 0).getDate();
+
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const pedidos = vendasFiltradas.filter(v => {
+            const data = new Date(v.dataHora);
+            return data.getDate() === dia && data.getMonth() === mesIndex;
+        });
+        const faturamento = pedidos.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+        const semana = Math.floor((dia - 1) / 7) + 1;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px;">${dia}</td>
+            <td style="padding:8px; text-align:center;">Semana ${semana}</td>
+            <td style="padding:8px; text-align:center;">${pedidos.length}</td>
+            <td style="padding:8px; text-align:right;">${faturamento.toLocaleString('pt-AO')} Kz</td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// IMPRIMIR FATURA
 window.imprimirFatura = async function(codigoRastreio) {
     if (!codigoRastreio) {
         alert('Este pedido não tem código de rastreio.');
@@ -251,12 +388,9 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
-// =================================================================
-// ✅ EXPORTAR PDF
-// =================================================================
+// EXPORTAR PDF (agora inclui o filtro atual)
 function exportarPDF() {
     try {
-        // Se jsPDF estiver disponível, usa; caso contrário, gera HTML para impressão
         if (typeof jspdf !== 'undefined' && jspdf.jsPDF) {
             const { jsPDF } = jspdf;
             const doc = new jsPDF();
@@ -268,6 +402,7 @@ function exportarPDF() {
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 26);
             doc.text(`Total de Pedidos: ${document.getElementById('kpiPedidos').textContent}`, 14, 32);
             doc.text(`Faturamento Total: ${document.getElementById('kpiFaturamento').textContent}`, 14, 38);
+            doc.text(`Ticket Médio: ${document.getElementById('kpiTicketMedio').textContent}`, 14, 44);
 
             const dadosProdutos = [];
             const vendasPorProduto = {};
@@ -291,43 +426,42 @@ function exportarPDF() {
             catalogo.forEach(prod => {
                 const qtdVendida = vendasPorProduto[prod.nome] || 0;
                 const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
+                const custoUnitario = extrairValorNumerico(prod.custo) || 0;
+                const lucroEstimado = qtdVendida * (extrairValorNumerico(prod.preco) - custoUnitario);
                 const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
-                dadosProdutos.push([prod.nome, qtdVendida, totalVendido.toLocaleString('pt-AO') + ' Kz', desconto + '%', prod.estoque || 0]);
+                dadosProdutos.push([prod.id || 'N/A', prod.nome, qtdVendida, totalVendido.toLocaleString('pt-AO') + ' Kz', lucroEstimado.toLocaleString('pt-AO') + ' Kz', desconto + '%', prod.estoque || 0]);
             });
 
             doc.autoTable({
-                startY: 45,
-                head: [['Produto', 'Qtd Vendida', 'Total (Kz)', 'Desconto', 'Estoque']],
-                body: dadosProdutos.length > 0 ? dadosProdutos : [['Sem produtos vendidos', '-', '-', '-', '-']],
+                startY: 50,
+                head: [['ID', 'Produto', 'Qtd Vendida', 'Total (Kz)', 'Lucro (Kz)', 'Desconto', 'Estoque']],
+                body: dadosProdutos.length > 0 ? dadosProdutos : [['Sem produtos vendidos', '-', '-', '-', '-', '-', '-']],
                 headStyles: { fillColor: [0, 90, 76], textColor: 255, fontStyle: 'bold' },
                 styles: { fontSize: 9 },
                 columnStyles: {
-                    0: { cellWidth: 60 },
-                    1: { cellWidth: 20, halign: 'center' },
-                    2: { cellWidth: 35, halign: 'right' },
-                    3: { cellWidth: 20, halign: 'center' },
-                    4: { cellWidth: 20, halign: 'center' }
+                    0: { cellWidth: 15 },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 18, halign: 'center' },
+                    3: { cellWidth: 30, halign: 'right' },
+                    4: { cellWidth: 25, halign: 'right' },
+                    5: { cellWidth: 15, halign: 'center' },
+                    6: { cellWidth: 15, halign: 'center' }
                 }
             });
 
             doc.save('Relatorio_Vendas_Aurora.pdf');
         } else {
-            // FALLBACK: abrir em nova janela para impressão
             window.print();
         }
     } catch (e) {
         console.error('Erro ao exportar PDF:', e);
-        // Fallback simples: imprimir página
         window.print();
     }
 }
 
-// =================================================================
-// ✅ EXPORTAR EXCEL (CSV)
-// =================================================================
+// EXPORTAR EXCEL
 function exportarExcel() {
     try {
-        // Se XLSX estiver disponível, usa; caso contrário, gera CSV
         if (typeof XLSX !== 'undefined') {
             const dados = [];
             dados.push(['Data/Hora', 'Cliente', 'Telefone', 'NIF', 'Morada', 'Produtos', 'Total (Kz)', 'Status']);
@@ -349,7 +483,6 @@ function exportarExcel() {
             XLSX.utils.book_append_sheet(wb, ws, 'Vendas');
             XLSX.writeFile(wb, 'Vendas_Aurora.xlsx');
         } else {
-            // FALLBACK: gerar CSV simples
             let csv = 'Data/Hora,Cliente,Telefone,NIF,Morada,Produtos,Total (Kz),Status\n';
             todasVendas.forEach(v => {
                 csv += `"${v.dataHora || ''}","${v.nomeCliente || ''}","${v.telefoneCliente || ''}","${v.nifCliente || ''}","${v.moradaCliente || ''}","${v.produtosResumo || ''}","${v.valorTotal || 0}","${v.status || ''}"\n`;
@@ -369,22 +502,20 @@ function exportarExcel() {
     }
 }
 
-// =================================================================
-// ✅ LIMPAR FILTROS (reset)
-// =================================================================
+// LIMPAR FILTROS
 function limparFiltros() {
-    const filtroCliente = document.getElementById('filtroPedidoCliente');
-    const filtroStatus = document.getElementById('filtroStatus');
-    if (filtroCliente) filtroCliente.value = '';
-    if (filtroStatus) filtroStatus.value = 'todos';
-    gerarRelatorio('todos');
-    alert('Filtros limpos! A mostrar todos os dados.');
+    document.getElementById('filtroPedidoCliente').value = '';
+    document.getElementById('filtroStatus').value = 'todos';
+    document.getElementById('selectMes').value = '';
+    document.getElementById('selectSemana').value = '';
+    document.getElementById('inputDia').value = '';
+    document.getElementById('dataInicio').value = '';
+    document.getElementById('dataFim').value = '';
+    document.getElementById('tabelaDiasMensal').style.display = 'none';
+    filtroAtual = { mes: '', semana: '', dia: '', dataInicio: '', dataFim: '' };
 }
 
-// =================================================================
 // GRÁFICOS
-// =================================================================
-
 function renderizarGraficoVendasPorDia(vendasFiltradas) {
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => {
@@ -430,7 +561,24 @@ function renderizarGraficoVendasPorDia(vendasFiltradas) {
     }
 }
 
-function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
+function renderizarGraficoProdutosMaisVendidos(vendasFiltradas) {
+    const vendasPorProduto = {};
+    vendasFiltradas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        } else if (venda.produtosResumo) {
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        }
+    });
+
     const topProdutos = Object.entries(vendasPorProduto)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
@@ -460,99 +608,6 @@ function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
         let html = '<ul style="list-style:none; padding:20px;">';
         topProdutos.forEach(p => {
             html += `<li style="margin-bottom:10px;">🔹 ${p[0]} - ${p[1]} unidades</li>`;
-        });
-        html += '</ul>';
-        ctx.parentElement.innerHTML = html;
-    }
-}
-
-function renderizarGraficoComparativoMensal(vendasFiltradas) {
-    const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
-    const dados = [0, 0, 0, 0, 0, 0];
-
-    vendasFiltradas.forEach(v => {
-        if (v.dataHora) {
-            const data = new Date(v.dataHora);
-            const mesIndex = data.getMonth();
-            if (mesIndex >= 2 && mesIndex <= 7) {
-                dados[mesIndex - 2] += (v.valorTotal || 0);
-            }
-        }
-    });
-
-    const ctx = document.getElementById('graficoComparativo');
-    if (!ctx) return;
-
-    if (chartDisponivel()) {
-        if (graficoComparativo) graficoComparativo.destroy();
-        graficoComparativo = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: meses,
-                datasets: [{
-                    label: 'Vendas (Kz)',
-                    data: dados,
-                    borderColor: '#D4AF37',
-                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
-        });
-    } else {
-        let html = '<div style="display:flex; align-items:flex-end; height:200px; gap:10px; padding:10px;">';
-        const maxVal = Math.max(...dados, 1);
-        meses.forEach((mes, i) => {
-            const altura = (dados[i] / maxVal) * 100;
-            html += `<div style="flex:1; text-align:center;">
-                <div style="background:#D4AF37; height:${altura}%; border-radius:4px;"></div>
-                <span style="font-size:10px;">${mes}</span>
-            </div>`;
-        });
-        html += '</div>';
-        ctx.parentElement.innerHTML = html;
-    }
-}
-
-function renderizarGraficoMapaVendas(vendasFiltradas) {
-    const regioes = ['Luanda', 'Benguela', 'Huambo', 'Lubango'];
-    const dados = [0, 0, 0, 0];
-
-    vendasFiltradas.forEach(v => {
-        const morada = (v.moradaCliente || '').toLowerCase();
-        if (morada.includes('luanda')) dados[0]++;
-        else if (morada.includes('benguela')) dados[1]++;
-        else if (morada.includes('huambo')) dados[2]++;
-        else if (morada.includes('lubango')) dados[3]++;
-    });
-
-    const ctx = document.getElementById('graficoMapa');
-    if (!ctx) return;
-
-    if (chartDisponivel()) {
-        if (graficoMapa) graficoMapa.destroy();
-        graficoMapa = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: regioes,
-                datasets: [{
-                    label: 'Pedidos',
-                    data: dados,
-                    backgroundColor: '#005A4C'
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                aspectRatio: 2
-            }
-        });
-    } else {
-        let html = '<ul style="list-style:none; padding:20px;">';
-        regioes.forEach((reg, i) => {
-            html += `<li style="margin-bottom:10px;">📍 ${reg}: ${dados[i]} pedidos</li>`;
         });
         html += '</ul>';
         ctx.parentElement.innerHTML = html;

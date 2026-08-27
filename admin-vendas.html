@@ -36,6 +36,7 @@
         <div id="conteudoVendas" style="display:none;">
             <div id="erroMensagem" style="display:none;"></div>
 
+            <!-- BOTÕES RÁPIDOS -->
             <div style="margin: 20px 0; display:flex; flex-wrap:wrap; gap:10px;">
                 <button id="btnRelatorioTodos" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Todos</button>
                 <button id="btnRelatorioSemanal" class="btn-admin" style="background:var(--cor-ouro); color:#000;">📅 Esta Semana</button>
@@ -45,6 +46,49 @@
                 <button id="btnLimparHistorico" class="btn-admin" style="background:#E74C3C;">🗑️ Limpar</button>
             </div>
 
+            <!-- FILTROS ESPECÍFICOS -->
+            <div style="margin: 20px 0; display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8f9fa; padding:16px; border-radius:12px; border:1px solid var(--cor-ouro);">
+                <strong style="margin-right:10px;">🔍 Filtro detalhado:</strong>
+                <select id="selectMes" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+                    <option value="">Todos os meses</option>
+                    <option value="0">Janeiro</option>
+                    <option value="1">Fevereiro</option>
+                    <option value="2">Março</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Maio</option>
+                    <option value="5">Junho</option>
+                    <option value="6">Julho</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Setembro</option>
+                    <option value="9">Outubro</option>
+                    <option value="10">Novembro</option>
+                    <option value="11">Dezembro</option>
+                </select>
+                <select id="selectSemana" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+                    <option value="">Todas as semanas</option>
+                    <option value="1">Semana 1 (1-7)</option>
+                    <option value="2">Semana 2 (8-14)</option>
+                    <option value="3">Semana 3 (15-21)</option>
+                    <option value="4">Semana 4 (22-28)</option>
+                    <option value="5">Semana 5 (29-31)</option>
+                </select>
+                <input type="date" id="inputDia" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+                <button id="btnAplicarFiltro" class="btn-admin" style="background:#005A4C; color:#fff;">✅ Aplicar</button>
+                <button id="btnLimparFiltro" class="btn-admin" style="background:#999; color:#fff;">♻️ Limpar</button>
+            </div>
+
+            <!-- FILTRO POR PERÍODO PERSONALIZADO -->
+            <div style="margin: 10px 0; display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#fff; padding:16px; border-radius:12px; border:1px solid #ddd;">
+                <strong style="margin-right:10px;">🗓️ Período personalizado:</strong>
+                <label>De:</label>
+                <input type="date" id="dataInicio" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+                <label>Até:</label>
+                <input type="date" id="dataFim" style="padding:8px; border-radius:8px; border:1px solid #ddd;" />
+                <button id="btnAplicarPeriodo" class="btn-admin" style="background:#3498db; color:#fff;">📅 Filtrar</button>
+                <button id="btnLimparPeriodo" class="btn-admin" style="background:#999; color:#fff;">♻️ Limpar Período</button>
+            </div>
+
+            <!-- KPI CARDS -->
             <div class="painel-faturamento">
                 <div class="card-faturamento sucesso">
                     <p>Faturamento Total</p>
@@ -57,6 +101,10 @@
                 <div class="card-faturamento">
                     <p>Itens Vendidos</p>
                     <h3 id="kpiItens">0</h3>
+                </div>
+                <div class="card-faturamento">
+                    <p>Ticket Médio</p>
+                    <h3 id="kpiTicketMedio">0 Kz</h3>
                 </div>
                 <div class="card-faturamento">
                     <p>Produtos em Estoque</p>
@@ -84,35 +132,33 @@
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin:30px 0;">
-                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
-                    <h3 style="color:var(--cor-esmeralda);">📈 Comparativo Mensal</h3>
-                    <canvas id="graficoComparativo"></canvas>
-                </div>
-                <div class="chart-container" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
-                    <h3 style="color:var(--cor-esmeralda);">📍 Mapa de Vendas (Regiões)</h3>
-                    <canvas id="graficoMapa"></canvas>
-                </div>
+            <!-- TABELA DE DIAS MENSAL -->
+            <div id="tabelaDiasMensal" style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); margin:30px 0; display:none;">
+                <h3 style="color:var(--cor-esmeralda);">📅 Classificação por Dia (mês selecionado)</h3>
+                <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                    <thead>
+                        <tr style="background:var(--cor-esmeralda); color:#FFF;">
+                            <th style="padding:8px;">Dia</th>
+                            <th style="padding:8px;">Semana</th>
+                            <th style="padding:8px;">Pedidos</th>
+                            <th style="padding:8px;">Faturamento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaDiasMensal"></tbody>
+                </table>
             </div>
 
-            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                <input type="text" id="filtroPedidoCliente" placeholder="🔍 Buscar por cliente..." style="padding:8px; border:1px solid #ddd; border-radius:6px; flex:1; min-width:150px; font-size:13px;" />
-                <select id="filtroStatus" style="padding:8px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
-                    <option value="todos">Todos os status</option>
-                    <option value="confirmado">🟡 Confirmado</option>
-                    <option value="enviado">🔵 Enviado</option>
-                    <option value="entregue">🟢 Entregue</option>
-                </select>
-            </div>
-
+            <!-- TABELA DE DETALHAMENTO POR PRODUTO (com ID e Lucro) -->
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card); margin-bottom:30px;">
-                <h3 style="color:var(--cor-esmeralda);">Detalhamento por Produto</h3>
+                <h3 style="color:var(--cor-esmeralda);">📦 Detalhamento por Produto (ID, Lucro e Estoque)</h3>
                 <table id="tabelaRelatorio" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                     <thead>
                         <tr style="background:var(--cor-esmeralda); color:#FFF;">
+                            <th style="padding:8px;">ID</th>
                             <th style="padding:8px;">Produto</th>
                             <th style="padding:8px;">Qtd Vendida</th>
                             <th style="padding:8px;">Total (Kz)</th>
+                            <th style="padding:8px;">Lucro (Kz)</th>
                             <th style="padding:8px;">Desconto</th>
                             <th style="padding:8px;">Estoque</th>
                         </tr>
@@ -121,8 +167,18 @@
                 </table>
             </div>
 
+            <!-- LISTA DE PEDIDOS -->
             <div style="background:#FFF; padding:20px; border-radius:16px; box-shadow:var(--sombra-card);">
                 <h3 style="color:var(--cor-esmeralda);">📦 Lista de Pedidos (Clientes)</h3>
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="filtroPedidoCliente" placeholder="🔍 Buscar por cliente..." style="padding:8px; border:1px solid #ddd; border-radius:6px; flex:1; min-width:150px; font-size:13px;" />
+                    <select id="filtroStatus" style="padding:8px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
+                        <option value="todos">Todos os status</option>
+                        <option value="confirmado">🟡 Confirmado</option>
+                        <option value="enviado">🔵 Enviado</option>
+                        <option value="entregue">🟢 Entregue</option>
+                    </select>
+                </div>
                 <div id="containerTabelaPedidos" style="max-height: 600px; overflow-y: auto;">
                     <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                         <thead>
