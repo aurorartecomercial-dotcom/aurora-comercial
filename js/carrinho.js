@@ -1,6 +1,6 @@
-import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura, IMAGEM_FALLBACK } from './utils.js';
+import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura } from './utils.js';
 import { db, CONFIG } from './config.js';
-import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 let carrinho = [];
@@ -267,49 +267,85 @@ async function enviarPedidoWhatsApp() {
     let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
+    // ✅ Gerar fatura HTML e abrir para impressão
+    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, totalComDesconto);
+
+    // ✅ Limpar carrinho imediatamente (independentemente da fatura)
+    limparCarrinho();
+
+    // Enviar dados para WhatsApp (opcional)
+    let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
+    textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
+    // Os itens já foram limpos, por isso usamos os dados da venda temp
+    // Vamos reconstruir a lista a partir dos dados salvos em dadosVendaTemp
+    const itens = dadosVendaTemp.itens || [];
+    itens.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco} Kz\n`; });
+    if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
+    textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
+    
+    window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
+
+    mostrarToast('Pedido finalizado! Fatura aberta para impressão.', 'sucesso');
+}
+
+// ✅ Nova função: Gera HTML da fatura e abre nova janela para imprimir
+function gerarFaturaHTML(itens, nome, telefone, nif, morada, total) {
     try {
-        const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-        const pdfBlob = await gerarFaturaPDF(carrinho, nome, telefone, nif, morada, totalComDesconto);
-        const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
-        const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
+        const numeroFatura = gerarNumeroFatura();
+        let itensHTML = '';
+        itens.forEach(item => {
+            const valorLimpo = extrairValorNumerico(item.preco);
+            const subtotal = valorLimpo * item.quantidade;
+            itensHTML += `<tr><td>${item.nome}</td><td>${item.quantidade}</td><td>${valorLimpo.toFixed(2)}</td><td>${subtotal.toFixed(2)}</td></tr>`;
+        });
 
-        // ✅ Abrir o PDF numa nova aba para impressão
-        const urlBlob = URL.createObjectURL(pdfBlob);
-        const win = window.open(urlBlob, '_blank');
-        if (win) {
-            win.document.title = nomeArquivo;
-            setTimeout(() => win.print(), 500); // opcional: abrir diálogo de impressão
-        } else {
-            // Se popup bloqueado, descarregar
-            const linkDownload = document.createElement('a');
-            linkDownload.href = urlBlob; linkDownload.download = nomeArquivo;
-            document.body.appendChild(linkDownload); linkDownload.click(); document.body.removeChild(linkDownload);
-        }
-        URL.revokeObjectURL(urlBlob);
+        const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fatura ${numeroFatura} - Aurora Comercial</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 30px; }
+  h1 { color: #005A4C; text-align: center; }
+  h2 { color: #D4AF37; text-align: center; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background-color: #005A4C; color: white; }
+  .total { font-size: 20px; font-weight: bold; text-align: right; margin-top: 20px; }
+  .dados { margin-top: 20px; }
+  .dados p { margin: 5px 0; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+<h1>AURORA COMERCIAL</h1>
+<h2>Contribuinte: 5000048151 | Tel: +244 933 677 628</h2>
+<hr>
+<p><strong>Fatura Nº:</strong> ${numeroFatura}</p>
+<p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+<div class="dados">
+<p><strong>Cliente:</strong> ${nome}</p>
+<p><strong>Telefone:</strong> ${telefone}</p>
+<p><strong>NIF:</strong> ${nif}</p>
+<p><strong>Morada:</strong> ${morada}</p>
+</div>
+<table>
+<thead><tr><th>Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+<tbody>${itensHTML}</tbody>
+</table>
+<p class="total">Total a Pagar: ${total.toFixed(2)} Kz</p>
+<script>window.print();</script>
+</body>
+</html>`;
 
-        // Partilhar via WhatsApp (opcional)
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({ title: 'Fatura Aurora Comercial', files: [file] });
-                limparCarrinho();
-                return;
-            } catch (err) { console.warn('Partilha cancelada.', err); }
-        }
-
-        // Enviar texto para WhatsApp (sem anexo)
-        let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
-        textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
-        carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco}\n`; });
-        if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
-        textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
-        textoWhats += `\n✅ A fatura foi gerada e impressa/descarregada.`;
-        window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
-
-        limparCarrinho();
-        mostrarToast('Fatura gerada! Verifique a nova aba.', 'sucesso');
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+        return true;
     } catch (e) {
-        console.error('❌ Erro ao gerar PDF:', e);
-        alert('A fatura não pôde ser gerada automaticamente. Envie os dados manualmente.');
+        console.error('Erro ao gerar fatura:', e);
+        alert('Não foi possível gerar a fatura. Pedido concluído, mas sem impressão automática.');
+        return false;
     }
 }
 
@@ -326,6 +362,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+    const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }));
+
     const novaVenda = {
         dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
@@ -338,7 +376,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
         descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
         status: 'confirmado',
-        itens: carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }))
+        itens: itensVenda
     };
 
     // Autenticação anónima
@@ -350,12 +388,10 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             user = cred.user;
         } catch (e) {
             console.error('Erro autenticação anónima:', e);
-            // Fallback local
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
             historicoLocal.push(novaVenda);
             localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-            alert('⚠️ Pedido salvo localmente (sem conexão).');
-            return;
+            // Mesmo sem auth, não bloqueia a compra
         }
     }
 
@@ -363,134 +399,48 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
         const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
         await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
-        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nA fatura será aberta para impressão.`);
+        
+        // ✅ Atualizar estoque dos produtos
+        await atualizarEstoque(itensVenda);
+        
+        // Salvar código de rastreio para uso posterior
+        dadosVendaTemp.codigoRastreio = codigoRastreio;
+        dadosVendaTemp.itens = itensVenda;
+        dadosVendaTemp.valorTotal = valorTotalPedido;
+        
+        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-        alert(`⚠️ ERRO AO SALVAR A VENDA NA NUVEM:\n${e.message}\n\nA venda foi salva localmente.`);
+        dadosVendaTemp.itens = itensVenda;
+        dadosVendaTemp.valorTotal = valorTotalPedido;
+        alert(`⚠️ Venda salva localmente (sem conexão).\nCódigo: ${dataHoraFormatada}`);
     }
 }
 
-async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const verdeEscuro = '#005A4C';
-    const dourado = '#D4AF37';
+// ✅ Nova função para decrementar estoque
+async function atualizarEstoque(itensVenda) {
     try {
-        const logoImg = new Image(); logoImg.src = 'logo auro.png';
-        await new Promise((resolve) => { logoImg.onload = () => { doc.addImage(logoImg, 'PNG', 15, 10, 20, 20); resolve(); }; logoImg.onerror = resolve; });
-    } catch (e) {}
+        // Buscar todos os produtos
+        const produtosSnap = await getDocs(collection(db, 'produtos'));
+        const produtosMap = new Map();
+        produtosSnap.forEach(doc => produtosMap.set(doc.data().nome, doc.id));
 
-    doc.setFontSize(24); doc.setTextColor(dourado); doc.setFont(undefined, 'bold'); doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
-    doc.setFontSize(9); doc.setTextColor('#444'); doc.setFont(undefined, 'normal'); doc.text('Contribuinte: 5000048151 | Tel: +244 933 677 628', 105, 28, { align: 'center' });
-    doc.text('contacto@aurorarte.ao | Luanda - Angola', 105, 34, { align: 'center' });
-    doc.setDrawColor(dourado); doc.setLineWidth(0.8); doc.line(20, 40, 190, 40);
-
-    const numeroFatura = gerarNumeroFatura();
-    doc.setFontSize(10); doc.setTextColor('#333'); doc.setFont(undefined, 'bold'); doc.text(`Nº: ${numeroFatura}`, 20, 48);
-    doc.setFont(undefined, 'normal'); doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 120, 48);
-
-    let y = 58;
-    doc.setFontSize(10); doc.text('Cliente:', 20, y); doc.setFont(undefined, 'bold'); doc.text(nomeCliente || 'N/A', 50, y); y += 7;
-    doc.setFont(undefined, 'normal'); doc.text('Telefone:', 20, y); doc.setFont(undefined, 'bold'); doc.text(telefoneCliente || 'N/A', 50, y); y += 7;
-    doc.setFont(undefined, 'normal'); doc.text('NIF:', 20, y); doc.setFont(undefined, 'bold'); doc.text(nifCliente || 'N/A', 50, y); y += 7;
-    doc.setFont(undefined, 'normal'); doc.text('Morada:', 20, y); doc.setFont(undefined, 'bold'); doc.text(moradaCliente || 'N/A', 50, y); y += 10;
-
-    const body = itensCarrinho.map(item => {
-        const unitario = extrairValorNumerico(item.preco);
-        return [item.nome, item.quantidade.toString(), `${unitario.toFixed(2)}`, `${(unitario * item.quantidade).toFixed(2)}`];
-    });
-
-    doc.autoTable({
-        startY: y + 5,
-        head: [['Descrição', 'Qtd', 'Preço Unit.', 'Subtotal']],
-        body: body,
-        theme: 'grid',
-        headStyles: { fillColor: verdeEscuro, textColor: '#FFFFFF', fontSize: 9, halign: 'center', fontStyle: 'bold' },
-        bodyStyles: { textColor: '#333', fontSize: 9 },
-        columnStyles: {
-            0: { cellWidth: 70 },
-            1: { cellWidth: 20, halign: 'center' },
-            2: { cellWidth: 35, halign: 'right' },
-            3: { cellWidth: 35, halign: 'right' }
-        },
-        margin: { left: 20, right: 20 },
-        tableWidth: 170,
-        styles: { lineColor: dourado, lineWidth: 0.2 }
-    });
-
-    const finalY = doc.lastAutoTable.finalY + 8;
-    doc.setFontSize(9); doc.setTextColor('#333'); doc.setFont(undefined, 'bold'); doc.text('Quadro Resumo de Imposto', 20, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Total Ilíquido:   ${totalGeral.toFixed(2)} Kz`, 20, finalY + 6);
-    doc.text(`Total Desconto:   0,00 Kz`, 20, finalY + 12);
-    doc.text(`Total Imposto:    0,00 Kz`, 20, finalY + 18);
-    doc.text(`Total IEC:        0,00 Kz`, 20, finalY + 24);
-
-    doc.setFontSize(10); doc.setTextColor(verdeEscuro); doc.setFont(undefined, 'bold'); doc.text(`Total a Pagar: ${totalGeral.toFixed(2)} Kz`, 140, finalY + 8, { align: 'right' });
-
-    const extenso = numeroPorExtenso(totalGeral);
-    doc.setFontSize(9); doc.setTextColor(verdeEscuro); doc.setFont(undefined, 'bold');
-    doc.text(extenso, 105, finalY + 22, { align: 'center' });
-
-    doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont(undefined, 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
-    return doc.output('blob');
-}
-
-function numeroPorExtenso(valor) {
-    const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-    const dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-    const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
-    const inteiro = Math.floor(valor);
-    const centavos = Math.round((valor - inteiro) * 100);
-
-    if (inteiro === 0) return 'zero kwanzas';
-
-    let extenso = '';
-    const milhares = Math.floor(inteiro / 1000);
-    const resto = inteiro % 1000;
-
-    if (milhares > 0) {
-        if (milhares === 1) extenso += 'mil ';
-        else {
-            const milExt = numeroPorExtensoSimples(milhares);
-            extenso += milExt + ' mil ';
+        for (const item of itensVenda) {
+            const prodId = produtosMap.get(item.nome);
+            if (prodId) {
+                const prodRef = doc(db, 'produtos', prodId);
+                const prodSnap = await getDoc(prodRef);
+                if (prodSnap.exists()) {
+                    const estoqueAtual = prodSnap.data().estoque || 0;
+                    const novoEstoque = Math.max(0, estoqueAtual - item.quantidade);
+                    await updateDoc(prodRef, { estoque: novoEstoque });
+                }
+            }
         }
+    } catch (e) {
+        console.error('Erro ao atualizar estoque:', e);
     }
-    if (resto > 0) {
-        extenso += numeroPorExtensoSimples(resto);
-    }
-
-    extenso = extenso.trim() + ' kwanzas';
-    if (centavos > 0) {
-        extenso += ` e ${centavos} centavos`;
-    }
-    return extenso;
-}
-
-function numeroPorExtensoSimples(n) {
-    const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-    const dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-    const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-    if (n === 0) return '';
-    if (n < 10) return unidades[n];
-    if (n < 20) {
-        const especiais = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-        return especiais[n - 10];
-    }
-    if (n < 100) {
-        const d = Math.floor(n / 10);
-        const u = n % 10;
-        return dezenas[d] + (u > 0 ? ' e ' + unidades[u] : '');
-    }
-    if (n < 1000) {
-        const c = Math.floor(n / 100);
-        const resto = n % 100;
-        if (c === 1 && resto === 0) return 'cem';
-        return centenas[c] + (resto > 0 ? ' e ' + numeroPorExtensoSimples(resto) : '');
-    }
-    return '';
 }
