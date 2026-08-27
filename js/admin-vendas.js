@@ -1,10 +1,19 @@
-import { auth, db, CONFIG } from './config.js';
+import { auth, db } from './config.js';
 import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { extrairValorNumerico } from './utils.js';
 
 let todasVendas = [];
 let catalogo = [];
+let graficoVendas = null;
+let graficoProdutos = null;
+let graficoComparativo = null;
+let graficoMapa = null;
+
+// Verificar se Chart.js está disponível
+function chartDisponivel() {
+    return typeof Chart !== 'undefined';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginVendas');
@@ -31,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio('todos'));
     document.getElementById('btnRelatorioSemanal')?.addEventListener('click', () => gerarRelatorio('semana'));
     document.getElementById('btnRelatorioMensal')?.addEventListener('click', () => gerarRelatorio('mes'));
-    // Botão exportar PDF pode continuar com jsPDF se quiser, mas não é obrigatório
 });
 
 async function carregarDados() {
@@ -80,6 +88,7 @@ function gerarRelatorio(periodo) {
     document.getElementById('kpiItens').textContent = itensVendidos;
     document.getElementById('kpiEstoque').textContent = estoqueTotal;
 
+    // Tabela de Pedidos
     const corpoTabelaPedidos = document.getElementById('corpoTabelaPedidos');
     corpoTabelaPedidos.innerHTML = '';
 
@@ -94,9 +103,7 @@ function gerarRelatorio(periodo) {
             <td style="padding:8px; font-size:11px;">${v.produtosResumo || 'N/A'}</td>
             <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; gap:4px;">
-                    <span style="font-size:11px; font-weight:700;">${v.status === 'enviado' ? '🔵 Enviado' : v.status === 'entregue' ? '🟢 Entregue' : '🟡 Confirmado'}</span>
-                </div>
+                <span style="font-size:11px; font-weight:700;">${v.status === 'enviado' ? '🔵 Enviado' : v.status === 'entregue' ? '🟢 Entregue' : '🟡 Confirmado'}</span>
                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
                     <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
                     <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
@@ -107,7 +114,7 @@ function gerarRelatorio(periodo) {
         corpoTabelaPedidos.appendChild(tr);
     });
 
-    // Tabela de detalhamento por produto
+    // Tabela de Produtos
     const vendasPorProduto = {};
     vendasFiltradas.forEach(venda => {
         if (venda.itens && Array.isArray(venda.itens)) {
@@ -135,9 +142,15 @@ function gerarRelatorio(periodo) {
         tr.innerHTML = `<td style="padding:8px;">${prod.nome}</td><td style="padding:8px; text-align:center;">${qtdVendida}</td><td style="padding:8px; text-align:right;">${totalVendido.toLocaleString('pt-AO')}</td><td style="padding:8px; text-align:center;">${desconto}%</td><td style="padding:8px; text-align:center;">${prod.estoque || 0}</td>`;
         corpoTabelaRelatorio.appendChild(tr);
     });
+
+    // Renderizar gráficos
+    renderizarGraficoVendasPorDia(vendasFiltradas);
+    renderizarGraficoProdutosMaisVendidos(vendasPorProduto);
+    renderizarGraficoComparativoMensal(vendasFiltradas);
+    renderizarGraficoMapaVendas(vendasFiltradas);
 }
 
-// ✅ Imprimir fatura HTML (substitui PDF)
+// ✅ FUNÇÃO PARA IMPRIMIR FATURA DO CLIENTE (HTML)
 window.imprimirFatura = async function(codigoRastreio) {
     if (!codigoRastreio) {
         alert('Este pedido não tem código de rastreio.');
@@ -231,3 +244,185 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
         }
     } catch(e) { alert('Erro: ' + e.message); }
 };
+
+// =================================================================
+// FUNÇÕES DE GRÁFICOS (COM FALLBACK PARA CSS SE CHART.JS FALHAR)
+// =================================================================
+
+function renderizarGraficoVendasPorDia(vendasFiltradas) {
+    const vendasPorDia = {};
+    vendasFiltradas.forEach(v => {
+        if (v.dataHora) {
+            const dia = v.dataHora.split(' ')[0];
+            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0);
+        }
+    });
+
+    const ctx = document.getElementById('graficoVendas');
+    if (!ctx) return;
+
+    const dias = Object.keys(vendasPorDia);
+    const valores = Object.values(vendasPorDia);
+
+    if (dias.length === 0) {
+        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">Sem dados de vendas por dia.</p>';
+        return;
+    }
+
+    if (chartDisponivel()) {
+        if (graficoVendas) graficoVendas.destroy();
+        graficoVendas = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dias,
+                datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
+        });
+    } else {
+        // FALLBACK: gráfico de barras CSS
+        const maxVal = Math.max(...valores);
+        let html = '<div style="display:flex; align-items:flex-end; height:200px; gap:10px; padding:10px;">';
+        dias.forEach((dia, i) => {
+            const altura = (valores[i] / maxVal) * 100;
+            html += `<div style="flex:1; text-align:center;">
+                <div style="background:#005A4C; height:${altura}%; border-radius:4px;"></div>
+                <span style="font-size:10px;">${dia}</span>
+            </div>`;
+        });
+        html += '</div>';
+        ctx.parentElement.innerHTML = html;
+    }
+}
+
+function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
+    const topProdutos = Object.entries(vendasPorProduto)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const ctx = document.getElementById('graficoProdutos');
+    if (!ctx) return;
+
+    if (topProdutos.length === 0) {
+        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">Sem produtos vendidos.</p>';
+        return;
+    }
+
+    if (chartDisponivel()) {
+        if (graficoProdutos) graficoProdutos.destroy();
+        graficoProdutos = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: topProdutos.map(p => p[0]),
+                datasets: [{
+                    data: topProdutos.map(p => p[1]),
+                    backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+        });
+    } else {
+        // FALLBACK: lista simples
+        let html = '<ul style="list-style:none; padding:20px;">';
+        topProdutos.forEach(p => {
+            html += `<li style="margin-bottom:10px;">🔹 ${p[0]} - ${p[1]} unidades</li>`;
+        });
+        html += '</ul>';
+        ctx.parentElement.innerHTML = html;
+    }
+}
+
+function renderizarGraficoComparativoMensal(vendasFiltradas) {
+    const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
+    const dados = [0, 0, 0, 0, 0, 0];
+
+    vendasFiltradas.forEach(v => {
+        if (v.dataHora) {
+            const data = new Date(v.dataHora);
+            const mesIndex = data.getMonth();
+            if (mesIndex >= 2 && mesIndex <= 7) {
+                dados[mesIndex - 2] += (v.valorTotal || 0);
+            }
+        }
+    });
+
+    const ctx = document.getElementById('graficoComparativo');
+    if (!ctx) return;
+
+    if (chartDisponivel()) {
+        if (graficoComparativo) graficoComparativo.destroy();
+        graficoComparativo = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Vendas (Kz)',
+                    data: dados,
+                    borderColor: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+        });
+    } else {
+        // FALLBACK: barras simples
+        let html = '<div style="display:flex; align-items:flex-end; height:200px; gap:10px; padding:10px;">';
+        const maxVal = Math.max(...dados, 1);
+        meses.forEach((mes, i) => {
+            const altura = (dados[i] / maxVal) * 100;
+            html += `<div style="flex:1; text-align:center;">
+                <div style="background:#D4AF37; height:${altura}%; border-radius:4px;"></div>
+                <span style="font-size:10px;">${mes}</span>
+            </div>`;
+        });
+        html += '</div>';
+        ctx.parentElement.innerHTML = html;
+    }
+}
+
+function renderizarGraficoMapaVendas(vendasFiltradas) {
+    const regioes = ['Luanda', 'Benguela', 'Huambo', 'Lubango'];
+    const dados = [0, 0, 0, 0];
+
+    vendasFiltradas.forEach(v => {
+        const morada = (v.moradaCliente || '').toLowerCase();
+        if (morada.includes('luanda')) dados[0]++;
+        else if (morada.includes('benguela')) dados[1]++;
+        else if (morada.includes('huambo')) dados[2]++;
+        else if (morada.includes('lubango')) dados[3]++;
+    });
+
+    const ctx = document.getElementById('graficoMapa');
+    if (!ctx) return;
+
+    if (chartDisponivel()) {
+        if (graficoMapa) graficoMapa.destroy();
+        graficoMapa = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: regioes,
+                datasets: [{
+                    label: 'Pedidos',
+                    data: dados,
+                    backgroundColor: '#005A4C'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
+        });
+    } else {
+        // FALLBACK: lista simples
+        let html = '<ul style="list-style:none; padding:20px;">';
+        regioes.forEach((reg, i) => {
+            html += `<li style="margin-bottom:10px;">📍 ${reg}: ${dados[i]} pedidos</li>`;
+        });
+        html += '</ul>';
+        ctx.parentElement.innerHTML = html;
+    }
+}
