@@ -5,21 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aurora Comercial</title>
     <meta name="description" content="Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais." />
+    <meta name="keywords" content="aurora, comercial, angola, marketplace, eletrônicos, moda" />
     <meta property="og:title" content="Aurora Comercial" />
     <meta property="og:description" content="Os melhores produtos com frete grátis e descontos imperdíveis." />
     <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
-    <meta property="og:url" content="https://aurorarte.ao" />
+    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/" />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=3" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
-    
-    <!-- 👇 ESTAS 2 LINHAS CORRIGEM O ERRO DO PDF NO SITE DO CLIENTE 👇 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <!-- 👆 FIM DA CORREÇÃO -->
+    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
 
@@ -81,7 +79,6 @@
                 </li>
                 <li><a href="#" data-categoria="automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
-                <!-- 👇 LINK DE RASTREIO NO MENU -->
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
             </ul>
         </nav>
@@ -127,7 +124,7 @@
             </div>
         </section>
 
-        <!-- 👇 BOTÃO DE RASTREIO EM DESTAQUE -->
+        <!-- BOTÃO DE RASTREIO -->
         <div style="max-width:1480px; margin: 20px auto 0; padding: 0 24px; display:flex; justify-content:center;">
             <a href="rastreio.html" 
                style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); 
@@ -138,6 +135,7 @@
             </a>
         </div>
 
+        <!-- BANNER PWA -->
         <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
             <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
                 <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
@@ -148,6 +146,7 @@
             </div>
         </div>
 
+        <!-- MAIS COMPRADOS -->
         <section class="secao-mais-comprados" style="max-width:1480px; margin:30px auto 0; padding:0 24px;">
             <div class="secao-titulo">
                 <h2 style="color:#111;">⭐ Mais Comprados da Semana</h2>
@@ -156,6 +155,7 @@
             <div class="grade-produtos" id="maisCompradosGrid"></div>
         </section>
 
+        <!-- VITRINE -->
         <div class="vitrine-container">
             <aside class="filtros-sidebar">
                 <h3>Filtrar por</h3>
@@ -310,7 +310,7 @@
             </div>
             <div class="rodape-coluna">
                 <h4>Contacto</h4>
-                <p>📞 +244 933 677 628</p> <!-- 👈 NOVO NÚMERO NO RODAPÉ -->
+                <p>📞 +244 933 677 628</p>
                 <p>✉️ contacto@aurorarte.ao</p>
                 <p>📍 Luanda, Angola</p>
             </div>
@@ -320,7 +320,7 @@
 
     <script type="module" src="js/app.js?v=3"></script>
     
-    <!-- 👇 BOTÃO FLUTUANTE COM O NOVO NÚMERO -->
+    <!-- 👇 BOTÃO FLUTUANTE COM O NÚMERO OFICIAL -->
     <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>

@@ -5,7 +5,6 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 export async function carregarCatalogo() {
-    // Tenta usar cache primeiro
     const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
     let cache = {};
     if (cachedStr) {
@@ -15,7 +14,6 @@ export async function carregarCatalogo() {
     try {
         const snapshot = await getDocs(collection(db, 'produtos'));
         const novosProdutos = snapshot.docs.map(doc => doc.data());
-        
         localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, timestamp: Date.now() }));
         return novosProdutos;
     } catch (e) {
@@ -25,7 +23,7 @@ export async function carregarCatalogo() {
     }
 }
 
-export function criarCardProduto(prod) {
+export async function criarCardProduto(prod) {
     const card = document.createElement('a');
     card.className = 'produto-card';
     card.href = `detalhe.html?id=${prod.id}`;
@@ -63,7 +61,7 @@ export function criarCardProduto(prod) {
         else html += `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
 
-    const avaliacao = obterAvaliacao(prod.id);
+    const avaliacao = await obterAvaliacao(prod.id);
     if (avaliacao.media > 0) { html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`; }
 
     html += `
@@ -72,7 +70,7 @@ export function criarCardProduto(prod) {
                     style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
             </button>
-            <button onclick="window.shareProduct('${prod.nome}', '${prod.preco}', '${shareLink}')"
+            <button class="btn-share" data-nome="${prod.nome}" data-preco="${prod.preco}" data-link="${shareLink}"
                     style="background:transparent; border:1px solid #25D366; color:#25D366; padding:8px 16px; border-radius:30px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s;">
                 📤 Partilhar
             </button>
@@ -81,13 +79,6 @@ export function criarCardProduto(prod) {
     html += `</div>`;
     card.innerHTML = html;
 
-    const btnAdd = card.querySelector('.btn-add-carrinho-card');
-    if (btnAdd) {
-        btnAdd.addEventListener('click', function(e) {
-            e.stopPropagation(); e.preventDefault();
-            adicionarProdutoCarrinho(this.dataset.nome, this.dataset.preco, parseInt(this.dataset.estoque));
-        });
-    }
     return card;
 }
 
@@ -109,7 +100,7 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao)
     return filtrados;
 }
 
-export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
+export async function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
     if (!container) return;
     const start = (pagina - 1) * itensPorPagina;
     const end = start + itensPorPagina;
@@ -121,8 +112,6 @@ export function renderizarGrade(produtosFiltrados, container, pagina = 1, itensP
         return;
     }
 
-    paginaProdutos.forEach(prod => {
-        const card = criarCardProduto(prod);
-        container.appendChild(card);
-    });
+    const cards = await Promise.all(paginaProdutos.map(prod => criarCardProduto(prod)));
+    cards.forEach(card => container.appendChild(card));
 }

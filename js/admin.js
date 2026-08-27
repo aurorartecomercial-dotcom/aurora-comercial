@@ -1,6 +1,7 @@
-import { auth, db, CONFIG } from './config.js';
+import { auth, db } from './config.js';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 import { extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
 
 let produtos = [];
@@ -60,18 +61,11 @@ function iniciarAdmin() {
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
-    const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69'; // Substitua se necessário
 
-    async function uploadParaImgBB(file) {
-        const formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', file);
-        const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Erro no upload');
-        const data = await res.json();
-        return data.data.display_url || data.data.url;
-    }
+    // Storage
+    const storage = getStorage();
 
+    // Upload para Firebase Storage
     btnUploadImg.addEventListener('click', async () => {
         const files = imgUploadInput.files;
         if (!files.length) { alert('Selecione pelo menos uma imagem.'); return; }
@@ -83,18 +77,23 @@ function iniciarAdmin() {
 
         let sucesso = 0;
         for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const storageRef = ref(storage, `produtos/${Date.now()}-${file.name}`);
             try {
-                const url = await uploadParaImgBB(files[i]);
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
                 imagensAtuais.push(url);
                 sucesso++;
-            } catch (e) { console.error('Erro no upload da imagem', i, e); }
+            } catch (e) {
+                console.error('Erro no upload da imagem', i, e);
+            }
             uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
         }
 
         imagens.value = imagensAtuais.join(', ');
         atualizarPreview(imagens.value);
         btnUploadImg.disabled = false;
-        btnUploadImg.textContent = '⬆ Enviar para ImgBB';
+        btnUploadImg.textContent = '⬆ Enviar para Firebase Storage';
         uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
         setTimeout(() => uploadProgress.textContent = '', 3000);
         imgUploadInput.value = '';
@@ -154,13 +153,11 @@ function iniciarAdmin() {
             return;
         }
 
-        // Limpar e obter URLs de imagens
         const imagensArray = imagens.value.split(',').map(s => s.trim()).filter(s => s && !s.includes('placeholder'));
-        // Se não houver imagens, usar fallback (mas NÃO colocar placeholder no campo)
         const imagensFinal = imagensArray.length > 0 ? imagensArray : [IMAGEM_FALLBACK];
 
         const novoProduto = {
-            id: editandoId || crypto.randomUUID(), // Garante ID único
+            id: editandoId || crypto.randomUUID(),
             ordem: parseInt(ordem.value) || 0,
             nome: nome.value.trim(),
             categoria: categoria.value,

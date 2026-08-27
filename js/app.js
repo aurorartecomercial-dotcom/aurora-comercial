@@ -1,5 +1,5 @@
 import { initCarrinho } from './carrinho.js';
-import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
+import { carregarCatalogo, filtrarEOrdenar, renderizarGrade } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
 import { CONFIG } from './config.js';
@@ -94,6 +94,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderizarBalancoSemanal();
     aplicarFiltros();
+
+    // Delegação de eventos para grade (adicionar e partilhar)
+    document.getElementById('gradeProdutos').addEventListener('click', async (e) => {
+        const btnAdd = e.target.closest('.btn-add-carrinho-card');
+        if (btnAdd) {
+            e.preventDefault();
+            e.stopPropagation();
+            adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
+            return;
+        }
+
+        const btnShare = e.target.closest('.btn-share');
+        if (btnShare) {
+            e.preventDefault();
+            e.stopPropagation();
+            shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
+            return;
+        }
+    });
 });
 
 function aplicarFiltros(resetPagina = true) {
@@ -110,17 +129,17 @@ function aplicarFiltros(resetPagina = true) {
     }
 }
 
-function renderizarMaisComprados() {
+async function renderizarMaisComprados() {
     const grid = document.getElementById('maisCompradosGrid');
     if (!grid) return;
-    const ids = [1, 13, 17, 21, 23, 25, 7, 11];
-    const produtos = catalogo.filter(p => ids.includes(p.id));
-    produtos.sort((a, b) => (a.ordem || a.id) - (b.ordem || b.id));
+    // Usar ordem (campos numéricos) para selecionar os "mais comprados"
+    const ordens = [1, 2, 3, 4, 5, 6, 7, 8];
+    const produtos = catalogo
+        .filter(p => ordens.includes(p.ordem))
+        .sort((a, b) => a.ordem - b.ordem);
     grid.innerHTML = '';
-    produtos.forEach(prod => {
-        const card = criarCardProduto(prod);
-        grid.appendChild(card);
-    });
+    const cards = await Promise.all(produtos.map(prod => criarCardProduto(prod)));
+    cards.forEach(card => grid.appendChild(card));
 }
 
 function renderizarBalancoSemanal() {

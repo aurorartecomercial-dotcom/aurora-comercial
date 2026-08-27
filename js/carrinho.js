@@ -63,7 +63,7 @@ export function initCarrinho() {
             if (erros.nif) document.getElementById('erroNif').textContent = erros.nif;
             else document.getElementById('erroNif').textContent = '';
             if (Object.keys(erros).length > 0) return;
-            
+
             fecharModalCliente();
             iniciarFluxoPagamento(nome, telefone, nif, morada);
         });
@@ -87,6 +87,19 @@ export function initCarrinho() {
     document.getElementById('toastFechar')?.addEventListener('click', () => {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
+
+    // Delegação para botões + e - no carrinho
+    if (listaProdutosHTML) {
+        listaProdutosHTML.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const index = btn.dataset.index;
+            const mudanca = btn.dataset.mudanca;
+            if (index !== undefined && mudanca) {
+                alterarQtd(parseInt(index), parseInt(mudanca));
+            }
+        });
+    }
 
     // GPS
     const btnGPS = document.getElementById('btnGPS');
@@ -140,9 +153,9 @@ export function atualizarCarrinho() {
                     <p>${item.preco}</p>
                 </div>
                 <div class="item-controles">
-                    <button onclick="window.alterarQtd(${index}, -1)">−</button>
+                    <button data-index="${index}" data-mudanca="-1">−</button>
                     <span>${item.quantidade}</span>
-                    <button onclick="window.alterarQtd(${index}, 1)">+</button>
+                    <button data-index="${index}" data-mudanca="1">+</button>
                 </div>
             `;
             listaProdutosHTML.appendChild(li);
@@ -256,6 +269,9 @@ async function enviarPedidoWhatsApp() {
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
     try {
+        // Importa jsPDF dinamicamente para não pesar o carregamento inicial
+        const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        // Ajustar se necessário
         const pdfBlob = await gerarFaturaPDF(carrinho, nome, telefone, nif, morada, totalComDesconto);
         const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
         const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
@@ -323,7 +339,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
         const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
         await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
-        
+
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
@@ -335,7 +351,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 }
 
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    const { jsPDF } = window.jspdf;
+    // Importar jsPDF dinamicamente (já está no chamador, mas garantir)
+    const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C';
     const dourado = '#D4AF37';
@@ -391,13 +408,13 @@ async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCl
     doc.text(`Total IEC:        0,00 Kz`, 20, finalY + 24);
 
     doc.setFontSize(10); doc.setTextColor(verdeEscuro); doc.setFont(undefined, 'bold'); doc.text(`Total a Pagar: ${totalGeral.toFixed(2)} Kz`, 140, finalY + 8, { align: 'right' });
-    
+
     const extenso = numeroPorExtenso(totalGeral);
     doc.setFontSize(9); doc.setTextColor(verdeEscuro); doc.setFont(undefined, 'bold');
     doc.text(extenso, 105, finalY + 22, { align: 'center' });
 
     doc.setFontSize(7); doc.setTextColor('#888'); doc.setFont(undefined, 'italic'); doc.text('Processado por Sistema Validado - Aurora Comercial v1.0', 105, 280, { align: 'center' });
-    doc.save(`Fatura_Aurora_${numeroFatura}.pdf`);
+    return doc.output('blob');
 }
 
 function numeroPorExtenso(valor) {
