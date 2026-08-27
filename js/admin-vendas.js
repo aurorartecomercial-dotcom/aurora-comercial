@@ -10,7 +10,6 @@ let graficoProdutos = null;
 let graficoComparativo = null;
 let graficoMapa = null;
 
-// Verificar se Chart.js está disponível
 function chartDisponivel() {
     return typeof Chart !== 'undefined';
 }
@@ -40,6 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRelatorioTodos')?.addEventListener('click', () => gerarRelatorio('todos'));
     document.getElementById('btnRelatorioSemanal')?.addEventListener('click', () => gerarRelatorio('semana'));
     document.getElementById('btnRelatorioMensal')?.addEventListener('click', () => gerarRelatorio('mes'));
+
+    // ✅ Botões de exportação
+    document.getElementById('btnExportarPDF')?.addEventListener('click', exportarPDF);
+    document.getElementById('btnExportarExcel')?.addEventListener('click', exportarExcel);
+
+    // ✅ Botão Limpar (reset de filtros)
+    document.getElementById('btnLimparHistorico')?.addEventListener('click', limparFiltros);
 });
 
 async function carregarDados() {
@@ -150,7 +156,7 @@ function gerarRelatorio(periodo) {
     renderizarGraficoMapaVendas(vendasFiltradas);
 }
 
-// ✅ FUNÇÃO PARA IMPRIMIR FATURA DO CLIENTE (HTML)
+// ✅ IMPRIMIR FATURA DO CLIENTE (HTML)
 window.imprimirFatura = async function(codigoRastreio) {
     if (!codigoRastreio) {
         alert('Este pedido não tem código de rastreio.');
@@ -246,7 +252,137 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
 };
 
 // =================================================================
-// FUNÇÕES DE GRÁFICOS (COM FALLBACK PARA CSS SE CHART.JS FALHAR)
+// ✅ EXPORTAR PDF
+// =================================================================
+function exportarPDF() {
+    try {
+        // Se jsPDF estiver disponível, usa; caso contrário, gera HTML para impressão
+        if (typeof jspdf !== 'undefined' && jspdf.jsPDF) {
+            const { jsPDF } = jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16);
+            doc.setTextColor(0, 90, 76);
+            doc.text('Relatório de Vendas - Aurora Comercial', 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 26);
+            doc.text(`Total de Pedidos: ${document.getElementById('kpiPedidos').textContent}`, 14, 32);
+            doc.text(`Faturamento Total: ${document.getElementById('kpiFaturamento').textContent}`, 14, 38);
+
+            const dadosProdutos = [];
+            const vendasPorProduto = {};
+
+            todasVendas.forEach(venda => {
+                if (venda.itens && Array.isArray(venda.itens)) {
+                    venda.itens.forEach(item => {
+                        const nome = item.nome;
+                        const qtd = item.quantidade || 1;
+                        vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+                    });
+                } else if (venda.produtosResumo) {
+                    venda.produtosResumo.split(', ').forEach(item => {
+                        const nome = item.split(' (x')[0];
+                        const qtd = parseInt(item.split('(x')[1]) || 1;
+                        vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+                    });
+                }
+            });
+
+            catalogo.forEach(prod => {
+                const qtdVendida = vendasPorProduto[prod.nome] || 0;
+                const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
+                const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
+                dadosProdutos.push([prod.nome, qtdVendida, totalVendido.toLocaleString('pt-AO') + ' Kz', desconto + '%', prod.estoque || 0]);
+            });
+
+            doc.autoTable({
+                startY: 45,
+                head: [['Produto', 'Qtd Vendida', 'Total (Kz)', 'Desconto', 'Estoque']],
+                body: dadosProdutos.length > 0 ? dadosProdutos : [['Sem produtos vendidos', '-', '-', '-', '-']],
+                headStyles: { fillColor: [0, 90, 76], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 },
+                columnStyles: {
+                    0: { cellWidth: 60 },
+                    1: { cellWidth: 20, halign: 'center' },
+                    2: { cellWidth: 35, halign: 'right' },
+                    3: { cellWidth: 20, halign: 'center' },
+                    4: { cellWidth: 20, halign: 'center' }
+                }
+            });
+
+            doc.save('Relatorio_Vendas_Aurora.pdf');
+        } else {
+            // FALLBACK: abrir em nova janela para impressão
+            window.print();
+        }
+    } catch (e) {
+        console.error('Erro ao exportar PDF:', e);
+        // Fallback simples: imprimir página
+        window.print();
+    }
+}
+
+// =================================================================
+// ✅ EXPORTAR EXCEL (CSV)
+// =================================================================
+function exportarExcel() {
+    try {
+        // Se XLSX estiver disponível, usa; caso contrário, gera CSV
+        if (typeof XLSX !== 'undefined') {
+            const dados = [];
+            dados.push(['Data/Hora', 'Cliente', 'Telefone', 'NIF', 'Morada', 'Produtos', 'Total (Kz)', 'Status']);
+            todasVendas.forEach(v => {
+                dados.push([
+                    v.dataHora || '',
+                    v.nomeCliente || '',
+                    v.telefoneCliente || '',
+                    v.nifCliente || '',
+                    v.moradaCliente || '',
+                    v.produtosResumo || '',
+                    v.valorTotal || 0,
+                    v.status || ''
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Vendas');
+            XLSX.writeFile(wb, 'Vendas_Aurora.xlsx');
+        } else {
+            // FALLBACK: gerar CSV simples
+            let csv = 'Data/Hora,Cliente,Telefone,NIF,Morada,Produtos,Total (Kz),Status\n';
+            todasVendas.forEach(v => {
+                csv += `"${v.dataHora || ''}","${v.nomeCliente || ''}","${v.telefoneCliente || ''}","${v.nifCliente || ''}","${v.moradaCliente || ''}","${v.produtosResumo || ''}","${v.valorTotal || 0}","${v.status || ''}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Vendas_Aurora.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    } catch (e) {
+        console.error('Erro ao exportar Excel:', e);
+        alert('Erro ao exportar: ' + e.message);
+    }
+}
+
+// =================================================================
+// ✅ LIMPAR FILTROS (reset)
+// =================================================================
+function limparFiltros() {
+    const filtroCliente = document.getElementById('filtroPedidoCliente');
+    const filtroStatus = document.getElementById('filtroStatus');
+    if (filtroCliente) filtroCliente.value = '';
+    if (filtroStatus) filtroStatus.value = 'todos';
+    gerarRelatorio('todos');
+    alert('Filtros limpos! A mostrar todos os dados.');
+}
+
+// =================================================================
+// GRÁFICOS
 // =================================================================
 
 function renderizarGraficoVendasPorDia(vendasFiltradas) {
@@ -280,7 +416,6 @@ function renderizarGraficoVendasPorDia(vendasFiltradas) {
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
         });
     } else {
-        // FALLBACK: gráfico de barras CSS
         const maxVal = Math.max(...valores);
         let html = '<div style="display:flex; align-items:flex-end; height:200px; gap:10px; padding:10px;">';
         dias.forEach((dia, i) => {
@@ -322,7 +457,6 @@ function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
         });
     } else {
-        // FALLBACK: lista simples
         let html = '<ul style="list-style:none; padding:20px;">';
         topProdutos.forEach(p => {
             html += `<li style="margin-bottom:10px;">🔹 ${p[0]} - ${p[1]} unidades</li>`;
@@ -367,7 +501,6 @@ function renderizarGraficoComparativoMensal(vendasFiltradas) {
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
         });
     } else {
-        // FALLBACK: barras simples
         let html = '<div style="display:flex; align-items:flex-end; height:200px; gap:10px; padding:10px;">';
         const maxVal = Math.max(...dados, 1);
         meses.forEach((mes, i) => {
@@ -417,7 +550,6 @@ function renderizarGraficoMapaVendas(vendasFiltradas) {
             }
         });
     } else {
-        // FALLBACK: lista simples
         let html = '<ul style="list-style:none; padding:20px;">';
         regioes.forEach((reg, i) => {
             html += `<li style="margin-bottom:10px;">📍 ${reg}: ${dados[i]} pedidos</li>`;
