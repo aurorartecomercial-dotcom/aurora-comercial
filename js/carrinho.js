@@ -1,6 +1,7 @@
 import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura, IMAGEM_FALLBACK } from './utils.js';
 import { db, CONFIG } from './config.js';
 import { collection, addDoc, updateDoc, doc, getDoc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -88,7 +89,6 @@ export function initCarrinho() {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
 
-    // Delegação para botões + e - no carrinho
     if (listaProdutosHTML) {
         listaProdutosHTML.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
@@ -101,7 +101,6 @@ export function initCarrinho() {
         });
     }
 
-    // GPS
     const btnGPS = document.getElementById('btnGPS');
     if (btnGPS && inputMorada) {
         btnGPS.addEventListener('click', () => {
@@ -269,13 +268,26 @@ async function enviarPedidoWhatsApp() {
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
     try {
-        // Importa jsPDF dinamicamente para não pesar o carregamento inicial
         const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-        // Ajustar se necessário
         const pdfBlob = await gerarFaturaPDF(carrinho, nome, telefone, nif, morada, totalComDesconto);
         const nomeArquivo = `Fatura_Aurora_${Date.now()}.pdf`;
         const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
 
+        // ✅ Abrir o PDF numa nova aba para impressão
+        const urlBlob = URL.createObjectURL(pdfBlob);
+        const win = window.open(urlBlob, '_blank');
+        if (win) {
+            win.document.title = nomeArquivo;
+            setTimeout(() => win.print(), 500); // opcional: abrir diálogo de impressão
+        } else {
+            // Se popup bloqueado, descarregar
+            const linkDownload = document.createElement('a');
+            linkDownload.href = urlBlob; linkDownload.download = nomeArquivo;
+            document.body.appendChild(linkDownload); linkDownload.click(); document.body.removeChild(linkDownload);
+        }
+        URL.revokeObjectURL(urlBlob);
+
+        // Partilhar via WhatsApp (opcional)
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
                 await navigator.share({ title: 'Fatura Aurora Comercial', files: [file] });
@@ -284,27 +296,21 @@ async function enviarPedidoWhatsApp() {
             } catch (err) { console.warn('Partilha cancelada.', err); }
         }
 
-        const urlBlob = URL.createObjectURL(pdfBlob);
-        const linkDownload = document.createElement('a');
-        linkDownload.href = urlBlob; linkDownload.download = nomeArquivo;
-        document.body.appendChild(linkDownload); linkDownload.click(); document.body.removeChild(linkDownload);
-        URL.revokeObjectURL(urlBlob);
+        // Enviar texto para WhatsApp (sem anexo)
+        let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
+        textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
+        carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco}\n`; });
+        if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
+        textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
+        textoWhats += `\n✅ A fatura foi gerada e impressa/descarregada.`;
+        window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
+
+        limparCarrinho();
+        mostrarToast('Fatura gerada! Verifique a nova aba.', 'sucesso');
     } catch (e) {
         console.error('❌ Erro ao gerar PDF:', e);
-        alert('A fatura não pôde ser gerada automaticamente. Use o link do WhatsApp abaixo para enviar os dados manualmente.');
+        alert('A fatura não pôde ser gerada automaticamente. Envie os dados manualmente.');
     }
-
-    let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
-    textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
-    carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco}\n`; });
-    if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
-    textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
-    textoWhats += `\n✅ A fatura em PDF foi descarregada. Anexe o ficheiro antes de enviar.`;
-
-    window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
-
-    limparCarrinho();
-    mostrarToast('Fatura descarregada. Anexe‑a ao WhatsApp!', 'sucesso');
 }
 
 function limparCarrinho() {
@@ -335,12 +341,29 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         itens: carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }))
     };
 
+    // Autenticação anónima
+    const auth = getAuth();
+    let user = auth.currentUser;
+    if (!user) {
+        try {
+            const cred = await signInAnonymously(auth);
+            user = cred.user;
+        } catch (e) {
+            console.error('Erro autenticação anónima:', e);
+            // Fallback local
+            const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
+            historicoLocal.push(novaVenda);
+            localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
+            alert('⚠️ Pedido salvo localmente (sem conexão).');
+            return;
+        }
+    }
+
     try {
         const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
         const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
         await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
-
-        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nEnvie este código para o cliente acompanhar o pedido.`);
+        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}\n\nA fatura será aberta para impressão.`);
     } catch (e) {
         console.error('Erro ao salvar venda:', e);
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
@@ -351,7 +374,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 }
 
 async function gerarFaturaPDF(itensCarrinho, nomeCliente, telefoneCliente, nifCliente, moradaCliente, totalGeral) {
-    // Importar jsPDF dinamicamente (já está no chamador, mas garantir)
     const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const verdeEscuro = '#005A4C';

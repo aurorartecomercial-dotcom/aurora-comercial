@@ -106,6 +106,7 @@ function gerarRelatorio(periodo) {
                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
                     <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
                     <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
+                    <button onclick="window.imprimirFatura('${v.codigoRastreio || ''}')" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️ Imprimir</button>
                 </div>
             </td>
         `;
@@ -148,6 +149,93 @@ function gerarRelatorio(periodo) {
     renderizarGraficoMapaVendas(vendasFiltradas);
 }
 
+// ✅ FUNÇÃO PARA IMPRIMIR FATURA DO CLIENTE
+window.imprimirFatura = async function(codigoRastreio) {
+    if (!codigoRastreio) {
+        alert('Este pedido não tem código de rastreio.');
+        return;
+    }
+    try {
+        const q = query(collection(db, 'vendas'), where('codigoRastreio', '==', codigoRastreio));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            alert('Pedido não encontrado.');
+            return;
+        }
+        const venda = snapshot.docs[0].data();
+        // Gerar PDF
+        const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        const doc = new jsPDF();
+        doc.setFontSize(20);
+        doc.setTextColor(0, 90, 76);
+        doc.text('AURORA COMERCIAL', 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Código de Rastreio: ${codigoRastreio}`, 20, 30);
+        doc.text(`Data: ${venda.dataHora || 'N/A'}`, 20, 36);
+        doc.text(`Cliente: ${venda.nomeCliente || 'N/A'}`, 20, 42);
+        doc.text(`Telefone: ${venda.telefoneCliente || 'N/A'}`, 20, 48);
+        doc.text(`NIF: ${venda.nifCliente || 'N/A'}`, 20, 54);
+        doc.text(`Morada: ${venda.moradaCliente || 'N/A'}`, 20, 60);
+        doc.text('----------------------------------------', 20, 66);
+
+        let y = 72;
+        doc.text('Produtos:', 20, y);
+        y += 6;
+        if (venda.itens && venda.itens.length) {
+            venda.itens.forEach(item => {
+                doc.text(`- ${item.nome} (x${item.quantidade}) - ${item.preco.toFixed(2)} Kz`, 20, y);
+                y += 6;
+            });
+        } else if (venda.produtosResumo) {
+            const itens = venda.produtosResumo.split(', ');
+            itens.forEach(item => {
+                doc.text(`- ${item}`, 20, y);
+                y += 6;
+            });
+        }
+        doc.text('----------------------------------------', 20, y + 6);
+        doc.setFontSize(12);
+        doc.setTextColor(0, 90, 76);
+        doc.text(`Total: ${(venda.valorTotal || 0).toFixed(2)} Kz`, 20, y + 12);
+
+        // Abrir PDF numa nova aba
+        const pdfBlob = doc.output('blob');
+        const urlBlob = URL.createObjectURL(pdfBlob);
+        const win = window.open(urlBlob, '_blank');
+        if (win) {
+            setTimeout(() => win.print(), 300);
+        } else {
+            // Fallback download
+            const a = document.createElement('a');
+            a.href = urlBlob;
+            a.download = `Fatura_${codigoRastreio}.pdf`;
+            a.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(urlBlob), 5000);
+    } catch (e) {
+        console.error('Erro ao imprimir fatura:', e);
+        alert('Erro ao gerar fatura: ' + e.message);
+    }
+};
+
+window.atualizarStatus = async function(codigoRastreio, novoStatus) {
+    if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
+    if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
+    try {
+        const q = query(collection(db, 'vendas'), where('codigoRastreio', '==', codigoRastreio));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const docRef = snapshot.docs[0].ref;
+            await updateDoc(docRef, { status: novoStatus });
+            alert('Status atualizado!');
+            location.reload();
+        } else {
+            alert('Pedido não encontrado.');
+        }
+    } catch(e) { alert('Erro: ' + e.message); }
+};
+
 function renderizarGraficoVendasPorDia(vendasFiltradas) {
     const vendasPorDia = {};
     vendasFiltradas.forEach(v => {
@@ -179,7 +267,6 @@ function renderizarGraficoVendasPorDia(vendasFiltradas) {
 }
 
 function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
-    // Ordenar por quantidade vendida (desc)
     const topProdutos = Object.entries(vendasPorProduto)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
@@ -206,15 +293,13 @@ function renderizarGraficoProdutosMaisVendidos(vendasPorProduto) {
 }
 
 function renderizarGraficoComparativoMensal(vendasFiltradas) {
-    // Simular dados mensais (últimos 6 meses) baseados nas vendas
     const meses = ['Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago'];
     const dados = [0, 0, 0, 0, 0, 0];
 
     vendasFiltradas.forEach(v => {
         if (v.dataHora) {
             const data = new Date(v.dataHora);
-            const mesIndex = data.getMonth(); // 0-11
-            // Mapear para os últimos 6 meses (índices 2 a 7)
+            const mesIndex = data.getMonth();
             if (mesIndex >= 2 && mesIndex <= 7) {
                 dados[mesIndex - 2] += (v.valorTotal || 0);
             }
@@ -243,7 +328,6 @@ function renderizarGraficoComparativoMensal(vendasFiltradas) {
 }
 
 function renderizarGraficoMapaVendas(vendasFiltradas) {
-    // Simular vendas por região (Luanda, Benguela, Huambo, Lubango)
     const regioes = ['Luanda', 'Benguela', 'Huambo', 'Lubango'];
     const dados = [0, 0, 0, 0];
 
@@ -277,23 +361,6 @@ function renderizarGraficoMapaVendas(vendasFiltradas) {
         });
     }
 }
-
-window.atualizarStatus = async function(codigoRastreio, novoStatus) {
-    if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
-    if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
-    try {
-        const q = query(collection(db, 'vendas'), where('codigoRastreio', '==', codigoRastreio));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            const docRef = snapshot.docs[0].ref;
-            await updateDoc(docRef, { status: novoStatus });
-            alert('Status atualizado!');
-            location.reload();
-        } else {
-            alert('Pedido não encontrado.');
-        }
-    } catch(e) { alert('Erro: ' + e.message); }
-};
 
 function exportarPDF() {
     const doc = new jspdf.jsPDF();
