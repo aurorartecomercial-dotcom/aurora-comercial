@@ -8,20 +8,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
 
     const params = new URLSearchParams(window.location.search);
-    const idProduto = params.get('id'); // ⚠️ NÃO usar parseInt aqui!
+    const idProduto = params.get('id');
     
     if (!idProduto) {
         mostrarErro('Nenhum ID de produto foi informado.');
         return;
     }
 
-    const catalogo = await carregarCatalogo();
+    // ✅ Tenta carregar do cache local primeiro (instantâneo)
+    let catalogo = [];
+    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
+    if (cachedStr) {
+        try {
+            const cache = JSON.parse(cachedStr);
+            if (cache.data && cache.data.length > 0) catalogo = cache.data;
+        } catch (e) {}
+    }
+
+    // Se não tem cache, busca do Firebase
+    if (catalogo.length === 0) {
+        catalogo = await carregarCatalogo();
+    }
+
     if (!catalogo || catalogo.length === 0) {
         mostrarErro('Erro ao carregar catálogo.');
         return;
     }
 
-    // ⚠️ Comparar como string
     const prod = catalogo.find(p => String(p.id) === String(idProduto));
 
     if (!prod) {

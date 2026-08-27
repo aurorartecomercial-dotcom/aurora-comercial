@@ -19,7 +19,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tituloCategoria').textContent = `📦 ${nomeCategoria}`;
     document.getElementById('paginaTitulo').textContent = `${nomeCategoria} - Aurora Comercial`;
 
-    const catalogo = await carregarCatalogo();
+    // ✅ Tenta carregar do cache local primeiro
+    let catalogo = [];
+    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
+    if (cachedStr) {
+        try {
+            const cache = JSON.parse(cachedStr);
+            if (cache.data && cache.data.length > 0) catalogo = cache.data;
+        } catch (e) {}
+    }
+
+    // Se não tem cache, busca do Firebase
+    if (catalogo.length === 0) {
+        catalogo = await carregarCatalogo();
+    }
+
     document.getElementById('carregandoCategoria').style.display = 'none';
 
     if (!catalogo || catalogo.length === 0) {
@@ -38,7 +52,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ✅ Criar cards com await
-    const cards = await Promise.all(produtosFiltrados.map(prod => criarCardProduto(prod)));
-    cards.forEach(card => grid.appendChild(card));
+    // ✅ Cria todos os cards de uma vez (síncrono)
+    const fragment = document.createDocumentFragment();
+    for (const prod of produtosFiltrados) {
+        const card = criarCardProduto(prod);
+        fragment.appendChild(card);
+    }
+    grid.appendChild(fragment);
 });

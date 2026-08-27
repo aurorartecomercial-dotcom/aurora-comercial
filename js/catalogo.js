@@ -4,26 +4,71 @@ import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
 import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
-export async function carregarCatalogo() {
-    const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
-    let cache = {};
-    if (cachedStr) {
-        try { cache = JSON.parse(cachedStr); } catch (e) {}
-    }
+// ✅ CACHE EM MEMÓRIA (evita múltiplas buscas no mesmo carregamento)
+let cacheMemoria = null;
+let catalogoPromise = null;
 
+// ✅ Carrega do localStorage imediatamente e depois atualiza do Firebase
+export async function carregarCatalogo() {
+    // Se já tem cache em memória, retorna instantaneamente
+    if (cacheMemoria) return cacheMemoria;
+
+    // Se já está em andamento, retorna a promise existente
+    if (catalogoPromise) return catalogoPromise;
+
+    // Cria a promise para buscar do Firebase e do cache local
+    catalogoPromise = new Promise(async (resolve) => {
+        // 1. Primeiro tenta do localStorage (instantâneo)
+        try {
+            const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
+            if (cachedStr) {
+                const cache = JSON.parse(cachedStr);
+                // Usa cache se tiver menos de 30 minutos
+                if (cache.data && (Date.now() - cache.timestamp < 30 * 60 * 1000)) {
+                    cacheMemoria = cache.data;
+                    resolve(cacheMemoria);
+                    // Atualiza em segundo plano (não bloqueia)
+                    atualizarDoFirebase();
+                    return;
+                }
+            }
+        } catch (e) { console.warn('Cache inválido:', e); }
+
+        // 2. Sem cache válido, busca do Firebase
+        try {
+            const snapshot = await getDocs(collection(db, 'produtos'));
+            const produtos = snapshot.docs.map(doc => doc.data());
+            cacheMemoria = produtos;
+            // Salva no localStorage
+            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
+            resolve(produtos);
+        } catch (e) {
+            console.warn('Falha ao buscar do Firestore, usando cache:', e);
+            if (cacheMemoria) {
+                resolve(cacheMemoria);
+            } else {
+                resolve([]);
+            }
+        }
+    });
+
+    return catalogoPromise;
+}
+
+// ✅ Atualiza do Firebase em segundo plano sem bloquear a UI
+async function atualizarDoFirebase() {
     try {
         const snapshot = await getDocs(collection(db, 'produtos'));
-        const novosProdutos = snapshot.docs.map(doc => doc.data());
-        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: novosProdutos, timestamp: Date.now() }));
-        return novosProdutos;
+        const produtos = snapshot.docs.map(doc => doc.data());
+        cacheMemoria = produtos;
+        localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
     } catch (e) {
-        console.warn('Falha ao buscar do Firestore, usando cache:', e);
-        if (cache.data) return cache.data;
-        return [];
+        console.warn('Falha ao atualizar do Firebase:', e);
     }
 }
 
-export async function criarCardProduto(prod) {
+// ✅ Criação de card OTIMIZADA (sem await para avaliação)
+export function criarCardProduto(prod) {
     const card = document.createElement('a');
     card.className = 'produto-card';
     card.href = `detalhe.html?id=${prod.id}`;
@@ -61,8 +106,9 @@ export async function criarCardProduto(prod) {
         else html += `<span style="display:block; color:#27ae60; font-size:13px; margin-top:6px;">✅ ${prod.estoque} em estoque</span>`;
     }
 
-    const avaliacao = await obterAvaliacao(prod.id);
-    if (avaliacao.media > 0) { html += `<div style="margin-top:6px; font-size:13px;">⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})</div>`; }
+    // ✅ Avaliação carregada de forma assíncrona (não bloqueia o card)
+    // Usamos um atributo data-avaliacao e depois preenchemos
+    html += `<div class="avaliacao-card" data-produto-id="${prod.id}" style="margin-top:6px; font-size:13px; min-height:18px;"></div>`;
 
     html += `
         <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
@@ -78,6 +124,14 @@ export async function criarCardProduto(prod) {
     `;
     html += `</div>`;
     card.innerHTML = html;
+
+    // ✅ Carrega avaliação de forma assíncrona (sem bloquear)
+    obterAvaliacao(prod.id).then(avaliacao => {
+        const avaliacaoDiv = card.querySelector('.avaliacao-card');
+        if (avaliacaoDiv && avaliacao.media > 0) {
+            avaliacaoDiv.textContent = `⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total})`;
+        }
+    }).catch(() => {});
 
     return card;
 }
@@ -100,6 +154,7 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao)
     return filtrados;
 }
 
+// ✅ Renderiza a grade sem usar Promise.all (mais rápido)
 export async function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {
     if (!container) return;
     const start = (pagina - 1) * itensPorPagina;
@@ -112,6 +167,11 @@ export async function renderizarGrade(produtosFiltrados, container, pagina = 1, 
         return;
     }
 
-    const cards = await Promise.all(paginaProdutos.map(prod => criarCardProduto(prod)));
-    cards.forEach(card => container.appendChild(card));
+    // ✅ Cria todos os cards de uma vez (síncrono)
+    const fragment = document.createDocumentFragment();
+    for (const prod of paginaProdutos) {
+        const card = criarCardProduto(prod);
+        fragment.appendChild(card);
+    }
+    container.appendChild(fragment);
 }

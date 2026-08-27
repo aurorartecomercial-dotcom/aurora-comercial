@@ -22,6 +22,6 @@ export const auth = getAuth(app);
 // ⚠️ NÃO ESQUEÇA DE EXPORTAR O CONFIG!
 export const CONFIG = {
     CACHE_KEY: 'aurora_catalogo_cache',
-    CACHE_TTL: 60 * 60 * 1000,
+    CACHE_TTL: 30 * 60 * 1000, // 30 minutos (reduzido de 1h)
     NUMERO_WHATSAPP: '244933677628'
 };

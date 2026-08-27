@@ -19,15 +19,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     initMobileMenu();
 
-    catalogo = await carregarCatalogo();
-    if (!catalogo || catalogo.length === 0) {
-        document.getElementById('carregandoProdutos').textContent = '❌ Erro ao carregar produtos.';
-        return;
+    // ✅ CARREGAMENTO RÁPIDO: primeiro carrega do localStorage (instantâneo)
+    const carregando = document.getElementById('carregandoProdutos');
+    carregando.style.display = 'block';
+    carregando.textContent = '⏳ Carregando produtos...';
+
+    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
+    if (cachedStr) {
+        try {
+            const cache = JSON.parse(cachedStr);
+            if (cache.data && cache.data.length > 0) {
+                catalogo = cache.data;
+                renderizarTudo();
+                carregando.style.display = 'none';
+                // Atualiza do Firebase em segundo plano
+                atualizarCatalogoDoFirebase();
+                return;
+            }
+        } catch (e) { console.warn('Cache inválido:', e); }
     }
-    document.getElementById('carregandoProdutos').style.display = 'none';
 
-    renderizarMaisComprados();
+    // Sem cache, busca do Firebase
+    catalogo = await carregarCatalogo();
+    renderizarTudo();
+    carregando.style.display = 'none';
 
+    // ✅ Configuração dos filtros
     const buscaInput = document.getElementById('campoBusca');
     buscaInput.addEventListener('input', debounce(() => {
         termoBusca = buscaInput.value.trim();
@@ -92,9 +109,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     renderizarBalancoSemanal();
-    await aplicarFiltros(); // ✅ aguardar a renderização
+    await aplicarFiltros();
 
-    // Delegação de eventos para grade (adicionar e partilhar)
+    // Delegação de eventos para grade
     document.getElementById('gradeProdutos').addEventListener('click', async (e) => {
         const btnAdd = e.target.closest('.btn-add-carrinho-card');
         if (btnAdd) {
@@ -114,12 +131,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
+// ✅ Renderiza tudo de uma vez (grade + mais comprados)
+function renderizarTudo() {
+    renderizarMaisComprados();
+    aplicarFiltros();
+}
+
+// ✅ Atualiza catálogo do Firebase sem bloquear a UI
+async function atualizarCatalogoDoFirebase() {
+    try {
+        catalogo = await carregarCatalogo(); // retorna do cache em memória
+    } catch (e) {
+        console.warn('Erro ao atualizar do Firebase:', e);
+    }
+}
+
 async function aplicarFiltros(resetPagina = true) {
     if (resetPagina) paginaAtual = 1;
     const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao);
     const container = document.getElementById('gradeProdutos');
     if (paginaAtual === 1) container.innerHTML = '';
-    await renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA); // ✅ await
+    await renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA);
     const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA);
     const btn = document.getElementById('carregarMais');
     if (btn) {
@@ -136,8 +168,13 @@ async function renderizarMaisComprados() {
         .filter(p => ordens.includes(p.ordem))
         .sort((a, b) => a.ordem - b.ordem);
     grid.innerHTML = '';
-    const cards = await Promise.all(produtos.map(prod => criarCardProduto(prod))); // ✅ criando cards
-    cards.forEach(card => grid.appendChild(card));
+    // ✅ Cria cards síncronamente (mais rápido)
+    const fragment = document.createDocumentFragment();
+    for (const prod of produtos) {
+        const card = criarCardProduto(prod);
+        fragment.appendChild(card);
+    }
+    grid.appendChild(fragment);
 }
 
 function renderizarBalancoSemanal() {
