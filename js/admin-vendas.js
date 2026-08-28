@@ -3,6 +3,14 @@ import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.g
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { extrairValorNumerico } from './utils.js';
 
+// ============================================================
+// GUARDA: impede execução se a página não for o admin de vendas
+// ============================================================
+if (!document.getElementById('loginVendas') || !document.getElementById('conteudoVendas')) {
+    console.warn('admin-vendas.js carregado em página incorreta. Abortando execução.');
+    throw new Error('Página incorreta para admin-vendas.js');
+}
+
 let todasVendas = [];
 let catalogo = [];
 let graficos = {};
@@ -74,12 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
+    // Configurar abas
     document.querySelectorAll('.aba-btn').forEach(btn => {
         btn.addEventListener('click', () => trocarAba(btn.dataset.aba));
     });
 
+    // Configurar botões de exportação
     configurarExportacoes();
 
+    // Filtros
     document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
     document.getElementById('btnLimparDia')?.addEventListener('click', () => {
         document.getElementById('inputDiaDiario').value = '';

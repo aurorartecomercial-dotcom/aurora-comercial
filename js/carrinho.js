@@ -12,6 +12,7 @@ let cupomAplicado = null;
 let dadosVendaTemp = {};
 
 export function initCarrinho() {
+    // ✅ Verifica se os elementos existem antes de atribuir
     listaProdutosHTML = document.getElementById('itensCarrinhoLoja');
     totalHTML = document.getElementById('totalCarrinhoLoja');
     badgeContador = document.getElementById('badgeContador');
@@ -26,6 +27,12 @@ export function initCarrinho() {
     inputMorada = document.getElementById('inputMorada');
     btnSalvarCliente = document.getElementById('btnSalvarCliente');
     btnFecharModal = document.getElementById('btnFecharModal');
+
+    // ✅ Só inicializa se os elementos essenciais existirem
+    if (!listaProdutosHTML || !totalHTML || !badgeContador || !sidebar || !overlay) {
+        console.warn('Carrinho: elementos não encontrados nesta página. Inicialização cancelada.');
+        return;
+    }
 
     carregarCarrinho();
     atualizarCarrinho();
@@ -72,10 +79,6 @@ export function initCarrinho() {
 
     if (btnFecharModal) btnFecharModal.addEventListener('click', fecharModalCliente);
     if (modalCliente) modalCliente.addEventListener('click', (e) => { if (e.target === modalCliente) fecharModalCliente(); });
-
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'carrinho_aurora') { carrinho = JSON.parse(e.newValue) || []; atualizarCarrinho(); }
-    });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -267,17 +270,11 @@ async function enviarPedidoWhatsApp() {
     let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
-    // ✅ Gerar fatura HTML e abrir para impressão
     const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, totalComDesconto);
-
-    // ✅ Limpar carrinho imediatamente (independentemente da fatura)
     limparCarrinho();
 
-    // Enviar dados para WhatsApp (opcional)
     let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
     textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
-    // Os itens já foram limpos, por isso usamos os dados da venda temp
-    // Vamos reconstruir a lista a partir dos dados salvos em dadosVendaTemp
     const itens = dadosVendaTemp.itens || [];
     itens.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco} Kz\n`; });
     if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
@@ -288,7 +285,6 @@ async function enviarPedidoWhatsApp() {
     mostrarToast('Pedido finalizado! Fatura aberta para impressão.', 'sucesso');
 }
 
-// ✅ Nova função: Gera HTML da fatura e abre nova janela para imprimir
 function gerarFaturaHTML(itens, nome, telefone, nif, morada, total) {
     try {
         const numeroFatura = gerarNumeroFatura();
@@ -379,7 +375,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         itens: itensVenda
     };
 
-    // Autenticação anónima
     const auth = getAuth();
     let user = auth.currentUser;
     if (!user) {
@@ -391,7 +386,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
             historicoLocal.push(novaVenda);
             localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-            // Mesmo sem auth, não bloqueia a compra
         }
     }
 
@@ -400,10 +394,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
         await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
         
-        // ✅ Atualizar estoque dos produtos
         await atualizarEstoque(itensVenda);
         
-        // Salvar código de rastreio para uso posterior
         dadosVendaTemp.codigoRastreio = codigoRastreio;
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
@@ -420,10 +412,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     }
 }
 
-// ✅ Nova função para decrementar estoque
 async function atualizarEstoque(itensVenda) {
     try {
-        // Buscar todos os produtos
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         const produtosMap = new Map();
         produtosSnap.forEach(doc => produtosMap.set(doc.data().nome, doc.id));

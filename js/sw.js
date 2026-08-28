@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v3';  // Atualize a versão
+const CACHE_NAME = 'aurora-cache-v4';  // Versão atualizada
 const urlsToCache = [
     '/',
     '/index.html',
@@ -9,7 +9,6 @@ const urlsToCache = [
     '/style.css',
     '/logo auro.png',
     '/manifest.json',
-    // '/produtos.json',  // REMOVIDO
     '/js/app.js',
     '/js/carrinho.js',
     '/js/catalogo.js',
@@ -40,9 +39,22 @@ self.addEventListener('activate', event => {
     );
 });
 
+// Estratégia: network-first para JS (evita versões antigas), cache-first para o resto
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => response || fetch(event.request))
-    );
+    if (event.request.url.endsWith('.js')) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+    } else {
+        event.respondWith(
+            caches.match(event.request)
+                .then(response => response || fetch(event.request))
+        );
+    }
 });
