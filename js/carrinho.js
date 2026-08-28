@@ -12,13 +12,11 @@ let cupomAplicado = null;
 let dadosVendaTemp = {};
 
 export function initCarrinho() {
-    // ✅ Verifica se os elementos existem antes de atribuir
     listaProdutosHTML = document.getElementById('itensCarrinhoLoja');
     totalHTML = document.getElementById('totalCarrinhoLoja');
     badgeContador = document.getElementById('badgeContador');
     sidebar = document.getElementById('carrinhoSidebar');
     overlay = document.getElementById('carrinhoOverlay');
-
     modalCliente = document.getElementById('modalCliente');
     modalPagamento = document.getElementById('modalPagamento');
     inputNome = document.getElementById('inputNome');
@@ -28,7 +26,7 @@ export function initCarrinho() {
     btnSalvarCliente = document.getElementById('btnSalvarCliente');
     btnFecharModal = document.getElementById('btnFecharModal');
 
-    // ✅ Só inicializa se os elementos essenciais existirem
+    // ✅ Se não existir carrinho nesta página, não inicializa (evita erro)
     if (!listaProdutosHTML || !totalHTML || !badgeContador || !sidebar || !overlay) {
         console.warn('Carrinho: elementos não encontrados nesta página. Inicialização cancelada.');
         return;

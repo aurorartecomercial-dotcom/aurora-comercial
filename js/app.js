@@ -13,7 +13,7 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ Inicializa o carrinho apenas se os elementos existirem
+    // ✅ Inicializa o carrinho (verifica se elementos existem)
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 catalogo = cache.data;
                 renderizarTudo();
                 if (carregando) carregando.style.display = 'none';
-                atualizarCatalogoDoFirebase(); // Atualiza em segundo plano
+                atualizarCatalogoDoFirebase();
                 return;
             }
         } catch (e) { console.warn('Cache inválido:', e); }
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // ✅ Configuração dos filtros (com verificação de existência)
+    // ✅ Configuração dos filtros
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -133,51 +133,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderizarBalancoSemanal();
     await aplicarFiltros();
+});
 
-    // ✅ DELEGAÇÃO DE EVENTOS PARA OS BOTÕES (ADICIONAR E PARTILHAR)
-    const gradeProdutos = document.getElementById('gradeProdutos');
-    if (gradeProdutos) {
-        gradeProdutos.addEventListener('click', async (e) => {
-            // Botão Adicionar
-            const btnAdd = e.target.closest('.btn-add-carrinho-card');
-            if (btnAdd) {
-                e.preventDefault();
-                e.stopPropagation();
-                adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
-                return;
-            }
-
-            // Botão Partilhar
-            const btnShare = e.target.closest('.btn-share');
-            if (btnShare) {
-                e.preventDefault();
-                e.stopPropagation();
-                shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
-                return;
-            }
-        });
+// ✅ DELEGAÇÃO GLOBAL DE EVENTOS (funciona para qualquer card, mesmo carregado depois)
+document.addEventListener('click', function(e) {
+    // Botão Adicionar ao Carrinho
+    const btnAdd = e.target.closest('.btn-add-carrinho-card');
+    if (btnAdd) {
+        e.preventDefault();
+        e.stopPropagation();
+        const nome = btnAdd.dataset.nome;
+        const preco = btnAdd.dataset.preco;
+        const estoque = parseInt(btnAdd.dataset.estoque) || 0;
+        adicionarProdutoCarrinho(nome, preco, estoque);
+        return;
     }
 
-    // ✅ Delegação para a grade de "Mais Comprados"
-    const maisCompradosGrid = document.getElementById('maisCompradosGrid');
-    if (maisCompradosGrid) {
-        maisCompradosGrid.addEventListener('click', async (e) => {
-            const btnAdd = e.target.closest('.btn-add-carrinho-card');
-            if (btnAdd) {
-                e.preventDefault();
-                e.stopPropagation();
-                adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
-                return;
-            }
-
-            const btnShare = e.target.closest('.btn-share');
-            if (btnShare) {
-                e.preventDefault();
-                e.stopPropagation();
-                shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
-                return;
-            }
-        });
+    // Botão Partilhar
+    const btnShare = e.target.closest('.btn-share');
+    if (btnShare) {
+        e.preventDefault();
+        e.stopPropagation();
+        const nome = btnShare.dataset.nome;
+        const preco = btnShare.dataset.preco;
+        const link = btnShare.dataset.link;
+        shareProduct(nome, preco, link);
+        return;
     }
 });
 
