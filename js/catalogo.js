@@ -96,7 +96,8 @@ export function criarCardProduto(prod) {
 
     html += `
         <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-add-carrinho-card" data-nome="${prod.nome}" data-preco="${prod.preco}" data-estoque="${prod.estoque || 0}"
+            <button class="btn-add-carrinho-card" data-nome="${prod.nome}" data-preco="${prod.preco}" 
+                    data-preco-num="${extrairValorNumerico(prod.preco)}" data-estoque="${prod.estoque || 0}"
                     style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; cursor: pointer; flex: 1; transition: 0.2s;">
                 🛒 Adicionar
             </button>

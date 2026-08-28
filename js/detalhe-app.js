@@ -72,7 +72,11 @@ function renderizarDetalhes(prod) {
     }
     if (prodName) prodName.textContent = prod.nome;
 
-    let miniaturasHtml = prod.imagens.map((src, i) =>
+    // ✅ VERIFICAÇÃO PARA EVITAR UNDEFINED
+    const imagemPrincipal = (prod.imagens && prod.imagens.length > 0) ? prod.imagens[0] : IMAGEM_FALLBACK;
+    const miniaturasImagens = (prod.imagens && prod.imagens.length > 0) ? prod.imagens : [IMAGEM_FALLBACK];
+
+    let miniaturasHtml = miniaturasImagens.map((src, i) =>
         `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" 
               class="${i === 0 ? 'ativa' : ''}" 
               loading="lazy"
@@ -92,7 +96,7 @@ function renderizarDetalhes(prod) {
     container.innerHTML = `
         <div class="detalhes-grid">
             <div class="detalhes-imagem-principal">
-                <img id="detalhesImg" src="${prod.imagens[0]}" alt="${prod.nome}" 
+                <img id="detalhesImg" src="${imagemPrincipal}" alt="${prod.nome}" 
                      onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
                 <div class="detalhes-miniaturas" id="miniaturas">${miniaturasHtml}</div>
             </div>

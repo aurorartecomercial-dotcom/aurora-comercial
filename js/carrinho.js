@@ -26,7 +26,6 @@ export function initCarrinho() {
     btnSalvarCliente = document.getElementById('btnSalvarCliente');
     btnFecharModal = document.getElementById('btnFecharModal');
 
-    // ✅ Se não existir carrinho nesta página, não inicializa (evita erro)
     if (!listaProdutosHTML || !totalHTML || !badgeContador || !sidebar || !overlay) {
         console.warn('Carrinho: elementos não encontrados nesta página. Inicialização cancelada.');
         return;
@@ -404,6 +403,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
+        // ✅ CORREÇÃO ADICIONADA: definir itens e valor total no catch
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
         alert(`⚠️ Venda salva localmente (sem conexão).\nCódigo: ${dataHoraFormatada}`);

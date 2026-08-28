@@ -145,7 +145,14 @@ document.addEventListener('click', function(e) {
         const nome = btnAdd.dataset.nome;
         const preco = btnAdd.dataset.preco;
         const estoque = parseInt(btnAdd.dataset.estoque) || 0;
-        adicionarProdutoCarrinho(nome, preco, estoque);
+        // ✅ CORREÇÃO: usa o preço numérico se disponível
+        const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
+        if (precoNum > 0) {
+            adicionarProdutoCarrinho(nome, preco, estoque);
+        } else {
+            console.warn('Preço inválido, não foi possível adicionar.');
+            mostrarToast('Erro ao adicionar produto.', 'info');
+        }
         return;
     }
 

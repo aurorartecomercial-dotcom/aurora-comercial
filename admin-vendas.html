@@ -28,10 +28,8 @@
         .card-kpi.vermelho { border-left-color: #E74C3C; }
         .card-kpi.azul { border-left-color: #3498db; }
         .card-kpi.roxo { border-left-color: #9b59b6; }
-        /* ALTURA FIXA PARA GRÁFICOS */
         .grafico-container { position: relative; height: 250px; width: 100%; overflow: hidden; margin-bottom: 20px; }
         .grafico-container canvas { max-height: 250px !important; width: 100% !important; }
-        /* LINHA 1, 2, 3 do Dashboard */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
         @media (max-width: 768px) {
@@ -73,14 +71,13 @@
                 <button class="aba-btn" data-aba="pedidos">📦 Pedidos</button>
             </div>
 
-            <!-- DASHBOARD (estilo das imagens) -->
+            <!-- DASHBOARD -->
             <div id="aba-dashboard" class="aba-conteudo ativa">
                 <div class="exportar-botoes">
                     <button id="btnExportarPDFDashboard" class="btn-admin" style="background:#25D366;">📄 Exportar PDF</button>
                     <button id="btnExportarExcelDashboard" class="btn-admin" style="background:#005A4C;">📊 Exportar Excel</button>
                 </div>
 
-                <!-- Cabeçalho estilo Excel -->
                 <div style="background:linear-gradient(135deg, #005A4C, #003D32); color:#fff; padding:20px; border-radius:12px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
                     <div>
                         <h2 style="margin:0; color:var(--cor-ouro); font-size:26px;">📊 Dashboard Aurora Comercial</h2>
@@ -91,7 +88,7 @@
                     </div>
                 </div>
 
-                <!-- KPIs COLORIDOS (como nas imagens) -->
+                <!-- KPIs -->
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:15px; margin-bottom:25px;">
                     <div style="background:#27ae60; color:#fff; padding:20px; border-radius:12px; text-align:center;">
                         <p style="font-size:12px; opacity:0.9; margin:0;">💰 Faturamento Bruto</p>
@@ -181,6 +178,18 @@
                         <div class="grafico-container">
                             <canvas id="graficoSaldo"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ✅ LINHA 4: Faturamento Diário + Produtos Mais Vendidos (CORRIGIDO) -->
+                <div class="grid-2" style="margin-bottom:10px;">
+                    <div style="background:#f8f9fa; padding:20px; border-radius:12px; border:1px solid #e0e0e0;">
+                        <h3 style="color:var(--cor-esmeralda); margin-bottom:15px;">📊 Faturamento Diário</h3>
+                        <div class="grafico-container"><canvas id="graficoVendas"></canvas></div>
+                    </div>
+                    <div style="background:#f8f9fa; padding:20px; border-radius:12px; border:1px solid #e0e0e0;">
+                        <h3 style="color:var(--cor-esmeralda); margin-bottom:15px;">🛍️ Produtos Mais Vendidos</h3>
+                        <div class="grafico-container"><canvas id="graficoProdutos"></canvas></div>
                     </div>
                 </div>
             </div>

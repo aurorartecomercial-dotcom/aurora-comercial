@@ -9,6 +9,15 @@ let editandoId = null;
 // ⚠️ Substitua pela SUA chave do ImgBB (https://api.imgbb.com)
 const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
 
+// ✅ FALLBACK PARA NAVEGADORES ANTIGOS
+function gerarId() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
     const conteudoAdmin = document.getElementById('conteudoAdmin');
@@ -66,7 +75,6 @@ function iniciarAdmin() {
 
     // Função de upload para ImgBB
     async function uploadParaImgBB(file) {
-        // Verificar tipo e tamanho
         const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!tiposPermitidos.includes(file.type)) {
             throw new Error(`Formato não suportado: ${file.type}. Use JPG, PNG, GIF ou WEBP.`);
@@ -80,7 +88,7 @@ function iniciarAdmin() {
         formData.append('image', file);
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000); // 30 segundos
+        const timeout = setTimeout(() => controller.abort(), 30000);
 
         try {
             const res = await fetch('https://api.imgbb.com/1/upload', {
@@ -147,7 +155,6 @@ function iniciarAdmin() {
         imgUploadInput.value = '';
     });
 
-    // ... resto do código (carregarProdutos, editar, excluir, salvar, etc.)
     async function carregarProdutos() {
         try {
             const snapshot = await getDocs(collection(db, 'produtos'));
@@ -206,7 +213,7 @@ function iniciarAdmin() {
         const imagensFinal = imagensArray.length > 0 ? imagensArray : [IMAGEM_FALLBACK];
 
         const novoProduto = {
-            id: editandoId || crypto.randomUUID(),
+            id: editandoId || gerarId(),  // ✅ CORREÇÃO: usar gerarId() em vez de crypto.randomUUID()
             ordem: parseInt(ordem.value) || 0,
             nome: nome.value.trim(),
             categoria: categoria.value,
