@@ -13,17 +13,20 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // ✅ Inicializa o carrinho apenas se os elementos existirem
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
 
-    // ✅ CARREGAMENTO RÁPIDO: primeiro carrega do localStorage (instantâneo)
     const carregando = document.getElementById('carregandoProdutos');
-    carregando.style.display = 'block';
-    carregando.textContent = '⏳ Carregando produtos...';
+    if (carregando) {
+        carregando.style.display = 'block';
+        carregando.textContent = '⏳ Carregando produtos...';
+    }
 
+    // ✅ Tenta carregar do cache local primeiro (instantâneo)
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
         try {
@@ -31,26 +34,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (cache.data && cache.data.length > 0) {
                 catalogo = cache.data;
                 renderizarTudo();
-                carregando.style.display = 'none';
-                // Atualiza do Firebase em segundo plano
-                atualizarCatalogoDoFirebase();
+                if (carregando) carregando.style.display = 'none';
+                atualizarCatalogoDoFirebase(); // Atualiza em segundo plano
                 return;
             }
         } catch (e) { console.warn('Cache inválido:', e); }
     }
 
     // Sem cache, busca do Firebase
-    catalogo = await carregarCatalogo();
-    renderizarTudo();
-    carregando.style.display = 'none';
+    try {
+        catalogo = await carregarCatalogo();
+    } catch (e) {
+        console.error('Erro ao carregar catálogo:', e);
+        catalogo = [];
+    }
 
-    // ✅ Configuração dos filtros
+    renderizarTudo();
+    if (carregando) carregando.style.display = 'none';
+
+    // ✅ Configuração dos filtros (com verificação de existência)
     const buscaInput = document.getElementById('campoBusca');
-    buscaInput.addEventListener('input', debounce(() => {
-        termoBusca = buscaInput.value.trim();
-        paginaAtual = 1;
-        aplicarFiltros();
-    }, 300));
+    if (buscaInput) {
+        buscaInput.addEventListener('input', debounce(() => {
+            termoBusca = buscaInput.value.trim();
+            paginaAtual = 1;
+            aplicarFiltros();
+        }, 300));
+    }
 
     document.querySelectorAll('.menu-categorias a[data-categoria]').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -76,71 +86,110 @@ document.addEventListener('DOMContentLoaded', async () => {
     const precoMinLabel = document.getElementById('precoMinLabel');
     const precoMaxLabel = document.getElementById('precoMaxLabel');
 
-    precoMinInput.addEventListener('input', () => {
-        precoMin = parseInt(precoMinInput.value);
-        precoMinLabel.textContent = precoMin;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
-    precoMaxInput.addEventListener('input', () => {
-        precoMax = parseInt(precoMaxInput.value);
-        precoMaxLabel.textContent = precoMax;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
+    if (precoMinInput) {
+        precoMinInput.addEventListener('input', () => {
+            precoMin = parseInt(precoMinInput.value) || 0;
+            if (precoMinLabel) precoMinLabel.textContent = precoMin;
+            paginaAtual = 1;
+            aplicarFiltros();
+        });
+    }
+    if (precoMaxInput) {
+        precoMaxInput.addEventListener('input', () => {
+            precoMax = parseInt(precoMaxInput.value) || Infinity;
+            if (precoMaxLabel) precoMaxLabel.textContent = precoMax;
+            paginaAtual = 1;
+            aplicarFiltros();
+        });
+    }
 
-    document.getElementById('ordenar').addEventListener('change', (e) => {
-        ordenacao = e.target.value;
-        paginaAtual = 1;
-        aplicarFiltros();
-    });
+    const ordenarSelect = document.getElementById('ordenar');
+    if (ordenarSelect) {
+        ordenarSelect.addEventListener('change', (e) => {
+            ordenacao = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltros();
+        });
+    }
 
-    document.getElementById('carregarMais').addEventListener('click', () => {
-        paginaAtual++;
-        aplicarFiltros(false);
-    });
+    const carregarMaisBtn = document.getElementById('carregarMais');
+    if (carregarMaisBtn) {
+        carregarMaisBtn.addEventListener('click', () => {
+            paginaAtual++;
+            aplicarFiltros(false);
+        });
+    }
 
-    document.getElementById('btnLimparHistorico').addEventListener('click', () => {
-        if (confirm('Deseja zerar o balanço e limpar o histórico de vendas da semana?')) {
-            localStorage.removeItem('aurora_historico_vendas');
-            renderizarBalancoSemanal();
-            mostrarToast('Histórico limpo!', 'sucesso');
-        }
-    });
+    const btnLimparHistorico = document.getElementById('btnLimparHistorico');
+    if (btnLimparHistorico) {
+        btnLimparHistorico.addEventListener('click', () => {
+            if (confirm('Deseja zerar o balanço e limpar o histórico de vendas da semana?')) {
+                localStorage.removeItem('aurora_historico_vendas');
+                renderizarBalancoSemanal();
+                mostrarToast('Histórico limpo!', 'sucesso');
+            }
+        });
+    }
 
     renderizarBalancoSemanal();
     await aplicarFiltros();
 
-    // Delegação de eventos para grade
-    document.getElementById('gradeProdutos').addEventListener('click', async (e) => {
-        const btnAdd = e.target.closest('.btn-add-carrinho-card');
-        if (btnAdd) {
-            e.preventDefault();
-            e.stopPropagation();
-            adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
-            return;
-        }
+    // ✅ DELEGAÇÃO DE EVENTOS PARA OS BOTÕES (ADICIONAR E PARTILHAR)
+    const gradeProdutos = document.getElementById('gradeProdutos');
+    if (gradeProdutos) {
+        gradeProdutos.addEventListener('click', async (e) => {
+            // Botão Adicionar
+            const btnAdd = e.target.closest('.btn-add-carrinho-card');
+            if (btnAdd) {
+                e.preventDefault();
+                e.stopPropagation();
+                adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
+                return;
+            }
 
-        const btnShare = e.target.closest('.btn-share');
-        if (btnShare) {
-            e.preventDefault();
-            e.stopPropagation();
-            shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
-            return;
-        }
-    });
+            // Botão Partilhar
+            const btnShare = e.target.closest('.btn-share');
+            if (btnShare) {
+                e.preventDefault();
+                e.stopPropagation();
+                shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
+                return;
+            }
+        });
+    }
+
+    // ✅ Delegação para a grade de "Mais Comprados"
+    const maisCompradosGrid = document.getElementById('maisCompradosGrid');
+    if (maisCompradosGrid) {
+        maisCompradosGrid.addEventListener('click', async (e) => {
+            const btnAdd = e.target.closest('.btn-add-carrinho-card');
+            if (btnAdd) {
+                e.preventDefault();
+                e.stopPropagation();
+                adicionarProdutoCarrinho(btnAdd.dataset.nome, btnAdd.dataset.preco, parseInt(btnAdd.dataset.estoque));
+                return;
+            }
+
+            const btnShare = e.target.closest('.btn-share');
+            if (btnShare) {
+                e.preventDefault();
+                e.stopPropagation();
+                shareProduct(btnShare.dataset.nome, btnShare.dataset.preco, btnShare.dataset.link);
+                return;
+            }
+        });
+    }
 });
 
-// ✅ Renderiza tudo de uma vez (grade + mais comprados)
+// ✅ Funções auxiliares
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
 }
 
-// ✅ Atualiza catálogo do Firebase sem bloquear a UI
 async function atualizarCatalogoDoFirebase() {
     try {
-        catalogo = await carregarCatalogo(); // retorna do cache em memória
+        catalogo = await carregarCatalogo();
     } catch (e) {
         console.warn('Erro ao atualizar do Firebase:', e);
     }
@@ -150,6 +199,7 @@ async function aplicarFiltros(resetPagina = true) {
     if (resetPagina) paginaAtual = 1;
     const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao);
     const container = document.getElementById('gradeProdutos');
+    if (!container) return;
     if (paginaAtual === 1) container.innerHTML = '';
     await renderizarGrade(filtrados, container, paginaAtual, ITENS_POR_PAGINA);
     const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA);
@@ -168,7 +218,6 @@ async function renderizarMaisComprados() {
         .filter(p => ordens.includes(p.ordem))
         .sort((a, b) => a.ordem - b.ordem);
     grid.innerHTML = '';
-    // ✅ Cria cards síncronamente (mais rápido)
     const fragment = document.createDocumentFragment();
     for (const prod of produtos) {
         const card = criarCardProduto(prod);
@@ -214,13 +263,14 @@ window.filtrarPorCategoria = function(categoria) {
     const link = document.querySelector(`.menu-categorias a[data-categoria="${categoria}"]`);
     if (link) link.click();
     else { categoriaAtiva = categoria; paginaAtual = 1; aplicarFiltros(); }
-    document.getElementById('conteudo-principal').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('conteudo-principal')?.scrollIntoView({ behavior: 'smooth' });
 };
 
 window.mudarSlide = function(direcao) {
     const slides = document.querySelectorAll('.slide');
     const indicadores = document.querySelectorAll('.indicador');
     let indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+    if (indexAtual === -1) return;
     slides[indexAtual].classList.remove('ativo');
     indicadores[indexAtual].classList.remove('ativo');
     indexAtual = (indexAtual + direcao + slides.length) % slides.length;
@@ -233,6 +283,7 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
         const slides = document.querySelectorAll('.slide');
         const indicadores = document.querySelectorAll('.indicador');
         const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+        if (indexAtual === -1) return;
         slides[indexAtual].classList.remove('ativo');
         indicadores[indexAtual].classList.remove('ativo');
         slides[i].classList.add('ativo');
