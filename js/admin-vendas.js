@@ -11,10 +11,16 @@ function chartDisponivel() {
     return typeof Chart !== 'undefined';
 }
 
-// ✅ Função segura para definir texto
 function setText(id, valor) {
     const el = document.getElementById(id);
     if (el) el.textContent = valor;
+}
+
+function destruirGrafico(nome) {
+    if (graficos[nome]) {
+        graficos[nome].destroy();
+        graficos[nome] = null;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const erroLogin = document.getElementById('erroLoginVendas');
 
     if (!loginDiv || !conteudoDiv || !btnLogin || !emailInput || !senhaInput || !erroLogin) {
-        console.error('Elementos de login não encontrados. Verifique o HTML.');
+        console.error('Elementos de login não encontrados.');
         return;
     }
 
@@ -44,15 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
-    // Configurar abas
     document.querySelectorAll('.aba-btn').forEach(btn => {
         btn.addEventListener('click', () => trocarAba(btn.dataset.aba));
     });
 
-    // Configurar botões de exportação
     configurarExportacoes();
 
-    // Filtros
     document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
     document.getElementById('btnLimparDia')?.addEventListener('click', () => {
         document.getElementById('inputDiaDiario').value = '';
@@ -95,6 +98,12 @@ async function carregarDados() {
 
         preencherSelects();
         renderizarDashboard();
+        // Atualizar data no cabeçalho
+        const dataAtualEl = document.getElementById('dataAtual');
+        if (dataAtualEl) {
+            const hoje = new Date();
+            dataAtualEl.textContent = hoje.toLocaleDateString('pt-PT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
     } catch (e) {
         console.error('Erro ao carregar dados:', e);
         alert('Erro ao carregar dados: ' + e.message);
@@ -141,11 +150,8 @@ function calcularCustoDaVenda(venda) {
         let custo = 0;
         venda.itens.forEach(item => {
             const prod = catalogo.find(p => p.nome === item.nome);
-            if (prod) {
-                custo += extrairValorNumerico(prod.custo) * item.quantidade;
-            } else {
-                custo += (item.preco || 0) * item.quantidade * 0.6;
-            }
+            if (prod) custo += extrairValorNumerico(prod.custo) * item.quantidade;
+            else custo += (item.preco || 0) * item.quantidade * 0.6;
         });
         return custo;
     } else {
@@ -165,14 +171,7 @@ function calcularMargemVenda(venda) {
     return receita > 0 ? (lucro / receita) * 100 : 0;
 }
 
-// ✅ Função para destruir gráfico antigo
-function destruirGrafico(nome) {
-    if (graficos[nome]) {
-        graficos[nome].destroy();
-        graficos[nome] = null;
-    }
-}
-
+// ============ DASHBOARD ============
 function renderizarDashboard() {
     const vendas = todasVendas;
     const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
@@ -181,7 +180,6 @@ function renderizarDashboard() {
     const margemLucro = faturamentoBruto > 0 ? (lucroBruto / faturamentoBruto) * 100 : 0;
     const pedidos = vendas.length;
     const itens = vendas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
-    const ticketMedio = pedidos > 0 ? faturamentoBruto / pedidos : 0;
     const pendentes = vendas.filter(v => v.status !== 'entregue').length;
 
     setText('kpiFaturamentoBruto', faturamentoBruto.toLocaleString('pt-AO') + ' Kz');
@@ -189,11 +187,9 @@ function renderizarDashboard() {
     setText('kpiLucroBruto', lucroBruto.toLocaleString('pt-AO') + ' Kz');
     setText('kpiMargemLucro', margemLucro.toFixed(1) + '%');
     setText('kpiPedidos', pedidos);
-    setText('kpiItens', itens);
-    setText('kpiTicketMedio', ticketMedio.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPendentes', pendentes);
 
-    // ✅ Cálculo do faturamento de hoje e da semana
+    // KPIs de hoje e semana
     const hoje = new Date();
     const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
     
@@ -203,32 +199,33 @@ function renderizarDashboard() {
         const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
         return dataStr === hojeStr;
     });
-    
     const faturamentoHoje = vendasHoje.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidosHoje = vendasHoje.length;
     setText('kpiFaturamentoHoje', faturamentoHoje.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPedidosHoje', pedidosHoje);
 
-    // Semana atual (começa na segunda-feira, ou domingo, dependendo do fuso)
     const inicioSemana = new Date(hoje);
-    const diaSemana = hoje.getDay(); // 0=domingo, 1=segunda...
+    const diaSemana = hoje.getDay();
     inicioSemana.setDate(hoje.getDate() - diaSemana);
     inicioSemana.setHours(0, 0, 0, 0);
-    
     const vendasSemana = vendas.filter(v => {
         if (!v.dataHora) return false;
         const data = new Date(v.dataHora);
         return data >= inicioSemana;
     });
-    
     const faturamentoSemana = vendasSemana.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const pedidosSemana = vendasSemana.length;
     setText('kpiFaturamentoSemana', faturamentoSemana.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPedidosSemana', pedidosSemana);
 
     renderizarResumoDiario(vendas);
-    renderizarGraficoVendas(vendas);
-    renderizarGraficoProdutos(vendas);
+    renderizarGraficoRoscaCategorias(vendas);
+    renderizarGraficoTopClientes(vendas);
+    renderizarGraficoVendasMes(vendas);
+    renderizarGraficoLucratividade(vendas);
+    renderizarGraficoSaldo(vendas);
+    renderizarGraficoVendas(vendas); // gráfico antigo (se ainda existir)
+    renderizarGraficoProdutos(vendas); // gráfico antigo (se ainda existir)
 }
 
 function renderizarResumoDiario(vendas) {
@@ -264,6 +261,433 @@ function renderizarResumoDiario(vendas) {
     });
 }
 
+// ============ GRÁFICOS NOVOS ============
+function renderizarGraficoRoscaCategorias(vendas) {
+    const porCategoria = {};
+    vendas.forEach(v => {
+        let cat = 'Outros';
+        if (v.itens && v.itens.length) {
+            const primeiroItem = v.itens[0];
+            const prod = catalogo.find(p => p.nome === primeiroItem.nome);
+            if (prod) cat = prod.categoria || prod.tag || 'Outros';
+        } else if (v.produtosResumo) {
+            const nomeProd = v.produtosResumo.split(' (x')[0];
+            const prod = catalogo.find(p => p.nome === nomeProd);
+            if (prod) cat = prod.categoria || prod.tag || 'Outros';
+        }
+        porCategoria[cat] = (porCategoria[cat] || 0) + (v.valorTotal || 0);
+    });
+
+    const ctx = document.getElementById('graficoRoscaCategorias');
+    if (!ctx) return;
+    const labels = Object.keys(porCategoria);
+    const valores = Object.values(porCategoria);
+    if (labels.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('roscaCategorias');
+        graficos.roscaCategorias = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: valores,
+                    backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#E67E22']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoTopClientes(vendas) {
+    const porCliente = {};
+    vendas.forEach(v => {
+        const nome = v.nomeCliente || 'Cliente não identificado';
+        porCliente[nome] = (porCliente[nome] || 0) + (v.valorTotal || 0);
+    });
+    const top = Object.entries(porCliente).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    const ctx = document.getElementById('graficoTopClientes');
+    if (!ctx) return;
+    if (top.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('topClientes');
+        graficos.topClientes = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: top.map(p => p[0]),
+                datasets: [{ label: 'Total Gasto (Kz)', data: top.map(p => p[1]), backgroundColor: '#3498db' }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoVendasMes(vendas) {
+    const porMes = {};
+    vendas.forEach(v => {
+        const data = new Date(v.dataHora);
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!porMes[key]) porMes[key] = 0;
+        porMes[key] += 1;
+    });
+    const keys = Object.keys(porMes).sort();
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
+    });
+    const valores = keys.map(k => porMes[k]);
+
+    const ctx = document.getElementById('graficoVendasMes');
+    if (!ctx) return;
+    if (labels.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('vendasMes');
+        graficos.vendasMes = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Pedidos', data: valores, backgroundColor: '#2ecc71' }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoLucratividade(vendas) {
+    const porMes = {};
+    vendas.forEach(v => {
+        const data = new Date(v.dataHora);
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!porMes[key]) porMes[key] = { faturamento: 0, lucro: 0 };
+        porMes[key].faturamento += v.valorTotal || 0;
+        porMes[key].lucro += calcularLucroVenda(v);
+    });
+    const keys = Object.keys(porMes).sort();
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
+    });
+    const valores = keys.map(k => {
+        const info = porMes[k];
+        return info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+    });
+
+    const ctx = document.getElementById('graficoLucratividade');
+    if (!ctx) return;
+    if (labels.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('lucratividade');
+        graficos.lucratividade = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Margem (%)', data: valores, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoSaldo(vendas) {
+    const porDia = {};
+    vendas.forEach(v => {
+        if (!v.dataHora) return;
+        const data = new Date(v.dataHora);
+        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        if (!porDia[dataStr]) porDia[dataStr] = { faturamento: 0, custo: 0 };
+        porDia[dataStr].faturamento += v.valorTotal || 0;
+        porDia[dataStr].custo += calcularCustoDaVenda(v);
+    });
+    const dias = Object.keys(porDia).sort();
+    let saldoAcumulado = 0;
+    const saldos = dias.map(d => {
+        saldoAcumulado += porDia[d].faturamento - porDia[d].custo;
+        return saldoAcumulado;
+    });
+
+    const ctx = document.getElementById('graficoSaldo');
+    if (!ctx) return;
+    if (dias.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('saldo');
+        graficos.saldo = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dias.map(d => d.split('-').reverse().join('/')),
+                datasets: [{ label: 'Saldo Acumulado (Kz)', data: saldos, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.2)', fill: true, tension: 0.4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
+        });
+    }
+}
+
+// ============ OUTROS GRÁFICOS (mantidos) ============
+function renderizarGraficoVendas(vendas) {
+    const vendasPorDia = {};
+    vendas.forEach(v => {
+        if (v.dataHora) {
+            const dia = v.dataHora.split(' ')[0];
+            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0);
+        }
+    });
+    const ctx = document.getElementById('graficoVendas');
+    if (!ctx) return;
+    const dias = Object.keys(vendasPorDia).sort();
+    const valores = dias.map(d => vendasPorDia[d]);
+    if (dias.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('vendas');
+        graficos.vendas = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dias,
+                datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoProdutos(vendas) {
+    const vendasPorProduto = {};
+    vendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        } else if (venda.produtosResumo) {
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
+            });
+        }
+    });
+    const topProdutos = Object.entries(vendasPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const ctx = document.getElementById('graficoProdutos');
+    if (!ctx) return;
+    if (topProdutos.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('produtos');
+        graficos.produtos = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: topProdutos.map(p => p[0]),
+                datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
+        });
+    }
+}
+
+function renderizarGraficoMensal(vendas) {
+    const resumo = {};
+    vendas.forEach(v => {
+        const data = new Date(v.dataHora);
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
+        resumo[key].faturamento += v.valorTotal || 0;
+        resumo[key].lucro += calcularLucroVenda(v);
+    });
+    const keys = Object.keys(resumo).sort();
+    const ctx = document.getElementById('graficoMensal');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
+    });
+    const faturamentos = keys.map(k => resumo[k].faturamento);
+    const lucros = keys.map(k => resumo[k].lucro);
+    if (labels.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('mensal');
+        graficos.mensal = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Faturamento', data: faturamentos, borderColor: '#005A4C', backgroundColor: 'rgba(0,90,76,0.2)', fill: true, tension: 0.4 },
+                    { label: 'Lucro', data: lucros, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.2)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
+        });
+    }
+}
+
+function renderizarGraficoAnual(vendas) {
+    const resumo = {};
+    vendas.forEach(v => {
+        const ano = new Date(v.dataHora).getFullYear();
+        if (!resumo[ano]) resumo[ano] = { faturamento: 0, lucro: 0 };
+        resumo[ano].faturamento += v.valorTotal || 0;
+        resumo[ano].lucro += calcularLucroVenda(v);
+    });
+    const anos = Object.keys(resumo).sort();
+    const ctx = document.getElementById('graficoAnual');
+    if (!ctx) return;
+    const faturamentos = anos.map(a => resumo[a].faturamento);
+    const lucros = anos.map(a => resumo[a].lucro);
+    if (anos.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('anual');
+        graficos.anual = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: anos,
+                datasets: [
+                    { label: 'Faturamento', data: faturamentos, backgroundColor: 'rgba(0,90,76,0.7)' },
+                    { label: 'Lucro', data: lucros, backgroundColor: 'rgba(39,174,96,0.7)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
+        });
+    }
+}
+
+function renderizarGraficoMargemMensal() {
+    const resumo = {};
+    todasVendas.forEach(v => {
+        const data = new Date(v.dataHora);
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
+        resumo[key].faturamento += v.valorTotal || 0;
+        resumo[key].lucro += calcularLucroVenda(v);
+    });
+    const keys = Object.keys(resumo).sort();
+    const ctx = document.getElementById('graficoMargemMensal');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
+    });
+    const margens = keys.map(k => {
+        const info = resumo[k];
+        return info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+    });
+    if (labels.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('margem');
+        graficos.margem = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Margem (%)', data: margens, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+}
+
+function renderizarGraficoTopLucro() {
+    const lucroPorProduto = {};
+    todasVendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                const prod = catalogo.find(p => p.nome === nome);
+                const custo = prod ? extrairValorNumerico(prod.custo) : (item.preco || 0) * 0.6;
+                const receita = (item.preco || 0) * qtd;
+                if (!lucroPorProduto[nome]) lucroPorProduto[nome] = 0;
+                lucroPorProduto[nome] += receita - custo * qtd;
+            });
+        }
+    });
+    const top = Object.entries(lucroPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const ctx = document.getElementById('graficoTopLucro');
+    if (!ctx) return;
+    if (top.length === 0) return;
+
+    if (chartDisponivel()) {
+        destruirGrafico('topLucro');
+        graficos.topLucro = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: top.map(p => p[0]),
+                datasets: [{ label: 'Lucro (Kz)', data: top.map(p => p[1]), backgroundColor: '#27ae60' }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+}
+
+// ============ OUTRAS ABAS (mantidas) ============
 function renderizarDiario() {
     const diaSelecionado = document.getElementById('inputDiaDiario').value;
     let vendas = todasVendas;
@@ -570,235 +994,7 @@ function renderizarPedidos() {
     });
 }
 
-// ✅ FUNÇÕES DE GRÁFICOS COM ALTURA FIXA E DESTRUIÇÃO CORRETA
-function renderizarGraficoVendas(vendas) {
-    const vendasPorDia = {};
-    vendas.forEach(v => {
-        if (v.dataHora) {
-            const dia = v.dataHora.split(' ')[0];
-            vendasPorDia[dia] = (vendasPorDia[dia] || 0) + (v.valorTotal || 0);
-        }
-    });
-    const ctx = document.getElementById('graficoVendas');
-    if (!ctx) return;
-    const dias = Object.keys(vendasPorDia).sort();
-    const valores = dias.map(d => vendasPorDia[d]);
-    if (dias.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('vendas');
-        graficos.vendas = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: dias,
-                datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Isso ajuda, mas com altura fixa no CSS
-                animation: false, // Desativa animação para não "crescer"
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-}
-
-function renderizarGraficoProdutos(vendas) {
-    const vendasPorProduto = {};
-    vendas.forEach(venda => {
-        if (venda.itens && Array.isArray(venda.itens)) {
-            venda.itens.forEach(item => {
-                const nome = item.nome;
-                const qtd = item.quantidade || 1;
-                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-            });
-        } else if (venda.produtosResumo) {
-            venda.produtosResumo.split(', ').forEach(item => {
-                const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1;
-                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-            });
-        }
-    });
-    const topProdutos = Object.entries(vendasPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const ctx = document.getElementById('graficoProdutos');
-    if (!ctx) return;
-    if (topProdutos.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('produtos');
-        graficos.produtos = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: topProdutos.map(p => p[0]),
-                datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false
-            }
-        });
-    }
-}
-
-function renderizarGraficoMensal(vendas) {
-    const resumo = {};
-    vendas.forEach(v => {
-        const data = new Date(v.dataHora);
-        const mes = data.getMonth();
-        const ano = data.getFullYear();
-        const key = `${ano}-${mes}`;
-        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
-        resumo[key].faturamento += v.valorTotal || 0;
-        resumo[key].lucro += calcularLucroVenda(v);
-    });
-    const keys = Object.keys(resumo).sort();
-    const ctx = document.getElementById('graficoMensal');
-    if (!ctx) return;
-    const labels = keys.map(k => {
-        const [ano, mes] = k.split('-');
-        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
-    });
-    const faturamentos = keys.map(k => resumo[k].faturamento);
-    const lucros = keys.map(k => resumo[k].lucro);
-    if (labels.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('mensal');
-        graficos.mensal = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Faturamento', data: faturamentos, borderColor: '#005A4C', backgroundColor: 'rgba(0,90,76,0.2)', fill: true, tension: 0.4 },
-                    { label: 'Lucro', data: lucros, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.2)', fill: true, tension: 0.4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false
-            }
-        });
-    }
-}
-
-function renderizarGraficoAnual(vendas) {
-    const resumo = {};
-    vendas.forEach(v => {
-        const ano = new Date(v.dataHora).getFullYear();
-        if (!resumo[ano]) resumo[ano] = { faturamento: 0, lucro: 0 };
-        resumo[ano].faturamento += v.valorTotal || 0;
-        resumo[ano].lucro += calcularLucroVenda(v);
-    });
-    const anos = Object.keys(resumo).sort();
-    const ctx = document.getElementById('graficoAnual');
-    if (!ctx) return;
-    const faturamentos = anos.map(a => resumo[a].faturamento);
-    const lucros = anos.map(a => resumo[a].lucro);
-    if (anos.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('anual');
-        graficos.anual = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: anos,
-                datasets: [
-                    { label: 'Faturamento', data: faturamentos, backgroundColor: 'rgba(0,90,76,0.7)' },
-                    { label: 'Lucro', data: lucros, backgroundColor: 'rgba(39,174,96,0.7)' }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false
-            }
-        });
-    }
-}
-
-function renderizarGraficoMargemMensal() {
-    const resumo = {};
-    todasVendas.forEach(v => {
-        const data = new Date(v.dataHora);
-        const mes = data.getMonth();
-        const ano = data.getFullYear();
-        const key = `${ano}-${mes}`;
-        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
-        resumo[key].faturamento += v.valorTotal || 0;
-        resumo[key].lucro += calcularLucroVenda(v);
-    });
-    const keys = Object.keys(resumo).sort();
-    const ctx = document.getElementById('graficoMargemMensal');
-    if (!ctx) return;
-    const labels = keys.map(k => {
-        const [ano, mes] = k.split('-');
-        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
-    });
-    const margens = keys.map(k => {
-        const info = resumo[k];
-        return info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
-    });
-    if (labels.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('margem');
-        graficos.margem = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{ label: 'Margem (%)', data: margens, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-}
-
-function renderizarGraficoTopLucro() {
-    const lucroPorProduto = {};
-    todasVendas.forEach(venda => {
-        if (venda.itens && Array.isArray(venda.itens)) {
-            venda.itens.forEach(item => {
-                const nome = item.nome;
-                const qtd = item.quantidade || 1;
-                const prod = catalogo.find(p => p.nome === nome);
-                const custo = prod ? extrairValorNumerico(prod.custo) : (item.preco || 0) * 0.6;
-                const receita = (item.preco || 0) * qtd;
-                if (!lucroPorProduto[nome]) lucroPorProduto[nome] = 0;
-                lucroPorProduto[nome] += receita - custo * qtd;
-            });
-        }
-    });
-    const top = Object.entries(lucroPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const ctx = document.getElementById('graficoTopLucro');
-    if (!ctx) return;
-    if (top.length === 0) return;
-
-    if (chartDisponivel()) {
-        destruirGrafico('topLucro');
-        graficos.topLucro = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: top.map(p => p[0]),
-                datasets: [{ label: 'Lucro (Kz)', data: top.map(p => p[1]), backgroundColor: '#27ae60' }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false
-            }
-        });
-    }
-}
-
+// ============ EXPORTAÇÕES ============
 function configurarExportacoes() {
     const botoes = ['Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'];
     botoes.forEach(tipo => {
@@ -944,6 +1140,7 @@ function exportarExcel(tipo) {
     XLSX.writeFile(wb, `Relatorio_${tipo}.xlsx`);
 }
 
+// ============ AÇÕES GLOBAIS ============
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
