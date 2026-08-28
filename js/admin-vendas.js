@@ -5,7 +5,7 @@ import { extrairValorNumerico } from './utils.js';
 
 let todasVendas = [];
 let catalogo = [];
-let graficos = {};
+let graficos = {}; // Armazenar instâncias de gráficos para destruir corretamente
 
 function chartDisponivel() {
     return typeof Chart !== 'undefined';
@@ -165,6 +165,14 @@ function calcularMargemVenda(venda) {
     return receita > 0 ? (lucro / receita) * 100 : 0;
 }
 
+// ✅ Função para destruir gráfico antigo
+function destruirGrafico(nome) {
+    if (graficos[nome]) {
+        graficos[nome].destroy();
+        graficos[nome] = null;
+    }
+}
+
 function renderizarDashboard() {
     const vendas = todasVendas;
     const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
@@ -184,6 +192,39 @@ function renderizarDashboard() {
     setText('kpiItens', itens);
     setText('kpiTicketMedio', ticketMedio.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPendentes', pendentes);
+
+    // ✅ Cálculo do faturamento de hoje e da semana
+    const hoje = new Date();
+    const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+    
+    const vendasHoje = vendas.filter(v => {
+        if (!v.dataHora) return false;
+        const data = new Date(v.dataHora);
+        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        return dataStr === hojeStr;
+    });
+    
+    const faturamentoHoje = vendasHoje.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const pedidosHoje = vendasHoje.length;
+    setText('kpiFaturamentoHoje', faturamentoHoje.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiPedidosHoje', pedidosHoje);
+
+    // Semana atual (começa na segunda-feira, ou domingo, dependendo do fuso)
+    const inicioSemana = new Date(hoje);
+    const diaSemana = hoje.getDay(); // 0=domingo, 1=segunda...
+    inicioSemana.setDate(hoje.getDate() - diaSemana);
+    inicioSemana.setHours(0, 0, 0, 0);
+    
+    const vendasSemana = vendas.filter(v => {
+        if (!v.dataHora) return false;
+        const data = new Date(v.dataHora);
+        return data >= inicioSemana;
+    });
+    
+    const faturamentoSemana = vendasSemana.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const pedidosSemana = vendasSemana.length;
+    setText('kpiFaturamentoSemana', faturamentoSemana.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiPedidosSemana', pedidosSemana);
 
     renderizarResumoDiario(vendas);
     renderizarGraficoVendas(vendas);
@@ -529,6 +570,7 @@ function renderizarPedidos() {
     });
 }
 
+// ✅ FUNÇÕES DE GRÁFICOS COM ALTURA FIXA E DESTRUIÇÃO CORRETA
 function renderizarGraficoVendas(vendas) {
     const vendasPorDia = {};
     vendas.forEach(v => {
@@ -542,15 +584,21 @@ function renderizarGraficoVendas(vendas) {
     const dias = Object.keys(vendasPorDia).sort();
     const valores = dias.map(d => vendasPorDia[d]);
     if (dias.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.vendas) graficos.vendas.destroy();
+        destruirGrafico('vendas');
         graficos.vendas = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: dias,
                 datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Isso ajuda, mas com altura fixa no CSS
+                animation: false, // Desativa animação para não "crescer"
+                scales: { y: { beginAtZero: true } }
+            }
         });
     }
 }
@@ -576,15 +624,20 @@ function renderizarGraficoProdutos(vendas) {
     const ctx = document.getElementById('graficoProdutos');
     if (!ctx) return;
     if (topProdutos.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.produtos) graficos.produtos.destroy();
+        destruirGrafico('produtos');
         graficos.produtos = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: topProdutos.map(p => p[0]),
                 datasets: [{ data: topProdutos.map(p => p[1]), backgroundColor: ['#D4AF37', '#005A4C', '#E74C3C', '#3498DB', '#2ECC71'] }]
             },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
         });
     }
 }
@@ -609,8 +662,10 @@ function renderizarGraficoMensal(vendas) {
     });
     const faturamentos = keys.map(k => resumo[k].faturamento);
     const lucros = keys.map(k => resumo[k].lucro);
+    if (labels.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.mensal) graficos.mensal.destroy();
+        destruirGrafico('mensal');
         graficos.mensal = new Chart(ctx, {
             type: 'line',
             data: {
@@ -620,7 +675,11 @@ function renderizarGraficoMensal(vendas) {
                     { label: 'Lucro', data: lucros, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.2)', fill: true, tension: 0.4 }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
         });
     }
 }
@@ -638,8 +697,10 @@ function renderizarGraficoAnual(vendas) {
     if (!ctx) return;
     const faturamentos = anos.map(a => resumo[a].faturamento);
     const lucros = anos.map(a => resumo[a].lucro);
+    if (anos.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.anual) graficos.anual.destroy();
+        destruirGrafico('anual');
         graficos.anual = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -649,7 +710,11 @@ function renderizarGraficoAnual(vendas) {
                     { label: 'Lucro', data: lucros, backgroundColor: 'rgba(39,174,96,0.7)' }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
         });
     }
 }
@@ -676,15 +741,22 @@ function renderizarGraficoMargemMensal() {
         const info = resumo[k];
         return info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
     });
+    if (labels.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.margem) graficos.margem.destroy();
+        destruirGrafico('margem');
         graficos.margem = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{ label: 'Margem (%)', data: margens, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: { y: { beginAtZero: true } }
+            }
         });
     }
 }
@@ -708,23 +780,27 @@ function renderizarGraficoTopLucro() {
     const ctx = document.getElementById('graficoTopLucro');
     if (!ctx) return;
     if (top.length === 0) return;
+
     if (chartDisponivel()) {
-        if (graficos.topLucro) graficos.topLucro.destroy();
+        destruirGrafico('topLucro');
         graficos.topLucro = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: top.map(p => p[0]),
                 datasets: [{ label: 'Lucro (Kz)', data: top.map(p => p[1]), backgroundColor: '#27ae60' }]
             },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false
+            }
         });
     }
 }
 
 function configurarExportacoes() {
-    const botoes = [
-        'Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'
-    ];
+    const botoes = ['Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'];
     botoes.forEach(tipo => {
         const btnPdf = document.getElementById(`btnExportarPDF${tipo}`);
         const btnExcel = document.getElementById(`btnExportarExcel${tipo}`);

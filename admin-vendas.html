@@ -20,13 +20,16 @@
         .aba-conteudo.ativa { display: block; }
         .exportar-botoes { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .tabela-scroll { max-height: 500px; overflow-y: auto; }
-        .kpi-contabil { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card-kpi { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 15px 20px; border-radius: 12px; border-left: 4px solid var(--cor-ouro); }
-        .card-kpi p { font-size: 12px; color: #666; text-transform: uppercase; }
-        .card-kpi h3 { font-size: 22px; margin-top: 5px; color: #333; }
+        .kpi-contabil { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .card-kpi { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 12px 16px; border-radius: 10px; border-left: 4px solid var(--cor-ouro); min-height: 80px; }
+        .card-kpi p { font-size: 11px; color: #666; text-transform: uppercase; margin: 0; }
+        .card-kpi h3 { font-size: 20px; margin-top: 4px; color: #333; }
         .card-kpi.verde { border-left-color: #27ae60; }
         .card-kpi.vermelho { border-left-color: #E74C3C; }
         .card-kpi.azul { border-left-color: #3498db; }
+        /* ALTURA FIXA PARA GRÁFICOS */
+        .grafico-container { position: relative; height: 250px; width: 100%; overflow: hidden; }
+        canvas { max-height: 250px !important; width: 100% !important; }
     </style>
 </head>
 <body>
@@ -80,9 +83,22 @@
                     <div class="card-kpi"><p>💵 Ticket Médio</p><h3 id="kpiTicketMedio">0 Kz</h3></div>
                     <div class="card-kpi vermelho"><p>⚠️ Pedidos Pendentes</p><h3 id="kpiPendentes">0</h3></div>
                 </div>
+                <!-- KPIs adicionais para dia e semana -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                    <div style="background:#fff; padding:15px; border-radius:10px; border:1px solid #ddd;">
+                        <h4 style="margin:0; color:var(--cor-esmeralda);">📅 Faturamento de Hoje</h4>
+                        <h3 id="kpiFaturamentoHoje" style="color:#27ae60; margin-top:5px;">0 Kz</h3>
+                        <p style="font-size:12px; color:#999; margin:0;">Pedidos hoje: <span id="kpiPedidosHoje">0</span></p>
+                    </div>
+                    <div style="background:#fff; padding:15px; border-radius:10px; border:1px solid #ddd;">
+                        <h4 style="margin:0; color:var(--cor-esmeralda);">📆 Faturamento da Semana</h4>
+                        <h3 id="kpiFaturamentoSemana" style="color:#3498db; margin-top:5px;">0 Kz</h3>
+                        <p style="font-size:12px; color:#999; margin:0;">Pedidos na semana: <span id="kpiPedidosSemana">0</span></p>
+                    </div>
+                </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-                    <div><h3 style="color:var(--cor-esmeralda);">📅 Vendas por Dia</h3><canvas id="graficoVendas"></canvas></div>
-                    <div><h3 style="color:var(--cor-esmeralda);">🏆 Produtos Mais Vendidos</h3><canvas id="graficoProdutos"></canvas></div>
+                    <div class="grafico-container"><h3 style="color:var(--cor-esmeralda);">📅 Vendas por Dia</h3><canvas id="graficoVendas"></canvas></div>
+                    <div class="grafico-container"><h3 style="color:var(--cor-esmeralda);">🏆 Produtos Mais Vendidos</h3><canvas id="graficoProdutos"></canvas></div>
                 </div>
                 <div style="margin-top:20px;">
                     <h3 style="color:var(--cor-esmeralda);">📋 Resumo Diário</h3>
@@ -155,7 +171,7 @@
                 </div>
                 <div style="margin-top:20px;">
                     <h3 style="color:var(--cor-esmeralda);">📈 Evolução Mensal (Faturamento vs Lucro)</h3>
-                    <canvas id="graficoMensal"></canvas>
+                    <div class="grafico-container"><canvas id="graficoMensal"></canvas></div>
                 </div>
             </div>
 
@@ -178,7 +194,7 @@
                 </div>
                 <div style="margin-top:20px;">
                     <h3 style="color:var(--cor-esmeralda);">📊 Evolução Anual (Faturamento vs Lucro)</h3>
-                    <canvas id="graficoAnual"></canvas>
+                    <div class="grafico-container"><canvas id="graficoAnual"></canvas></div>
                 </div>
             </div>
 
@@ -211,8 +227,8 @@
                     <div class="card-kpi azul"><p>🎯 Margem Líquida</p><h3 id="contMargem">0%</h3></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-                    <div><h3 style="color:var(--cor-esmeralda);">📈 Margem de Lucro por Mês</h3><canvas id="graficoMargemMensal"></canvas></div>
-                    <div><h3 style="color:var(--cor-esmeralda);">🏆 Produtos Mais Lucrativos</h3><canvas id="graficoTopLucro"></canvas></div>
+                    <div class="grafico-container"><h3 style="color:var(--cor-esmeralda);">📈 Margem de Lucro por Mês</h3><canvas id="graficoMargemMensal"></canvas></div>
+                    <div class="grafico-container"><h3 style="color:var(--cor-esmeralda);">🏆 Produtos Mais Lucrativos</h3><canvas id="graficoTopLucro"></canvas></div>
                 </div>
                 <div style="margin-top:20px;">
                     <h3 style="color:var(--cor-esmeralda);">📋 Lançamentos Recentes</h3>
