@@ -1,7 +1,6 @@
 import { db, CONFIG } from './config.js';
 import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
-import { adicionarProdutoCarrinho } from './carrinho.js';
 import { obterAvaliacao } from './avaliacoes.js';
 
 // Cache em memória para buscas rápidas
