@@ -5,10 +5,16 @@ import { extrairValorNumerico } from './utils.js';
 
 let todasVendas = [];
 let catalogo = [];
-let graficos = {}; // armazenar instâncias de gráficos
+let graficos = {};
 
 function chartDisponivel() {
     return typeof Chart !== 'undefined';
+}
+
+// ✅ Função segura para definir texto
+function setText(id, valor) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.getElementById('emailVendas');
     const senhaInput = document.getElementById('senhaVendas');
     const erroLogin = document.getElementById('erroLoginVendas');
+
+    if (!loginDiv || !conteudoDiv || !btnLogin || !emailInput || !senhaInput || !erroLogin) {
+        console.error('Elementos de login não encontrados. Verifique o HTML.');
+        return;
+    }
 
     btnLogin.addEventListener('click', async () => {
         try {
@@ -41,42 +52,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configurar botões de exportação
     configurarExportacoes();
 
-    // Filtros diários
-    document.getElementById('btnFiltrarDia').addEventListener('click', () => renderizarDiario());
-    document.getElementById('btnLimparDia').addEventListener('click', () => {
+    // Filtros
+    document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
+    document.getElementById('btnLimparDia')?.addEventListener('click', () => {
         document.getElementById('inputDiaDiario').value = '';
         renderizarDiario();
     });
-
-    // Filtros semanais
-    document.getElementById('btnFiltrarSemana').addEventListener('click', () => renderizarSemanal());
-    document.getElementById('btnLimparSemana').addEventListener('click', () => {
+    document.getElementById('btnFiltrarSemana')?.addEventListener('click', () => renderizarSemanal());
+    document.getElementById('btnLimparSemana')?.addEventListener('click', () => {
         document.getElementById('selectSemanaFiltro').value = '';
         renderizarSemanal();
     });
-
-    // Filtros mensais
-    document.getElementById('btnFiltrarMes').addEventListener('click', () => renderizarMensal());
-    document.getElementById('btnLimparMes').addEventListener('click', () => {
+    document.getElementById('btnFiltrarMes')?.addEventListener('click', () => renderizarMensal());
+    document.getElementById('btnLimparMes')?.addEventListener('click', () => {
         document.getElementById('selectMesFiltro').value = '';
         renderizarMensal();
     });
-
-    // Filtros anuais
-    document.getElementById('btnFiltrarAno').addEventListener('click', () => renderizarAnual());
-    document.getElementById('btnLimparAno').addEventListener('click', () => {
+    document.getElementById('btnFiltrarAno')?.addEventListener('click', () => renderizarAnual());
+    document.getElementById('btnLimparAno')?.addEventListener('click', () => {
         document.getElementById('selectAnoFiltro').value = '';
         renderizarAnual();
     });
-
-    // Filtros de pedidos
-    document.getElementById('filtroPedidoCliente').addEventListener('input', () => renderizarPedidos());
-    document.getElementById('filtroStatus').addEventListener('change', () => renderizarPedidos());
-    document.getElementById('btnFiltrarPendentes').addEventListener('click', () => {
+    document.getElementById('filtroPedidoCliente')?.addEventListener('input', () => renderizarPedidos());
+    document.getElementById('filtroStatus')?.addEventListener('change', () => renderizarPedidos());
+    document.getElementById('btnFiltrarPendentes')?.addEventListener('click', () => {
         document.getElementById('filtroStatus').value = 'confirmado';
         renderizarPedidos();
     });
-    document.getElementById('btnFiltrarEntregues').addEventListener('click', () => {
+    document.getElementById('btnFiltrarEntregues')?.addEventListener('click', () => {
         document.getElementById('filtroStatus').value = 'entregue';
         renderizarPedidos();
     });
@@ -99,19 +102,21 @@ async function carregarDados() {
 }
 
 function preencherSelects() {
-    // Anos
     const anos = [...new Set(todasVendas.map(v => new Date(v.dataHora).getFullYear()))].sort();
     const selectAno = document.getElementById('selectAnoFiltro');
-    selectAno.innerHTML = '<option value="">Todos os anos</option>';
-    anos.forEach(ano => {
-        selectAno.innerHTML += `<option value="${ano}">${ano}</option>`;
-    });
+    if (selectAno) {
+        selectAno.innerHTML = '<option value="">Todos os anos</option>';
+        anos.forEach(ano => {
+            selectAno.innerHTML += `<option value="${ano}">${ano}</option>`;
+        });
+    }
 
-    // Semanas
     const selectSemana = document.getElementById('selectSemanaFiltro');
-    selectSemana.innerHTML = '<option value="">Todas as semanas</option>';
-    for (let i = 1; i <= 5; i++) {
-        selectSemana.innerHTML += `<option value="${i}">Semana ${i}</option>`;
+    if (selectSemana) {
+        selectSemana.innerHTML = '<option value="">Todas as semanas</option>';
+        for (let i = 1; i <= 5; i++) {
+            selectSemana.innerHTML += `<option value="${i}">Semana ${i}</option>`;
+        }
     }
 }
 
@@ -131,12 +136,7 @@ function trocarAba(abaId) {
     }
 }
 
-// =====================
-// FUNÇÕES DE CÁLCULO
-// =====================
-
 function calcularCustoDaVenda(venda) {
-    // Tenta extrair custo dos itens da venda
     if (venda.itens && venda.itens.length) {
         let custo = 0;
         venda.itens.forEach(item => {
@@ -144,15 +144,12 @@ function calcularCustoDaVenda(venda) {
             if (prod) {
                 custo += extrairValorNumerico(prod.custo) * item.quantidade;
             } else {
-                // fallback: custo = 60% do preço (estimativa)
                 custo += (item.preco || 0) * item.quantidade * 0.6;
             }
         });
         return custo;
     } else {
-        // Sem detalhes de itens, estimativa baseada em produtosResumo
-        const custoEstimado = (venda.valorTotal || 0) * 0.6;
-        return custoEstimado;
+        return (venda.valorTotal || 0) * 0.6;
     }
 }
 
@@ -168,10 +165,6 @@ function calcularMargemVenda(venda) {
     return receita > 0 ? (lucro / receita) * 100 : 0;
 }
 
-// =====================
-// RENDERIZAÇÃO DASHBOARD
-// =====================
-
 function renderizarDashboard() {
     const vendas = todasVendas;
     const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
@@ -183,14 +176,14 @@ function renderizarDashboard() {
     const ticketMedio = pedidos > 0 ? faturamentoBruto / pedidos : 0;
     const pendentes = vendas.filter(v => v.status !== 'entregue').length;
 
-    document.getElementById('kpiFaturamentoBruto').textContent = faturamentoBruto.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiCustoTotal').textContent = custoTotal.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiLucroBruto').textContent = lucroBruto.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiMargemLucro').textContent = margemLucro.toFixed(1) + '%';
-    document.getElementById('kpiPedidos').textContent = pedidos;
-    document.getElementById('kpiItens').textContent = itens;
-    document.getElementById('kpiTicketMedio').textContent = ticketMedio.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiPendentes').textContent = pendentes;
+    setText('kpiFaturamentoBruto', faturamentoBruto.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiCustoTotal', custoTotal.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiLucroBruto', lucroBruto.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiMargemLucro', margemLucro.toFixed(1) + '%');
+    setText('kpiPedidos', pedidos);
+    setText('kpiItens', itens);
+    setText('kpiTicketMedio', ticketMedio.toLocaleString('pt-AO') + ' Kz');
+    setText('kpiPendentes', pendentes);
 
     renderizarResumoDiario(vendas);
     renderizarGraficoVendas(vendas);
@@ -199,6 +192,7 @@ function renderizarDashboard() {
 
 function renderizarResumoDiario(vendas) {
     const tbody = document.getElementById('corpoResumoDiario');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const resumo = {};
     vendas.forEach(v => {
@@ -229,10 +223,6 @@ function renderizarResumoDiario(vendas) {
     });
 }
 
-// =====================
-// RENDERIZAÇÃO DIÁRIO
-// =====================
-
 function renderizarDiario() {
     const diaSelecionado = document.getElementById('inputDiaDiario').value;
     let vendas = todasVendas;
@@ -250,16 +240,19 @@ function renderizarDiario() {
     const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
 
     const resumoDiv = document.getElementById('resumoDiaContabil');
-    resumoDiv.innerHTML = `
-        <div class="kpi-contabil">
-            <div class="card-kpi verde"><p>💰 Receita</p><h3>${faturamento.toLocaleString('pt-AO')} Kz</h3></div>
-            <div class="card-kpi"><p>📦 Custo</p><h3>${custo.toLocaleString('pt-AO')} Kz</h3></div>
-            <div class="card-kpi verde"><p>📈 Lucro</p><h3>${lucro.toLocaleString('pt-AO')} Kz</h3></div>
-            <div class="card-kpi azul"><p>🎯 Margem</p><h3>${margem.toFixed(1)}%</h3></div>
-        </div>
-    `;
+    if (resumoDiv) {
+        resumoDiv.innerHTML = `
+            <div class="kpi-contabil">
+                <div class="card-kpi verde"><p>💰 Receita</p><h3>${faturamento.toLocaleString('pt-AO')} Kz</h3></div>
+                <div class="card-kpi"><p>📦 Custo</p><h3>${custo.toLocaleString('pt-AO')} Kz</h3></div>
+                <div class="card-kpi verde"><p>📈 Lucro</p><h3>${lucro.toLocaleString('pt-AO')} Kz</h3></div>
+                <div class="card-kpi azul"><p>🎯 Margem</p><h3>${margem.toFixed(1)}%</h3></div>
+            </div>
+        `;
+    }
 
     const container = document.getElementById('listaPedidosDia');
+    if (!container) return;
     container.innerHTML = '';
     if (vendas.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Nenhum pedido neste dia.</p>';
@@ -281,10 +274,6 @@ function renderizarDiario() {
         });
     }
 }
-
-// =====================
-// RENDERIZAÇÃO SEMANAL
-// =====================
 
 function renderizarSemanal() {
     const semanaFiltro = document.getElementById('selectSemanaFiltro').value;
@@ -310,6 +299,7 @@ function renderizarSemanal() {
     });
 
     const tbody = document.getElementById('corpoTabelaSemanal');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const keys = Object.keys(resumo).sort();
     keys.forEach(key => {
@@ -328,10 +318,6 @@ function renderizarSemanal() {
         tbody.appendChild(tr);
     });
 }
-
-// =====================
-// RENDERIZAÇÃO MENSAL
-// =====================
 
 function renderizarMensal() {
     const mesFiltro = document.getElementById('selectMesFiltro').value;
@@ -354,6 +340,7 @@ function renderizarMensal() {
     });
 
     const tbody = document.getElementById('corpoTabelaMensal');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const keys = Object.keys(resumo).sort();
     keys.forEach(key => {
@@ -372,13 +359,8 @@ function renderizarMensal() {
         tbody.appendChild(tr);
     });
 
-    // Gráfico mensal
     renderizarGraficoMensal(vendas);
 }
-
-// =====================
-// RENDERIZAÇÃO ANUAL
-// =====================
 
 function renderizarAnual() {
     const anoFiltro = document.getElementById('selectAnoFiltro').value;
@@ -399,6 +381,7 @@ function renderizarAnual() {
     });
 
     const tbody = document.getElementById('corpoTabelaAnual');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const anos = Object.keys(resumo).sort();
     anos.forEach(ano => {
@@ -416,13 +399,8 @@ function renderizarAnual() {
         tbody.appendChild(tr);
     });
 
-    // Gráfico anual
     renderizarGraficoAnual(vendas);
 }
-
-// =====================
-// RENDERIZAÇÃO PRODUTOS
-// =====================
 
 function renderizarProdutos() {
     const vendasPorProduto = {};
@@ -444,15 +422,16 @@ function renderizarProdutos() {
                 const qtd = parseInt(item.split('(x')[1]) || 1;
                 if (!vendasPorProduto[nome]) vendasPorProduto[nome] = { qtd: 0, receita: 0, custo: 0 };
                 vendasPorProduto[nome].qtd += qtd;
-                vendasPorProduto[nome].receita += (extrairValorNumerico(venda.valorTotal) / vendasPorProduto[nome].qtd) * qtd; // aproximação
+                vendasPorProduto[nome].receita += (extrairValorNumerico(venda.valorTotal) / Math.max(1, vendasPorProduto[nome].qtd)) * qtd;
                 const prod = catalogo.find(p => p.nome === nome);
                 if (prod) vendasPorProduto[nome].custo += extrairValorNumerico(prod.custo) * qtd;
-                else vendasPorProduto[nome].custo += (extrairValorNumerico(venda.valorTotal) / vendasPorProduto[nome].qtd) * qtd * 0.6;
+                else vendasPorProduto[nome].custo += (extrairValorNumerico(venda.valorTotal) / Math.max(1, vendasPorProduto[nome].qtd)) * qtd * 0.6;
             });
         }
     });
 
     const tbody = document.getElementById('corpoTabelaProdutos');
+    if (!tbody) return;
     tbody.innerHTML = '';
     catalogo.forEach(prod => {
         const info = vendasPorProduto[prod.nome] || { qtd: 0, receita: 0, custo: 0 };
@@ -477,23 +456,19 @@ function renderizarProdutos() {
     });
 }
 
-// =====================
-// RENDERIZAÇÃO CONTABILIDADE
-// =====================
-
 function renderizarContabilidade() {
     const receita = todasVendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
     const custo = todasVendas.reduce((acc, v) => acc + calcularCustoDaVenda(v), 0);
     const lucro = receita - custo;
     const margem = receita > 0 ? (lucro / receita) * 100 : 0;
 
-    document.getElementById('contReceita').textContent = receita.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('contCusto').textContent = custo.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('contLucro').textContent = lucro.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('contMargem').textContent = margem.toFixed(1) + '%';
+    setText('contReceita', receita.toLocaleString('pt-AO') + ' Kz');
+    setText('contCusto', custo.toLocaleString('pt-AO') + ' Kz');
+    setText('contLucro', lucro.toLocaleString('pt-AO') + ' Kz');
+    setText('contMargem', margem.toFixed(1) + '%');
 
-    // Lançamentos recentes
     const tbody = document.getElementById('corpoLancamentos');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const vendasOrdenadas = [...todasVendas].sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora)).slice(0,20);
     vendasOrdenadas.forEach(v => {
@@ -510,14 +485,9 @@ function renderizarContabilidade() {
         tbody.appendChild(tr);
     });
 
-    // Gráficos contábeis
     renderizarGraficoMargemMensal();
     renderizarGraficoTopLucro();
 }
-
-// =====================
-// RENDERIZAÇÃO PEDIDOS
-// =====================
 
 function renderizarPedidos() {
     const clienteFiltro = document.getElementById('filtroPedidoCliente').value.trim().toLowerCase();
@@ -528,6 +498,7 @@ function renderizarPedidos() {
     if (statusFiltro !== 'todos') vendas = vendas.filter(v => v.status === statusFiltro);
 
     const tbody = document.getElementById('corpoTabelaPedidos');
+    if (!tbody) return;
     tbody.innerHTML = '';
     vendas.sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora));
     vendas.forEach(v => {
@@ -557,10 +528,6 @@ function renderizarPedidos() {
         tbody.appendChild(tr);
     });
 }
-
-// =====================
-// GRÁFICOS
-// =====================
 
 function renderizarGraficoVendas(vendas) {
     const vendasPorDia = {};
@@ -754,27 +721,16 @@ function renderizarGraficoTopLucro() {
     }
 }
 
-// =====================
-// EXPORTAÇÕES
-// =====================
-
 function configurarExportacoes() {
-    document.getElementById('btnExportarPDFDashboard').addEventListener('click', () => exportarPDF('dashboard'));
-    document.getElementById('btnExportarExcelDashboard').addEventListener('click', () => exportarExcel('dashboard'));
-    document.getElementById('btnExportarPDFDiario').addEventListener('click', () => exportarPDF('diario'));
-    document.getElementById('btnExportarExcelDiario').addEventListener('click', () => exportarExcel('diario'));
-    document.getElementById('btnExportarPDFSemanal').addEventListener('click', () => exportarPDF('semanal'));
-    document.getElementById('btnExportarExcelSemanal').addEventListener('click', () => exportarExcel('semanal'));
-    document.getElementById('btnExportarPDFMensal').addEventListener('click', () => exportarPDF('mensal'));
-    document.getElementById('btnExportarExcelMensal').addEventListener('click', () => exportarExcel('mensal'));
-    document.getElementById('btnExportarPDFAnual').addEventListener('click', () => exportarPDF('anual'));
-    document.getElementById('btnExportarExcelAnual').addEventListener('click', () => exportarExcel('anual'));
-    document.getElementById('btnExportarPDFProdutos').addEventListener('click', () => exportarPDF('produtos'));
-    document.getElementById('btnExportarExcelProdutos').addEventListener('click', () => exportarExcel('produtos'));
-    document.getElementById('btnExportarPDFContabilidade').addEventListener('click', () => exportarPDF('contabilidade'));
-    document.getElementById('btnExportarExcelContabilidade').addEventListener('click', () => exportarExcel('contabilidade'));
-    document.getElementById('btnExportarPDFPedidos').addEventListener('click', () => exportarPDF('pedidos'));
-    document.getElementById('btnExportarExcelPedidos').addEventListener('click', () => exportarExcel('pedidos'));
+    const botoes = [
+        'Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'
+    ];
+    botoes.forEach(tipo => {
+        const btnPdf = document.getElementById(`btnExportarPDF${tipo}`);
+        const btnExcel = document.getElementById(`btnExportarExcel${tipo}`);
+        if (btnPdf) btnPdf.addEventListener('click', () => exportarPDF(tipo.toLowerCase()));
+        if (btnExcel) btnExcel.addEventListener('click', () => exportarExcel(tipo.toLowerCase()));
+    });
 }
 
 function exportarPDF(tipo) {
@@ -835,11 +791,10 @@ function exportarPDF(tipo) {
             dados.push([prod.id || 'N/A', prod.nome, info.qtd, info.receita.toLocaleString('pt-AO')+' Kz', info.custo.toLocaleString('pt-AO')+' Kz', lucro.toLocaleString('pt-AO')+' Kz', margem.toFixed(1)+'%']);
         });
     } else if (tipo === 'contabilidade') {
-        // Balanço geral
-        doc.text(`Receita Total: ${document.getElementById('contReceita').textContent}`, 14, 32);
-        doc.text(`Custo Total: ${document.getElementById('contCusto').textContent}`, 14, 38);
-        doc.text(`Lucro Líquido: ${document.getElementById('contLucro').textContent}`, 14, 44);
-        doc.text(`Margem Líquida: ${document.getElementById('contMargem').textContent}`, 14, 50);
+        doc.text(`Receita Total: ${document.getElementById('contReceita')?.textContent || '0'}`, 14, 32);
+        doc.text(`Custo Total: ${document.getElementById('contCusto')?.textContent || '0'}`, 14, 38);
+        doc.text(`Lucro Líquido: ${document.getElementById('contLucro')?.textContent || '0'}`, 14, 44);
+        doc.text(`Margem Líquida: ${document.getElementById('contMargem')?.textContent || '0'}`, 14, 50);
         startY = 55;
         head = [['Data', 'Cliente', 'Produtos', 'Receita', 'Custo', 'Lucro']];
         const lancamentos = [...todasVendas].sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora)).slice(0,30);
@@ -863,8 +818,6 @@ function exportarExcel(tipo) {
         alert('Biblioteca XLSX não carregada.');
         return;
     }
-    // Similar ao PDF, mas com dados diferentes para cada tipo
-    // (implementação pode ser simplificada para gerar um CSV/Excel básico)
     let dados = [];
     let headers = [];
 
@@ -915,10 +868,6 @@ function exportarExcel(tipo) {
     XLSX.writeFile(wb, `Relatorio_${tipo}.xlsx`);
 }
 
-// =====================
-// AÇÕES GLOBAIS
-// =====================
-
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
@@ -944,7 +893,6 @@ window.imprimirFatura = async function(codigoRastreio) {
         if (snapshot.empty) return alert('Pedido não encontrado.');
         const venda = snapshot.docs[0].data();
         
-        // Gerar HTML da fatura
         const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
