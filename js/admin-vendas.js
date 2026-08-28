@@ -5,13 +5,7 @@ import { extrairValorNumerico } from './utils.js';
 
 let todasVendas = [];
 let catalogo = [];
-let graficoVendas = null;
-let graficoProdutos = null;
-let graficoMensal = null;
-let graficoAnual = null;
-
-// Estado atual da aba
-let abaAtual = 'visaoGeral';
+let graficos = {}; // armazenar instâncias de gráficos
 
 function chartDisponivel() {
     return typeof Chart !== 'undefined';
@@ -41,75 +35,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configurar abas
     document.querySelectorAll('.aba-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            trocarAba(btn.dataset.aba);
-        });
+        btn.addEventListener('click', () => trocarAba(btn.dataset.aba));
     });
 
-    // Botões de exportação específicos por aba
-    configurarBotoesExportacao();
+    // Configurar botões de exportação
+    configurarExportacoes();
 
     // Filtros diários
-    document.getElementById('btnFiltrarDia').addEventListener('click', filtrarPorDia);
-    document.getElementById('btnLimparDia').addEventListener('click', limparFiltroDia);
+    document.getElementById('btnFiltrarDia').addEventListener('click', () => renderizarDiario());
+    document.getElementById('btnLimparDia').addEventListener('click', () => {
+        document.getElementById('inputDiaDiario').value = '';
+        renderizarDiario();
+    });
 
     // Filtros semanais
-    document.getElementById('btnFiltrarSemana').addEventListener('click', filtrarPorSemana);
-    document.getElementById('btnLimparSemana').addEventListener('click', limparFiltroSemana);
+    document.getElementById('btnFiltrarSemana').addEventListener('click', () => renderizarSemanal());
+    document.getElementById('btnLimparSemana').addEventListener('click', () => {
+        document.getElementById('selectSemanaFiltro').value = '';
+        renderizarSemanal();
+    });
 
     // Filtros mensais
-    document.getElementById('btnFiltrarMes').addEventListener('click', filtrarPorMes);
-    document.getElementById('btnLimparMes').addEventListener('click', limparFiltroMes);
+    document.getElementById('btnFiltrarMes').addEventListener('click', () => renderizarMensal());
+    document.getElementById('btnLimparMes').addEventListener('click', () => {
+        document.getElementById('selectMesFiltro').value = '';
+        renderizarMensal();
+    });
 
     // Filtros anuais
-    document.getElementById('btnFiltrarAno').addEventListener('click', filtrarPorAno);
-    document.getElementById('btnLimparAno').addEventListener('click', limparFiltroAno);
+    document.getElementById('btnFiltrarAno').addEventListener('click', () => renderizarAnual());
+    document.getElementById('btnLimparAno').addEventListener('click', () => {
+        document.getElementById('selectAnoFiltro').value = '';
+        renderizarAnual();
+    });
 
     // Filtros de pedidos
-    document.getElementById('filtroPedidoCliente').addEventListener('input', filtrarPedidos);
-    document.getElementById('filtroStatus').addEventListener('change', filtrarPedidos);
+    document.getElementById('filtroPedidoCliente').addEventListener('input', () => renderizarPedidos());
+    document.getElementById('filtroStatus').addEventListener('change', () => renderizarPedidos());
     document.getElementById('btnFiltrarPendentes').addEventListener('click', () => {
         document.getElementById('filtroStatus').value = 'confirmado';
-        filtrarPedidos();
+        renderizarPedidos();
     });
     document.getElementById('btnFiltrarEntregues').addEventListener('click', () => {
         document.getElementById('filtroStatus').value = 'entregue';
-        filtrarPedidos();
+        renderizarPedidos();
     });
 });
 
-// Função para trocar de aba
-function trocarAba(abaId) {
-    abaAtual = abaId;
-    document.querySelectorAll('.aba-btn').forEach(btn => {
-        btn.classList.toggle('ativa', btn.dataset.aba === abaId);
-    });
-    document.querySelectorAll('.aba-conteudo').forEach(div => {
-        div.classList.toggle('ativa', div.id === `aba-${abaId}`);
-    });
-    // Atualizar dados da aba selecionada
-    atualizarAbaAtual();
-}
-
-// Configurar botões de exportação para cada aba
-function configurarBotoesExportacao() {
-    document.getElementById('btnExportarPDFGeral').addEventListener('click', () => exportarPDF('geral'));
-    document.getElementById('btnExportarExcelGeral').addEventListener('click', () => exportarExcel('geral'));
-    document.getElementById('btnExportarPDFDiario').addEventListener('click', () => exportarPDF('diario'));
-    document.getElementById('btnExportarExcelDiario').addEventListener('click', () => exportarExcel('diario'));
-    document.getElementById('btnExportarPDFSemanal').addEventListener('click', () => exportarPDF('semanal'));
-    document.getElementById('btnExportarExcelSemanal').addEventListener('click', () => exportarExcel('semanal'));
-    document.getElementById('btnExportarPDFMensal').addEventListener('click', () => exportarPDF('mensal'));
-    document.getElementById('btnExportarExcelMensal').addEventListener('click', () => exportarExcel('mensal'));
-    document.getElementById('btnExportarPDFAnual').addEventListener('click', () => exportarPDF('anual'));
-    document.getElementById('btnExportarExcelAnual').addEventListener('click', () => exportarExcel('anual'));
-    document.getElementById('btnExportarPDFPedidos').addEventListener('click', () => exportarPDF('pedidos'));
-    document.getElementById('btnExportarExcelPedidos').addEventListener('click', () => exportarExcel('pedidos'));
-    document.getElementById('btnExportarPDFProdutos').addEventListener('click', () => exportarPDF('produtos'));
-    document.getElementById('btnExportarExcelProdutos').addEventListener('click', () => exportarExcel('produtos'));
-}
-
-// Carregar dados do Firebase
 async function carregarDados() {
     try {
         const vendasSnap = await getDocs(collection(db, 'vendas'));
@@ -118,18 +90,16 @@ async function carregarDados() {
         const produtosSnap = await getDocs(collection(db, 'produtos'));
         catalogo = produtosSnap.docs.map(doc => doc.data());
 
-        // Preencher selects de anos e semanas
         preencherSelects();
-        atualizarAbaAtual();
+        renderizarDashboard();
     } catch (e) {
         console.error('Erro ao carregar dados:', e);
         alert('Erro ao carregar dados: ' + e.message);
     }
 }
 
-// Preencher selects dinâmicos
 function preencherSelects() {
-    // Anos disponíveis
+    // Anos
     const anos = [...new Set(todasVendas.map(v => new Date(v.dataHora).getFullYear()))].sort();
     const selectAno = document.getElementById('selectAnoFiltro');
     selectAno.innerHTML = '<option value="">Todos os anos</option>';
@@ -137,7 +107,7 @@ function preencherSelects() {
         selectAno.innerHTML += `<option value="${ano}">${ano}</option>`;
     });
 
-    // Semanas disponíveis (1-5)
+    // Semanas
     const selectSemana = document.getElementById('selectSemanaFiltro');
     selectSemana.innerHTML = '<option value="">Todas as semanas</option>';
     for (let i = 1; i <= 5; i++) {
@@ -145,69 +115,127 @@ function preencherSelects() {
     }
 }
 
-// Atualizar aba atual
-function atualizarAbaAtual() {
-    switch (abaAtual) {
-        case 'visaoGeral':
-            renderizarVisaoGeral();
-            break;
-        case 'diario':
-            renderizarDiario();
-            break;
-        case 'semanal':
-            renderizarSemanal();
-            break;
-        case 'mensal':
-            renderizarMensal();
-            break;
-        case 'anual':
-            renderizarAnual();
-            break;
-        case 'pedidos':
-            renderizarPedidos();
-            break;
-        case 'produtos':
-            renderizarProdutos();
-            break;
+function trocarAba(abaId) {
+    document.querySelectorAll('.aba-btn').forEach(btn => btn.classList.toggle('ativa', btn.dataset.aba === abaId));
+    document.querySelectorAll('.aba-conteudo').forEach(div => div.classList.toggle('ativa', div.id === `aba-${abaId}`));
+    
+    switch (abaId) {
+        case 'dashboard': renderizarDashboard(); break;
+        case 'diario': renderizarDiario(); break;
+        case 'semanal': renderizarSemanal(); break;
+        case 'mensal': renderizarMensal(); break;
+        case 'anual': renderizarAnual(); break;
+        case 'produtos': renderizarProdutos(); break;
+        case 'contabilidade': renderizarContabilidade(); break;
+        case 'pedidos': renderizarPedidos(); break;
     }
 }
 
 // =====================
-// RENDERIZAÇÃO POR ABA
+// FUNÇÕES DE CÁLCULO
 // =====================
 
-// Visão Geral
-function renderizarVisaoGeral() {
-    const vendas = todasVendas;
+function calcularCustoDaVenda(venda) {
+    // Tenta extrair custo dos itens da venda
+    if (venda.itens && venda.itens.length) {
+        let custo = 0;
+        venda.itens.forEach(item => {
+            const prod = catalogo.find(p => p.nome === item.nome);
+            if (prod) {
+                custo += extrairValorNumerico(prod.custo) * item.quantidade;
+            } else {
+                // fallback: custo = 60% do preço (estimativa)
+                custo += (item.preco || 0) * item.quantidade * 0.6;
+            }
+        });
+        return custo;
+    } else {
+        // Sem detalhes de itens, estimativa baseada em produtosResumo
+        const custoEstimado = (venda.valorTotal || 0) * 0.6;
+        return custoEstimado;
+    }
+}
 
-    // KPIs
-    const faturamento = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+function calcularLucroVenda(venda) {
+    const receita = venda.valorTotal || 0;
+    const custo = calcularCustoDaVenda(venda);
+    return receita - custo;
+}
+
+function calcularMargemVenda(venda) {
+    const receita = venda.valorTotal || 0;
+    const lucro = calcularLucroVenda(venda);
+    return receita > 0 ? (lucro / receita) * 100 : 0;
+}
+
+// =====================
+// RENDERIZAÇÃO DASHBOARD
+// =====================
+
+function renderizarDashboard() {
+    const vendas = todasVendas;
+    const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const custoTotal = vendas.reduce((acc, v) => acc + calcularCustoDaVenda(v), 0);
+    const lucroBruto = faturamentoBruto - custoTotal;
+    const margemLucro = faturamentoBruto > 0 ? (lucroBruto / faturamentoBruto) * 100 : 0;
     const pedidos = vendas.length;
     const itens = vendas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
-    const estoque = catalogo.reduce((acc, p) => acc + (p.estoque || 0), 0);
+    const ticketMedio = pedidos > 0 ? faturamentoBruto / pedidos : 0;
     const pendentes = vendas.filter(v => v.status !== 'entregue').length;
-    const ticket = pedidos > 0 ? faturamento / pedidos : 0;
 
-    document.getElementById('kpiFaturamento').textContent = faturamento.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiFaturamentoBruto').textContent = faturamentoBruto.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiCustoTotal').textContent = custoTotal.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiLucroBruto').textContent = lucroBruto.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('kpiMargemLucro').textContent = margemLucro.toFixed(1) + '%';
     document.getElementById('kpiPedidos').textContent = pedidos;
     document.getElementById('kpiItens').textContent = itens;
-    document.getElementById('kpiTicketMedio').textContent = ticket.toLocaleString('pt-AO') + ' Kz';
-    document.getElementById('kpiEstoque').textContent = estoque;
+    document.getElementById('kpiTicketMedio').textContent = ticketMedio.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('kpiPendentes').textContent = pendentes;
 
-    // Resumo Diário
     renderizarResumoDiario(vendas);
-
-    // Gráficos
     renderizarGraficoVendas(vendas);
     renderizarGraficoProdutos(vendas);
 }
 
-// Diário
+function renderizarResumoDiario(vendas) {
+    const tbody = document.getElementById('corpoResumoDiario');
+    tbody.innerHTML = '';
+    const resumo = {};
+    vendas.forEach(v => {
+        if (!v.dataHora) return;
+        const data = new Date(v.dataHora);
+        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        if (!resumo[dataStr]) resumo[dataStr] = { total: 0, faturamento: 0, custo: 0, lucro: 0 };
+        resumo[dataStr].total++;
+        resumo[dataStr].faturamento += v.valorTotal || 0;
+        resumo[dataStr].custo += calcularCustoDaVenda(v);
+        resumo[dataStr].lucro += calcularLucroVenda(v);
+    });
+    const datas = Object.keys(resumo).sort((a,b)=>b.localeCompare(a));
+    datas.forEach(dataStr => {
+        const info = resumo[dataStr];
+        const dataFormatada = dataStr.split('-').reverse().join('/');
+        const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px;">${dataFormatada}</td>
+            <td style="padding:8px; text-align:center;">${info.total}</td>
+            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:right;">${info.custo.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${info.lucro.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:center;">${margem.toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =====================
+// RENDERIZAÇÃO DIÁRIO
+// =====================
+
 function renderizarDiario() {
     const diaSelecionado = document.getElementById('inputDiaDiario').value;
     let vendas = todasVendas;
-
     if (diaSelecionado) {
         vendas = todasVendas.filter(v => {
             const data = new Date(v.dataHora);
@@ -216,19 +244,37 @@ function renderizarDiario() {
         });
     }
 
-    // Renderizar lista de pedidos do dia
+    const faturamento = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const custo = vendas.reduce((acc, v) => acc + calcularCustoDaVenda(v), 0);
+    const lucro = faturamento - custo;
+    const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+
+    const resumoDiv = document.getElementById('resumoDiaContabil');
+    resumoDiv.innerHTML = `
+        <div class="kpi-contabil">
+            <div class="card-kpi verde"><p>💰 Receita</p><h3>${faturamento.toLocaleString('pt-AO')} Kz</h3></div>
+            <div class="card-kpi"><p>📦 Custo</p><h3>${custo.toLocaleString('pt-AO')} Kz</h3></div>
+            <div class="card-kpi verde"><p>📈 Lucro</p><h3>${lucro.toLocaleString('pt-AO')} Kz</h3></div>
+            <div class="card-kpi azul"><p>🎯 Margem</p><h3>${margem.toFixed(1)}%</h3></div>
+        </div>
+    `;
+
     const container = document.getElementById('listaPedidosDia');
     container.innerHTML = '';
     if (vendas.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#999;">Nenhum pedido neste dia.</p>';
+        container.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Nenhum pedido neste dia.</p>';
     } else {
+        vendas.sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora));
         vendas.forEach(v => {
+            const lucroVenda = calcularLucroVenda(v);
+            const margemVenda = calcularMargemVenda(v);
             const div = document.createElement('div');
             div.style.cssText = 'border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; background:#f9f9f9;';
             div.innerHTML = `
                 <strong>${v.dataHora}</strong> - ${v.nomeCliente}<br>
                 ${v.produtosResumo}<br>
-                <span style="color:#25D366; font-weight:bold;">${(v.valorTotal||0).toLocaleString('pt-AO')} Kz</span> - 
+                <span style="color:#25D366; font-weight:bold;">${(v.valorTotal||0).toLocaleString('pt-AO')} Kz</span> |
+                <span style="color:#005A4C;">Lucro: ${lucroVenda.toLocaleString('pt-AO')} Kz (${margemVenda.toFixed(1)}%)</span> |
                 <span style="color:${v.status==='entregue'?'#27ae60':'#E74C3C'};">${v.status==='entregue'?'✅ Entregue':'⚠️ Pendente'}</span>
             `;
             container.appendChild(div);
@@ -236,7 +282,10 @@ function renderizarDiario() {
     }
 }
 
-// Semanal
+// =====================
+// RENDERIZAÇÃO SEMANAL
+// =====================
+
 function renderizarSemanal() {
     const semanaFiltro = document.getElementById('selectSemanaFiltro').value;
     const vendas = todasVendas.filter(v => {
@@ -246,7 +295,6 @@ function renderizarSemanal() {
         return semana === parseInt(semanaFiltro);
     });
 
-    // Agrupar por semana
     const resumo = {};
     vendas.forEach(v => {
         const data = new Date(v.dataHora);
@@ -254,13 +302,11 @@ function renderizarSemanal() {
         const mes = data.getMonth();
         const ano = data.getFullYear();
         const key = `${ano}-${mes}-${semana}`;
-        if (!resumo[key]) {
-            resumo[key] = { semana, mes, ano, total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-        }
+        if (!resumo[key]) resumo[key] = { semana, mes, ano, total: 0, faturamento: 0, custo: 0, lucro: 0 };
         resumo[key].total++;
         resumo[key].faturamento += v.valorTotal || 0;
-        if (v.status === 'entregue') resumo[key].entregues++;
-        else resumo[key].pendentes++;
+        resumo[key].custo += calcularCustoDaVenda(v);
+        resumo[key].lucro += calcularLucroVenda(v);
     });
 
     const tbody = document.getElementById('corpoTabelaSemanal');
@@ -269,19 +315,24 @@ function renderizarSemanal() {
     keys.forEach(key => {
         const info = resumo[key];
         const mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][info.mes];
+        const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding:8px;">Semana ${info.semana} - ${mesNome}/${info.ano}</td>
-            <td style="padding:8px;">${info.total}</td>
-            <td style="padding:8px; color:#27ae60;">${info.entregues}</td>
-            <td style="padding:8px; color:#E74C3C;">${info.pendentes}</td>
-            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:center;">${info.total}</td>
+            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right;">${info.custo.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${info.lucro.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:center;">${margem.toFixed(1)}%</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// Mensal
+// =====================
+// RENDERIZAÇÃO MENSAL
+// =====================
+
 function renderizarMensal() {
     const mesFiltro = document.getElementById('selectMesFiltro').value;
     const vendas = todasVendas.filter(v => {
@@ -289,20 +340,17 @@ function renderizarMensal() {
         return new Date(v.dataHora).getMonth() === parseInt(mesFiltro);
     });
 
-    // Agrupar por mês
     const resumo = {};
     vendas.forEach(v => {
         const data = new Date(v.dataHora);
         const mes = data.getMonth();
         const ano = data.getFullYear();
         const key = `${ano}-${mes}`;
-        if (!resumo[key]) {
-            resumo[key] = { mes, ano, total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-        }
+        if (!resumo[key]) resumo[key] = { mes, ano, total: 0, faturamento: 0, custo: 0, lucro: 0 };
         resumo[key].total++;
         resumo[key].faturamento += v.valorTotal || 0;
-        if (v.status === 'entregue') resumo[key].entregues++;
-        else resumo[key].pendentes++;
+        resumo[key].custo += calcularCustoDaVenda(v);
+        resumo[key].lucro += calcularLucroVenda(v);
     });
 
     const tbody = document.getElementById('corpoTabelaMensal');
@@ -311,13 +359,15 @@ function renderizarMensal() {
     keys.forEach(key => {
         const info = resumo[key];
         const mesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][info.mes];
+        const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding:8px;">${mesNome} ${info.ano}</td>
-            <td style="padding:8px;">${info.total}</td>
-            <td style="padding:8px; color:#27ae60;">${info.entregues}</td>
-            <td style="padding:8px; color:#E74C3C;">${info.pendentes}</td>
-            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:center;">${info.total}</td>
+            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right;">${info.custo.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${info.lucro.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:center;">${margem.toFixed(1)}%</td>
         `;
         tbody.appendChild(tr);
     });
@@ -326,7 +376,10 @@ function renderizarMensal() {
     renderizarGraficoMensal(vendas);
 }
 
-// Anual
+// =====================
+// RENDERIZAÇÃO ANUAL
+// =====================
+
 function renderizarAnual() {
     const anoFiltro = document.getElementById('selectAnoFiltro').value;
     const vendas = todasVendas.filter(v => {
@@ -334,18 +387,15 @@ function renderizarAnual() {
         return new Date(v.dataHora).getFullYear() === parseInt(anoFiltro);
     });
 
-    // Agrupar por ano
     const resumo = {};
     vendas.forEach(v => {
         const data = new Date(v.dataHora);
         const ano = data.getFullYear();
-        if (!resumo[ano]) {
-            resumo[ano] = { ano, total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-        }
+        if (!resumo[ano]) resumo[ano] = { total: 0, faturamento: 0, custo: 0, lucro: 0 };
         resumo[ano].total++;
         resumo[ano].faturamento += v.valorTotal || 0;
-        if (v.status === 'entregue') resumo[ano].entregues++;
-        else resumo[ano].pendentes++;
+        resumo[ano].custo += calcularCustoDaVenda(v);
+        resumo[ano].lucro += calcularLucroVenda(v);
     });
 
     const tbody = document.getElementById('corpoTabelaAnual');
@@ -353,13 +403,15 @@ function renderizarAnual() {
     const anos = Object.keys(resumo).sort();
     anos.forEach(ano => {
         const info = resumo[ano];
+        const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding:8px;">${info.ano}</td>
-            <td style="padding:8px;">${info.total}</td>
-            <td style="padding:8px; color:#27ae60;">${info.entregues}</td>
-            <td style="padding:8px; color:#E74C3C;">${info.pendentes}</td>
-            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:center;">${info.total}</td>
+            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right;">${info.custo.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${info.lucro.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:center;">${margem.toFixed(1)}%</td>
         `;
         tbody.appendChild(tr);
     });
@@ -368,23 +420,116 @@ function renderizarAnual() {
     renderizarGraficoAnual(vendas);
 }
 
-// Pedidos
+// =====================
+// RENDERIZAÇÃO PRODUTOS
+// =====================
+
+function renderizarProdutos() {
+    const vendasPorProduto = {};
+    todasVendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                if (!vendasPorProduto[nome]) vendasPorProduto[nome] = { qtd: 0, receita: 0, custo: 0 };
+                vendasPorProduto[nome].qtd += qtd;
+                vendasPorProduto[nome].receita += (item.preco || 0) * qtd;
+                const prod = catalogo.find(p => p.nome === nome);
+                if (prod) vendasPorProduto[nome].custo += extrairValorNumerico(prod.custo) * qtd;
+                else vendasPorProduto[nome].custo += (item.preco || 0) * qtd * 0.6;
+            });
+        } else if (venda.produtosResumo) {
+            venda.produtosResumo.split(', ').forEach(item => {
+                const nome = item.split(' (x')[0];
+                const qtd = parseInt(item.split('(x')[1]) || 1;
+                if (!vendasPorProduto[nome]) vendasPorProduto[nome] = { qtd: 0, receita: 0, custo: 0 };
+                vendasPorProduto[nome].qtd += qtd;
+                vendasPorProduto[nome].receita += (extrairValorNumerico(venda.valorTotal) / vendasPorProduto[nome].qtd) * qtd; // aproximação
+                const prod = catalogo.find(p => p.nome === nome);
+                if (prod) vendasPorProduto[nome].custo += extrairValorNumerico(prod.custo) * qtd;
+                else vendasPorProduto[nome].custo += (extrairValorNumerico(venda.valorTotal) / vendasPorProduto[nome].qtd) * qtd * 0.6;
+            });
+        }
+    });
+
+    const tbody = document.getElementById('corpoTabelaProdutos');
+    tbody.innerHTML = '';
+    catalogo.forEach(prod => {
+        const info = vendasPorProduto[prod.nome] || { qtd: 0, receita: 0, custo: 0 };
+        const receita = info.receita;
+        const custo = info.custo;
+        const lucro = receita - custo;
+        const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+        const estoque = prod.estoque || 0;
+        const estoqueBaixo = estoque <= 5 ? 'background:#ffe0e0;' : '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px; font-weight:600;">${prod.id || 'N/A'}</td>
+            <td style="padding:8px;">${prod.nome}</td>
+            <td style="padding:8px; text-align:center;">${info.qtd}</td>
+            <td style="padding:8px; text-align:right;">${receita.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right;">${custo.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${lucro.toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:center;">${margem.toFixed(1)}%</td>
+            <td style="padding:8px; text-align:center; ${estoqueBaixo}">${estoque}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =====================
+// RENDERIZAÇÃO CONTABILIDADE
+// =====================
+
+function renderizarContabilidade() {
+    const receita = todasVendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
+    const custo = todasVendas.reduce((acc, v) => acc + calcularCustoDaVenda(v), 0);
+    const lucro = receita - custo;
+    const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+
+    document.getElementById('contReceita').textContent = receita.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('contCusto').textContent = custo.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('contLucro').textContent = lucro.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('contMargem').textContent = margem.toFixed(1) + '%';
+
+    // Lançamentos recentes
+    const tbody = document.getElementById('corpoLancamentos');
+    tbody.innerHTML = '';
+    const vendasOrdenadas = [...todasVendas].sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora)).slice(0,20);
+    vendasOrdenadas.forEach(v => {
+        const lucroVenda = calcularLucroVenda(v);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding:8px;">${v.dataHora}</td>
+            <td style="padding:8px;">${v.nomeCliente}</td>
+            <td style="padding:8px; font-size:11px;">${v.produtosResumo || ''}</td>
+            <td style="padding:8px; text-align:right;">${(v.valorTotal||0).toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right;">${calcularCustoDaVenda(v).toLocaleString('pt-AO')}</td>
+            <td style="padding:8px; text-align:right; color:#27ae60;">${lucroVenda.toLocaleString('pt-AO')}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Gráficos contábeis
+    renderizarGraficoMargemMensal();
+    renderizarGraficoTopLucro();
+}
+
+// =====================
+// RENDERIZAÇÃO PEDIDOS
+// =====================
+
 function renderizarPedidos() {
     const clienteFiltro = document.getElementById('filtroPedidoCliente').value.trim().toLowerCase();
     const statusFiltro = document.getElementById('filtroStatus').value;
 
     let vendas = todasVendas;
-    if (clienteFiltro) {
-        vendas = vendas.filter(v => (v.nomeCliente || '').toLowerCase().includes(clienteFiltro));
-    }
-    if (statusFiltro !== 'todos') {
-        vendas = vendas.filter(v => v.status === statusFiltro);
-    }
+    if (clienteFiltro) vendas = vendas.filter(v => (v.nomeCliente || '').toLowerCase().includes(clienteFiltro));
+    if (statusFiltro !== 'todos') vendas = vendas.filter(v => v.status === statusFiltro);
 
     const tbody = document.getElementById('corpoTabelaPedidos');
     tbody.innerHTML = '';
-    vendas.sort((a,b) => new Date(b.dataHora) - new Date(a.dataHora));
-
+    vendas.sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora));
     vendas.forEach(v => {
         const status = v.status || 'confirmado';
         const isPendente = status === 'confirmado';
@@ -413,85 +558,6 @@ function renderizarPedidos() {
     });
 }
 
-// Produtos
-function renderizarProdutos() {
-    const vendasPorProduto = {};
-    todasVendas.forEach(venda => {
-        if (venda.itens && Array.isArray(venda.itens)) {
-            venda.itens.forEach(item => {
-                const nome = item.nome;
-                const qtd = item.quantidade || 1;
-                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-            });
-        } else if (venda.produtosResumo) {
-            venda.produtosResumo.split(', ').forEach(item => {
-                const nome = item.split(' (x')[0];
-                const qtd = parseInt(item.split('(x')[1]) || 1;
-                vendasPorProduto[nome] = (vendasPorProduto[nome] || 0) + qtd;
-            });
-        }
-    });
-
-    const tbody = document.getElementById('corpoTabelaRelatorio');
-    tbody.innerHTML = '';
-    catalogo.forEach(prod => {
-        const qtdVendida = vendasPorProduto[prod.nome] || 0;
-        const totalVendido = qtdVendida * (extrairValorNumerico(prod.preco) || 0);
-        const custoUnitario = extrairValorNumerico(prod.custo) || 0;
-        const lucro = qtdVendida * (extrairValorNumerico(prod.preco) - custoUnitario);
-        const desconto = prod.desconto ? parseInt(prod.desconto) : 0;
-        const estoque = prod.estoque || 0;
-        const estoqueBaixo = estoque <= 5 ? 'background:#ffe0e0;' : '';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="padding:8px; font-weight:600;">${prod.id || 'N/A'}</td>
-            <td style="padding:8px;">${prod.nome}</td>
-            <td style="padding:8px; text-align:center;">${qtdVendida}</td>
-            <td style="padding:8px; text-align:right;">${totalVendido.toLocaleString('pt-AO')}</td>
-            <td style="padding:8px; text-align:right; color:#27ae60;">${lucro.toLocaleString('pt-AO')}</td>
-            <td style="padding:8px; text-align:center;">${desconto}%</td>
-            <td style="padding:8px; text-align:center; ${estoqueBaixo}">${estoque}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-// =====================
-// FUNÇÕES AUXILIARES
-// =====================
-
-function filtrarPorDia() {
-    renderizarDiario();
-}
-function limparFiltroDia() {
-    document.getElementById('inputDiaDiario').value = '';
-    renderizarDiario();
-}
-function filtrarPorSemana() {
-    renderizarSemanal();
-}
-function limparFiltroSemana() {
-    document.getElementById('selectSemanaFiltro').value = '';
-    renderizarSemanal();
-}
-function filtrarPorMes() {
-    renderizarMensal();
-}
-function limparFiltroMes() {
-    document.getElementById('selectMesFiltro').value = '';
-    renderizarMensal();
-}
-function filtrarPorAno() {
-    renderizarAnual();
-}
-function limparFiltroAno() {
-    document.getElementById('selectAnoFiltro').value = '';
-    renderizarAnual();
-}
-function filtrarPedidos() {
-    renderizarPedidos();
-}
-
 // =====================
 // GRÁFICOS
 // =====================
@@ -508,13 +574,10 @@ function renderizarGraficoVendas(vendas) {
     if (!ctx) return;
     const dias = Object.keys(vendasPorDia).sort();
     const valores = dias.map(d => vendasPorDia[d]);
-    if (dias.length === 0) {
-        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">Sem dados.</p>';
-        return;
-    }
+    if (dias.length === 0) return;
     if (chartDisponivel()) {
-        if (graficoVendas) graficoVendas.destroy();
-        graficoVendas = new Chart(ctx, {
+        if (graficos.vendas) graficos.vendas.destroy();
+        graficos.vendas = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: dias,
@@ -545,13 +608,10 @@ function renderizarGraficoProdutos(vendas) {
     const topProdutos = Object.entries(vendasPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
     const ctx = document.getElementById('graficoProdutos');
     if (!ctx) return;
-    if (topProdutos.length === 0) {
-        ctx.parentElement.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">Sem dados.</p>';
-        return;
-    }
+    if (topProdutos.length === 0) return;
     if (chartDisponivel()) {
-        if (graficoProdutos) graficoProdutos.destroy();
-        graficoProdutos = new Chart(ctx, {
+        if (graficos.produtos) graficos.produtos.destroy();
+        graficos.produtos = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: topProdutos.map(p => p[0]),
@@ -569,8 +629,9 @@ function renderizarGraficoMensal(vendas) {
         const mes = data.getMonth();
         const ano = data.getFullYear();
         const key = `${ano}-${mes}`;
-        if (!resumo[key]) resumo[key] = { mes, ano, total: 0 };
-        resumo[key].total += v.valorTotal || 0;
+        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
+        resumo[key].faturamento += v.valorTotal || 0;
+        resumo[key].lucro += calcularLucroVenda(v);
     });
     const keys = Object.keys(resumo).sort();
     const ctx = document.getElementById('graficoMensal');
@@ -579,14 +640,18 @@ function renderizarGraficoMensal(vendas) {
         const [ano, mes] = k.split('-');
         return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
     });
-    const valores = keys.map(k => resumo[k].total);
+    const faturamentos = keys.map(k => resumo[k].faturamento);
+    const lucros = keys.map(k => resumo[k].lucro);
     if (chartDisponivel()) {
-        if (graficoMensal) graficoMensal.destroy();
-        graficoMensal = new Chart(ctx, {
+        if (graficos.mensal) graficos.mensal.destroy();
+        graficos.mensal = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Faturamento (Kz)', data: valores, borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.2)', fill: true, tension: 0.4 }]
+                datasets: [
+                    { label: 'Faturamento', data: faturamentos, borderColor: '#005A4C', backgroundColor: 'rgba(0,90,76,0.2)', fill: true, tension: 0.4 },
+                    { label: 'Lucro', data: lucros, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.2)', fill: true, tension: 0.4 }
+                ]
             },
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
         });
@@ -597,73 +662,129 @@ function renderizarGraficoAnual(vendas) {
     const resumo = {};
     vendas.forEach(v => {
         const ano = new Date(v.dataHora).getFullYear();
-        if (!resumo[ano]) resumo[ano] = 0;
-        resumo[ano] += v.valorTotal || 0;
+        if (!resumo[ano]) resumo[ano] = { faturamento: 0, lucro: 0 };
+        resumo[ano].faturamento += v.valorTotal || 0;
+        resumo[ano].lucro += calcularLucroVenda(v);
     });
     const anos = Object.keys(resumo).sort();
     const ctx = document.getElementById('graficoAnual');
     if (!ctx) return;
-    const valores = anos.map(a => resumo[a]);
+    const faturamentos = anos.map(a => resumo[a].faturamento);
+    const lucros = anos.map(a => resumo[a].lucro);
     if (chartDisponivel()) {
-        if (graficoAnual) graficoAnual.destroy();
-        graficoAnual = new Chart(ctx, {
+        if (graficos.anual) graficos.anual.destroy();
+        graficos.anual = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: anos,
-                datasets: [{ label: 'Faturamento (Kz)', data: valores, backgroundColor: 'rgba(0, 90, 76, 0.7)', borderColor: '#005A4C', borderWidth: 1 }]
+                datasets: [
+                    { label: 'Faturamento', data: faturamentos, backgroundColor: 'rgba(0,90,76,0.7)' },
+                    { label: 'Lucro', data: lucros, backgroundColor: 'rgba(39,174,96,0.7)' }
+                ]
             },
             options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
         });
     }
 }
 
-// =====================
-// RESUMO DIÁRIO (VISÃO GERAL)
-// =====================
-
-function renderizarResumoDiario(vendas) {
-    const tbody = document.getElementById('corpoResumoDiario');
-    tbody.innerHTML = '';
+function renderizarGraficoMargemMensal() {
     const resumo = {};
-    vendas.forEach(v => {
-        if (!v.dataHora) return;
+    todasVendas.forEach(v => {
         const data = new Date(v.dataHora);
-        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-        if (!resumo[dataStr]) resumo[dataStr] = { total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-        resumo[dataStr].total++;
-        resumo[dataStr].faturamento += v.valorTotal || 0;
-        if (v.status === 'entregue') resumo[dataStr].entregues++;
-        else resumo[dataStr].pendentes++;
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!resumo[key]) resumo[key] = { mes, ano, faturamento: 0, lucro: 0 };
+        resumo[key].faturamento += v.valorTotal || 0;
+        resumo[key].lucro += calcularLucroVenda(v);
     });
-    const datas = Object.keys(resumo).sort((a,b)=>b.localeCompare(a));
-    datas.forEach(dataStr => {
-        const info = resumo[dataStr];
-        const dataFormatada = dataStr.split('-').reverse().join('/');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="padding:8px;">${dataFormatada}</td>
-            <td style="padding:8px; text-align:center;">${info.total}</td>
-            <td style="padding:8px; text-align:center; color:#27ae60;">${info.entregues}</td>
-            <td style="padding:8px; text-align:center; color:#E74C3C; font-weight:700;">${info.pendentes}</td>
-            <td style="padding:8px; text-align:right;">${info.faturamento.toLocaleString('pt-AO')} Kz</td>
-        `;
-        tbody.appendChild(tr);
+    const keys = Object.keys(resumo).sort();
+    const ctx = document.getElementById('graficoMargemMensal');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
     });
+    const margens = keys.map(k => {
+        const info = resumo[k];
+        return info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+    });
+    if (chartDisponivel()) {
+        if (graficos.margem) graficos.margem.destroy();
+        graficos.margem = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Margem (%)', data: margens, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2, scales: { y: { beginAtZero: true } } }
+        });
+    }
+}
+
+function renderizarGraficoTopLucro() {
+    const lucroPorProduto = {};
+    todasVendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                const nome = item.nome;
+                const qtd = item.quantidade || 1;
+                const prod = catalogo.find(p => p.nome === nome);
+                const custo = prod ? extrairValorNumerico(prod.custo) : (item.preco || 0) * 0.6;
+                const receita = (item.preco || 0) * qtd;
+                if (!lucroPorProduto[nome]) lucroPorProduto[nome] = 0;
+                lucroPorProduto[nome] += receita - custo * qtd;
+            });
+        }
+    });
+    const top = Object.entries(lucroPorProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const ctx = document.getElementById('graficoTopLucro');
+    if (!ctx) return;
+    if (top.length === 0) return;
+    if (chartDisponivel()) {
+        if (graficos.topLucro) graficos.topLucro.destroy();
+        graficos.topLucro = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: top.map(p => p[0]),
+                datasets: [{ label: 'Lucro (Kz)', data: top.map(p => p[1]), backgroundColor: '#27ae60' }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, aspectRatio: 2 }
+        });
+    }
 }
 
 // =====================
-// EXPORTAÇÃO PDF/EXCEL POR ABA
+// EXPORTAÇÕES
 // =====================
+
+function configurarExportacoes() {
+    document.getElementById('btnExportarPDFDashboard').addEventListener('click', () => exportarPDF('dashboard'));
+    document.getElementById('btnExportarExcelDashboard').addEventListener('click', () => exportarExcel('dashboard'));
+    document.getElementById('btnExportarPDFDiario').addEventListener('click', () => exportarPDF('diario'));
+    document.getElementById('btnExportarExcelDiario').addEventListener('click', () => exportarExcel('diario'));
+    document.getElementById('btnExportarPDFSemanal').addEventListener('click', () => exportarPDF('semanal'));
+    document.getElementById('btnExportarExcelSemanal').addEventListener('click', () => exportarExcel('semanal'));
+    document.getElementById('btnExportarPDFMensal').addEventListener('click', () => exportarPDF('mensal'));
+    document.getElementById('btnExportarExcelMensal').addEventListener('click', () => exportarExcel('mensal'));
+    document.getElementById('btnExportarPDFAnual').addEventListener('click', () => exportarPDF('anual'));
+    document.getElementById('btnExportarExcelAnual').addEventListener('click', () => exportarExcel('anual'));
+    document.getElementById('btnExportarPDFProdutos').addEventListener('click', () => exportarPDF('produtos'));
+    document.getElementById('btnExportarExcelProdutos').addEventListener('click', () => exportarExcel('produtos'));
+    document.getElementById('btnExportarPDFContabilidade').addEventListener('click', () => exportarPDF('contabilidade'));
+    document.getElementById('btnExportarExcelContabilidade').addEventListener('click', () => exportarExcel('contabilidade'));
+    document.getElementById('btnExportarPDFPedidos').addEventListener('click', () => exportarPDF('pedidos'));
+    document.getElementById('btnExportarExcelPedidos').addEventListener('click', () => exportarExcel('pedidos'));
+}
 
 function exportarPDF(tipo) {
     if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-        alert('Biblioteca jsPDF não carregada. Usando impressão.');
-        window.print();
+        alert('Biblioteca jsPDF não carregada.');
         return;
     }
     const { jsPDF } = jspdf;
     const doc = new jsPDF();
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.setTextColor(0, 90, 76);
     doc.text('Relatório de Vendas - Aurora Comercial', 14, 20);
     doc.setFontSize(10);
@@ -672,62 +793,63 @@ function exportarPDF(tipo) {
 
     let dados = [];
     let head = [];
+    let startY = 35;
 
-    switch (tipo) {
-        case 'geral':
-            head = [['Data', 'Pedidos', 'Entregues', 'Pendentes', 'Faturamento']];
-            const resumo = {};
-            todasVendas.forEach(v => {
-                const data = new Date(v.dataHora);
-                const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-                if (!resumo[dataStr]) resumo[dataStr] = { total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-                resumo[dataStr].total++;
-                resumo[dataStr].faturamento += v.valorTotal || 0;
-                if (v.status === 'entregue') resumo[dataStr].entregues++;
-                else resumo[dataStr].pendentes++;
-            });
-            Object.keys(resumo).sort().forEach(d => {
-                const info = resumo[d];
-                dados.push([d.split('-').reverse().join('/'), info.total, info.entregues, info.pendentes, info.faturamento.toLocaleString('pt-AO') + ' Kz']);
-            });
-            break;
-        case 'diario':
-            const dia = document.getElementById('inputDiaDiario').value;
-            let vendasDia = todasVendas.filter(v => {
-                if (!dia) return true;
-                const data = new Date(v.dataHora);
-                const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-                return dataStr === dia;
-            });
-            head = [['Data/Hora', 'Cliente', 'Telefone', 'Total', 'Status']];
-            vendasDia.forEach(v => {
-                dados.push([v.dataHora, v.nomeCliente, v.telefoneCliente, (v.valorTotal||0).toLocaleString('pt-AO') + ' Kz', v.status]);
-            });
-            break;
-        case 'semanal':
-            head = [['Semana', 'Pedidos', 'Entregues', 'Pendentes', 'Faturamento']];
-            // Reutilizar a mesma lógica da tabela semanal
-            const semanalResumo = {};
-            todasVendas.forEach(v => {
-                const data = new Date(v.dataHora);
-                const semana = Math.floor((data.getDate()-1)/7)+1;
-                const key = `${data.getFullYear()}-${data.getMonth()}-${semana}`;
-                if (!semanalResumo[key]) semanalResumo[key] = { semana, total: 0, entregues: 0, pendentes: 0, faturamento: 0 };
-                semanalResumo[key].total++;
-                semanalResumo[key].faturamento += v.valorTotal || 0;
-                if (v.status === 'entregue') semanalResumo[key].entregues++;
-                else semanalResumo[key].pendentes++;
-            });
-            Object.keys(semanalResumo).forEach(k => {
-                const info = semanalResumo[k];
-                dados.push([`Semana ${info.semana}`, info.total, info.entregues, info.pendentes, info.faturamento.toLocaleString('pt-AO') + ' Kz']);
-            });
-            break;
-        // Adicione outros casos (mensal, anual, pedidos, produtos) semelhantes
+    if (tipo === 'dashboard') {
+        head = [['Data', 'Pedidos', 'Faturamento', 'Custo', 'Lucro', 'Margem']];
+        const resumo = {};
+        todasVendas.forEach(v => {
+            if (!v.dataHora) return;
+            const data = new Date(v.dataHora);
+            const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+            if (!resumo[dataStr]) resumo[dataStr] = { total: 0, faturamento: 0, custo: 0, lucro: 0 };
+            resumo[dataStr].total++;
+            resumo[dataStr].faturamento += v.valorTotal || 0;
+            resumo[dataStr].custo += calcularCustoDaVenda(v);
+            resumo[dataStr].lucro += calcularLucroVenda(v);
+        });
+        Object.keys(resumo).sort().forEach(d => {
+            const info = resumo[d];
+            const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+            dados.push([d.split('-').reverse().join('/'), info.total, info.faturamento.toLocaleString('pt-AO')+' Kz', info.custo.toLocaleString('pt-AO')+' Kz', info.lucro.toLocaleString('pt-AO')+' Kz', margem.toFixed(1)+'%']);
+        });
+    } else if (tipo === 'produtos') {
+        head = [['ID', 'Produto', 'Qtd', 'Receita', 'Custo', 'Lucro', 'Margem']];
+        const vendasPorProduto = {};
+        todasVendas.forEach(venda => {
+            if (venda.itens) {
+                venda.itens.forEach(item => {
+                    const nome = item.nome;
+                    if (!vendasPorProduto[nome]) vendasPorProduto[nome] = { qtd: 0, receita: 0, custo: 0 };
+                    vendasPorProduto[nome].qtd += item.quantidade || 1;
+                    vendasPorProduto[nome].receita += (item.preco || 0) * (item.quantidade || 1);
+                    const prod = catalogo.find(p => p.nome === nome);
+                    if (prod) vendasPorProduto[nome].custo += extrairValorNumerico(prod.custo) * (item.quantidade || 1);
+                });
+            }
+        });
+        catalogo.forEach(prod => {
+            const info = vendasPorProduto[prod.nome] || { qtd: 0, receita: 0, custo: 0 };
+            const lucro = info.receita - info.custo;
+            const margem = info.receita > 0 ? (lucro / info.receita) * 100 : 0;
+            dados.push([prod.id || 'N/A', prod.nome, info.qtd, info.receita.toLocaleString('pt-AO')+' Kz', info.custo.toLocaleString('pt-AO')+' Kz', lucro.toLocaleString('pt-AO')+' Kz', margem.toFixed(1)+'%']);
+        });
+    } else if (tipo === 'contabilidade') {
+        // Balanço geral
+        doc.text(`Receita Total: ${document.getElementById('contReceita').textContent}`, 14, 32);
+        doc.text(`Custo Total: ${document.getElementById('contCusto').textContent}`, 14, 38);
+        doc.text(`Lucro Líquido: ${document.getElementById('contLucro').textContent}`, 14, 44);
+        doc.text(`Margem Líquida: ${document.getElementById('contMargem').textContent}`, 14, 50);
+        startY = 55;
+        head = [['Data', 'Cliente', 'Produtos', 'Receita', 'Custo', 'Lucro']];
+        const lancamentos = [...todasVendas].sort((a,b)=>new Date(b.dataHora)-new Date(a.dataHora)).slice(0,30);
+        lancamentos.forEach(v => {
+            dados.push([v.dataHora, v.nomeCliente, v.produtosResumo || '', (v.valorTotal||0).toLocaleString('pt-AO')+' Kz', calcularCustoDaVenda(v).toLocaleString('pt-AO')+' Kz', calcularLucroVenda(v).toLocaleString('pt-AO')+' Kz']);
+        });
     }
 
     doc.autoTable({
-        startY: 35,
+        startY: startY,
         head: head,
         body: dados,
         headStyles: { fillColor: [0, 90, 76], textColor: 255, fontStyle: 'bold' },
@@ -741,9 +863,56 @@ function exportarExcel(tipo) {
         alert('Biblioteca XLSX não carregada.');
         return;
     }
-    // Implementação similar ao PDF
-    // (para resumir, pode-se usar a mesma lógica e gerar arquivo .xlsx)
-    alert('Exportação Excel implementada no código completo.');
+    // Similar ao PDF, mas com dados diferentes para cada tipo
+    // (implementação pode ser simplificada para gerar um CSV/Excel básico)
+    let dados = [];
+    let headers = [];
+
+    if (tipo === 'dashboard') {
+        headers = ['Data', 'Pedidos', 'Faturamento', 'Custo', 'Lucro', 'Margem'];
+        const resumo = {};
+        todasVendas.forEach(v => {
+            if (!v.dataHora) return;
+            const data = new Date(v.dataHora);
+            const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+            if (!resumo[dataStr]) resumo[dataStr] = { total: 0, faturamento: 0, custo: 0, lucro: 0 };
+            resumo[dataStr].total++;
+            resumo[dataStr].faturamento += v.valorTotal || 0;
+            resumo[dataStr].custo += calcularCustoDaVenda(v);
+            resumo[dataStr].lucro += calcularLucroVenda(v);
+        });
+        Object.keys(resumo).sort().forEach(d => {
+            const info = resumo[d];
+            const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
+            dados.push([d.split('-').reverse().join('/'), info.total, info.faturamento, info.custo, info.lucro, margem.toFixed(1)+'%']);
+        });
+    } else if (tipo === 'produtos') {
+        headers = ['ID', 'Produto', 'Qtd', 'Receita', 'Custo', 'Lucro', 'Margem'];
+        const vendasPorProduto = {};
+        todasVendas.forEach(venda => {
+            if (venda.itens) {
+                venda.itens.forEach(item => {
+                    const nome = item.nome;
+                    if (!vendasPorProduto[nome]) vendasPorProduto[nome] = { qtd: 0, receita: 0, custo: 0 };
+                    vendasPorProduto[nome].qtd += item.quantidade || 1;
+                    vendasPorProduto[nome].receita += (item.preco || 0) * (item.quantidade || 1);
+                    const prod = catalogo.find(p => p.nome === nome);
+                    if (prod) vendasPorProduto[nome].custo += extrairValorNumerico(prod.custo) * (item.quantidade || 1);
+                });
+            }
+        });
+        catalogo.forEach(prod => {
+            const info = vendasPorProduto[prod.nome] || { qtd: 0, receita: 0, custo: 0 };
+            const lucro = info.receita - info.custo;
+            const margem = info.receita > 0 ? (lucro / info.receita) * 100 : 0;
+            dados.push([prod.id || 'N/A', prod.nome, info.qtd, info.receita, info.custo, lucro, margem.toFixed(1)+'%']);
+        });
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dados]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Relatorio');
+    XLSX.writeFile(wb, `Relatorio_${tipo}.xlsx`);
 }
 
 // =====================
@@ -774,9 +943,46 @@ window.imprimirFatura = async function(codigoRastreio) {
         const snapshot = await getDocs(q);
         if (snapshot.empty) return alert('Pedido não encontrado.');
         const venda = snapshot.docs[0].data();
-        // ... (mesma lógica de impressão da versão anterior)
-        // Gerar HTML e abrir nova janela
-        const html = `...`; // (preencher com o HTML da fatura)
+        
+        // Gerar HTML da fatura
+        const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fatura ${codigoRastreio} - Aurora</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 30px; }
+  h1 { color: #005A4C; text-align: center; }
+  h2 { color: #D4AF37; text-align: center; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background-color: #005A4C; color: white; }
+  .total { font-size: 20px; font-weight: bold; text-align: right; margin-top: 20px; }
+  .dados { margin-top: 20px; }
+  .dados p { margin: 5px 0; }
+</style>
+</head>
+<body>
+<h1>AURORA COMERCIAL</h1>
+<h2>Contribuinte: 5000048151 | Tel: +244 933 677 628</h2>
+<hr>
+<p><strong>Fatura Nº:</strong> ${codigoRastreio}</p>
+<p><strong>Data:</strong> ${venda.dataHora || ''}</p>
+<div class="dados">
+<p><strong>Cliente:</strong> ${venda.nomeCliente || ''}</p>
+<p><strong>Telefone:</strong> ${venda.telefoneCliente || ''}</p>
+<p><strong>NIF:</strong> ${venda.nifCliente || ''}</p>
+<p><strong>Morada:</strong> ${venda.moradaCliente || ''}</p>
+</div>
+<table>
+<thead><tr><th>Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+<tbody>${(venda.itens||[]).map(item=>`<tr><td>${item.nome}</td><td>${item.quantidade}</td><td>${item.preco||0}</td><td>${(item.preco||0)*(item.quantidade||1)}</td></tr>`).join('') || venda.produtosResumo || ''}</tbody>
+</table>
+<p class="total">Total a Pagar: ${(venda.valorTotal || 0).toFixed(2)} Kz</p>
+<script>window.print();</script>
+</body>
+</html>`;
+
         const win = window.open('', '_blank');
         win.document.write(html);
         win.document.close();
