@@ -69,7 +69,7 @@ body {
 .carrinho-icone { background: none; border: none; color: #FFF; font-size: 24px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; }
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
 
-/* MENU (com dropdown) */
+/* MENU */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; flex-wrap: wrap; }
 .menu-categorias ul li { position: relative; }
@@ -80,6 +80,7 @@ body {
 .menu-categorias ul li a:hover, .menu-categorias ul li a.ativo { color: var(--cor-ouro); border-bottom-color: var(--cor-ouro); background: rgba(212, 175, 55, 0.1); }
 #menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
 
+/* DROPDOWN - CORRIGIDO PARA NÃO ABRIR TODOS */
 .submenu {
     display: none;
     position: absolute;
@@ -175,7 +176,7 @@ body {
 }
 
 /* ============================================================
-   CORREÇÕES MOBILE & DROPDOWN
+   RESPONSIVIDADE MOBILE
    ============================================================ */
 @media (max-width: 768px) {
     body { padding-top: 170px; }
@@ -205,14 +206,20 @@ body {
     .menu-categorias ul.menu-aberto { display: flex; }
     .menu-categorias ul li a { padding: 12px 24px; border-bottom: none; text-align: left; }
     .menu-categorias ul li a:hover { background: var(--cor-esmeralda); }
+
+    /* No mobile, os submenus abrem como lista estática (sem position absolute) */
     .submenu {
         position: static;
         background: var(--cor-esmeralda-escuro);
         padding-left: 20px;
         border: none;
         box-shadow: none;
+        display: none; /* Escondido por padrão */
     }
-    .dropdown:hover .submenu { display: block; }
+    .dropdown:hover .submenu,
+    .dropdown.menu-aberto .submenu {
+        display: block;
+    }
 
     .grade-produtos {
         grid-template-columns: repeat(2, 1fr) !important;
