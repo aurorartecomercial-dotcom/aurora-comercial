@@ -18,7 +18,6 @@
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
-    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
 
@@ -51,6 +50,7 @@
             </div>
         </div>
 
+        <!-- MENU COMPLETO COM NOVAS CATEGORIAS -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -62,22 +62,176 @@
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html" class="ativo">Home</a></li>
-                <li><a href="#" data-categoria="eletronicos">Eletrônicos</a></li>
-                <li><a href="#" data-categoria="consolas">Consolas</a></li>
-                <li><a href="#" data-categoria="beleza">Beleza</a></li>
-                <li><a href="#" data-categoria="cozinha">Cozinha</a></li>
-                <li><a href="#" data-categoria="colunas">Colunas</a></li>
-                <li><a href="#" data-categoria="ferramentas">Ferramentas</a></li>
-                <li><a href="#" data-categoria="casa">Casa</a></li>
+                
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Eletrônicos ▾</a>
                     <ul class="submenu" role="menu">
-                        <li><a href="#" data-categoria="feminino" role="menuitem">Feminino</a></li>
-                        <li><a href="#" data-categoria="masculino" role="menuitem">Masculino</a></li>
-                        <li><a href="#" data-categoria="calcados" role="menuitem">Sapatos</a></li>
-                        <li><a href="#" data-categoria="joias" role="menuitem">Pulseiras</a></li>
+                        <li><a href="#" data-categoria="eletronicos" role="menuitem">Todos os Eletrônicos</a></li>
+                        <li><a href="#" data-categoria="smartphones" role="menuitem">Smartphones</a></li>
+                        <li><a href="#" data-categoria="tablets" role="menuitem">Tablets</a></li>
+                        <li><a href="#" data-categoria="notebooks" role="menuitem">Notebooks</a></li>
+                        <li><a href="#" data-categoria="acessorios-eletronicos" role="menuitem">Acessórios</a></li>
                     </ul>
                 </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Games & Consolas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="consolas" role="menuitem">Todos os Games</a></li>
+                        <li><a href="#" data-categoria="jogos" role="menuitem">Jogos</a></li>
+                        <li><a href="#" data-categoria="controles" role="menuitem">Controles</a></li>
+                        <li><a href="#" data-categoria="headsets" role="menuitem">Headsets</a></li>
+                        <li><a href="#" data-categoria="cadeiras-gamer" role="menuitem">Cadeiras Gamer</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Moda & Acessórios ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="feminino" role="menuitem">Moda Feminina</a></li>
+                        <li><a href="#" data-categoria="masculino" role="menuitem">Moda Masculina</a></li>
+                        <li><a href="#" data-categoria="calcados" role="menuitem">Calçados</a></li>
+                        <li><a href="#" data-categoria="joias" role="menuitem">Joias & Pulseiras</a></li>
+                        <li><a href="#" data-categoria="oculos" role="menuitem">Óculos</a></li>
+                        <li><a href="#" data-categoria="relogios" role="menuitem">Relógios</a></li>
+                        <li><a href="#" data-categoria="bolsas" role="menuitem">Bolsas & Malas</a></li>
+                        <li><a href="#" data-categoria="cintos-bones" role="menuitem">Cintos & Bonés</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Beleza & Perfumaria ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="beleza" role="menuitem">Todos os Produtos</a></li>
+                        <li><a href="#" data-categoria="maquiagem" role="menuitem">Maquiagem</a></li>
+                        <li><a href="#" data-categoria="cuidados-pele" role="menuitem">Cuidados com a Pele</a></li>
+                        <li><a href="#" data-categoria="perfumes" role="menuitem">Perfumes</a></li>
+                        <li><a href="#" data-categoria="manicure-pedicure" role="menuitem">Manicure & Pedicure</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Casa & Decoração ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="casa" role="menuitem">Casa & Utilidades</a></li>
+                        <li><a href="#" data-categoria="cozinha" role="menuitem">Cozinha</a></li>
+                        <li><a href="#" data-categoria="decoracao" role="menuitem">Decoração</a></li>
+                        <li><a href="#" data-categoria="iluminacao" role="menuitem">Iluminação</a></li>
+                        <li><a href="#" data-categoria="jardinagem" role="menuitem">Jardinagem</a></li>
+                        <li><a href="#" data-categoria="organizadores" role="menuitem">Organizadores</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Esporte & Lazer ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="esporte" role="menuitem">Todos os Esportes</a></li>
+                        <li><a href="#" data-categoria="futebol" role="menuitem">Futebol</a></li>
+                        <li><a href="#" data-categoria="fitness" role="menuitem">Fitness</a></li>
+                        <li><a href="#" data-categoria="ciclismo" role="menuitem">Ciclismo</a></li>
+                        <li><a href="#" data-categoria="camping" role="menuitem">Camping</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Infantil & Brinquedos ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="infantil" role="menuitem">Todos os Infantis</a></li>
+                        <li><a href="#" data-categoria="bebes" role="menuitem">Bebês</a></li>
+                        <li><a href="#" data-categoria="criancas" role="menuitem">Crianças (3-8 anos)</a></li>
+                        <li><a href="#" data-categoria="bonecas" role="menuitem">Bonecas</a></li>
+                        <li><a href="#" data-categoria="carrinhos" role="menuitem">Carrinhos</a></li>
+                        <li><a href="#" data-categoria="quebra-cabecas" role="menuitem">Quebra-cabeças</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Livros & Papelaria ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="livros" role="menuitem">Todos os Livros</a></li>
+                        <li><a href="#" data-categoria="livros-tecnicos" role="menuitem">Livros Técnicos</a></li>
+                        <li><a href="#" data-categoria="bestsellers" role="menuitem">Bestsellers</a></li>
+                        <li><a href="#" data-categoria="material-escolar" role="menuitem">Material Escolar</a></li>
+                        <li><a href="#" data-categoria="escritorio" role="menuitem">Escritório</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Ferramentas & Construção ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="ferramentas" role="menuitem">Ferramentas</a></li>
+                        <li><a href="#" data-categoria="eletrica" role="menuitem">Elétrica</a></li>
+                        <li><a href="#" data-categoria="hidraulica" role="menuitem">Hidráulica</a></li>
+                        <li><a href="#" data-categoria="tintas" role="menuitem">Tintas</a></li>
+                        <li><a href="#" data-categoria="construcao" role="menuitem">Construção</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Alimentos & Bebidas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="alimentos" role="menuitem">Todos os Alimentos</a></li>
+                        <li><a href="#" data-categoria="gourmet" role="menuitem">Gourmet</a></li>
+                        <li><a href="#" data-categoria="cafes-chas" role="menuitem">Cafés & Chás</a></li>
+                        <li><a href="#" data-categoria="snacks" role="menuitem">Snacks</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Saúde & Suplementos ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="saude" role="menuitem">Saúde & Bem-estar</a></li>
+                        <li><a href="#" data-categoria="vitaminas" role="menuitem">Vitaminas</a></li>
+                        <li><a href="#" data-categoria="proteinas" role="menuitem">Proteínas</a></li>
+                        <li><a href="#" data-categoria="termogenicos" role="menuitem">Termogênicos</a></li>
+                        <li><a href="#" data-categoria="equipamentos-medicao" role="menuitem">Equipamentos de Medição</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Viagem & Malas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="viagem" role="menuitem">Todos os Itens de Viagem</a></li>
+                        <li><a href="#" data-categoria="malas-mochilas" role="menuitem">Malas & Mochilas</a></li>
+                        <li><a href="#" data-categoria="necessaires" role="menuitem">Necessaires</a></li>
+                        <li><a href="#" data-categoria="travesseiros-viagem" role="menuitem">Travesseiros de Pescoço</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Música & Instrumentos ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="musica" role="menuitem">Todos os Instrumentos</a></li>
+                        <li><a href="#" data-categoria="violoes" role="menuitem">Violões</a></li>
+                        <li><a href="#" data-categoria="teclados" role="menuitem">Teclados</a></li>
+                        <li><a href="#" data-categoria="baterias" role="menuitem">Baterias</a></li>
+                        <li><a href="#" data-categoria="acessorios-musica" role="menuitem">Acessórios Musicais</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Pet Shop ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="pets" role="menuitem">Todos os Pets</a></li>
+                        <li><a href="#" data-categoria="racao" role="menuitem">Ração</a></li>
+                        <li><a href="#" data-categoria="brinquedos-pets" role="menuitem">Brinquedos</a></li>
+                        <li><a href="#" data-categoria="banho-tosa" role="menuitem">Banho & Tosa</a></li>
+                        <li><a href="#" data-categoria="roupas-pets" role="menuitem">Roupas Pets</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Escritório & Informática ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="informatica" role="menuitem">Informática & Escritório</a></li>
+                        <li><a href="#" data-categoria="cadeiras-escritorio" role="menuitem">Cadeiras de Escritório</a></li>
+                        <li><a href="#" data-categoria="mesas" role="menuitem">Mesas</a></li>
+                        <li><a href="#" data-categoria="impressoras" role="menuitem">Impressoras</a></li>
+                        <li><a href="#" data-categoria="material-escritorio" role="menuitem">Material de Escritório</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="#" data-categoria="colunas">Colunas</a></li>
                 <li><a href="#" data-categoria="automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
@@ -85,22 +239,21 @@
         </nav>
     </header>
 
+    <!-- Conteúdo principal (mantido igual) -->
     <main id="conteudo-principal" role="main">
-        <!-- CARROSSEL -->
+        <!-- Carrossel -->
         <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
                         <div class="slide-texto">
                             <h2>🔥 Promoção Gamer!</h2>
-                            <p> PS5, Xbox e Nintendo Switch com até 20% OFF</p>
+                            <p>PS5, Xbox e Nintendo Switch com até 20% OFF</p>
                             <a href="#" class="btn-slide">Aproveitar Oferta</a>
                         </div>
                     </div>
                     <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" />
                         <div class="slide-texto">
                             <h2>⚡ Sinta a Ação</h2>
@@ -109,7 +262,6 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" />
                         <div class="slide-texto">
                             <h2>💅 📱 Eleve o seu Estilo</h2>
@@ -324,7 +476,6 @@
 
     <script type="module" src="js/app.js?v=3"></script>
     
-    <!-- 👇 BOTÃO FLUTUANTE COM O NÚMERO OFICIAL -->
     <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>
