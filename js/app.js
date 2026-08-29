@@ -26,33 +26,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregando.textContent = '⏳ Carregando produtos...';
     }
 
-    // ✅ Tenta carregar do cache local primeiro (instantâneo)
+    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
+    let catalogoCarregado = false;
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
         try {
             const cache = JSON.parse(cachedStr);
             if (cache.data && cache.data.length > 0) {
                 catalogo = cache.data;
-                renderizarTudo();
-                if (carregando) carregando.style.display = 'none';
-                atualizarCatalogoDoFirebase();
-                return;
+                catalogoCarregado = true;
             }
         } catch (e) { console.warn('Cache inválido:', e); }
     }
 
-    // Sem cache, busca do Firebase
-    try {
-        catalogo = await carregarCatalogo();
-    } catch (e) {
-        console.error('Erro ao carregar catálogo:', e);
-        catalogo = [];
+    // ✅ 2. Se não tem cache, busca do Firebase
+    if (!catalogoCarregado) {
+        try {
+            catalogo = await carregarCatalogo();
+        } catch (e) {
+            console.error('Erro ao carregar catálogo:', e);
+            catalogo = [];
+        }
     }
 
+    // ✅ 3. Renderiza os produtos
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // ✅ Configuração dos filtros
+    // Se veio do cache, atualiza em segundo plano com os dados do Firebase
+    if (catalogoCarregado) {
+        atualizarCatalogoDoFirebase();
+    }
+
+    // ✅ 4. Configuração dos filtros (sempre executada!)
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -145,7 +151,6 @@ document.addEventListener('click', function(e) {
         const nome = btnAdd.dataset.nome;
         const preco = btnAdd.dataset.preco;
         const estoque = parseInt(btnAdd.dataset.estoque) || 0;
-        // ✅ CORREÇÃO: usa o preço numérico se disponível
         const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
         if (precoNum > 0) {
             adicionarProdutoCarrinho(nome, preco, estoque);
@@ -178,6 +183,8 @@ function renderizarTudo() {
 async function atualizarCatalogoDoFirebase() {
     try {
         catalogo = await carregarCatalogo();
+        // Após atualizar o catálogo, re-renderiza a lista para refletir os dados mais recentes
+        renderizarTudo();
     } catch (e) {
         console.warn('Erro ao atualizar do Firebase:', e);
     }
