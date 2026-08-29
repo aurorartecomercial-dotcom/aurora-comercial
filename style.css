@@ -24,6 +24,7 @@ html, body {
 body {
     background: var(--cor-fundo);
     font-family: var(--fonte-corpo);
+    padding-top: 110px;
     color: var(--cor-texto);
     -webkit-font-smoothing: antialiased;
 }
@@ -68,15 +69,34 @@ body {
 .carrinho-icone { background: none; border: none; color: #FFF; font-size: 24px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; }
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
 
-/* MENU */
+/* MENU (com dropdown) */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; flex-wrap: wrap; }
+.menu-categorias ul li { position: relative; }
 .menu-categorias ul li a {
     display: block; padding: 8px 12px; color: #FFF; text-decoration: none;
     font-size: 14px; font-weight: 500; transition: 0.2s; white-space: nowrap; border-bottom: 3px solid transparent;
 }
-.menu-categorias ul li a:hover, .menu-categorias ul li a.ativo { color: var(--cor-ouro); border-bottom-color: var(--cor-ouro); }
+.menu-categorias ul li a:hover, .menu-categorias ul li a.ativo { color: var(--cor-ouro); border-bottom-color: var(--cor-ouro); background: rgba(212, 175, 55, 0.1); }
 #menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--cor-esmeralda);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    padding: 8px 0;
+    border-radius: 0 0 8px 8px;
+    min-width: 180px;
+    border: 1px solid var(--cor-ouro);
+    border-top: none;
+    z-index: 1000;
+}
+.dropdown:hover .submenu { display: block; }
+.submenu li a { color: #FFF !important; padding: 10px 16px; border-bottom: none; }
+.submenu li a:hover { background: var(--cor-ouro); color: #000 !important; }
 
 /* CARROSSEL */
 .carrossel-ofertas { margin: 20px auto 0; max-width: 1480px; border-radius: var(--raio-borda); overflow: hidden; position: relative; box-shadow: var(--sombra-card); border: 2px solid var(--cor-ouro); }
@@ -96,7 +116,7 @@ body {
 .indicador { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; border: none; }
 .indicador.ativo { background: var(--cor-ouro); transform: scale(1.2); }
 
-/* GRID PRODUTOS - CRÍTICO PARA MOBILE */
+/* GRID PRODUTOS */
 .grade-produtos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -140,7 +160,7 @@ body {
 .btn-finalizar { width: 100%; padding: 12px; background: #25D366; color: #FFF; border: none; border-radius: 40px; font-weight: 700; cursor: pointer; }
 .btn-finalizar:hover { background: #1ebd58; }
 
-/* LAYOUT CATEGORIA RESPONSIVO */
+/* LAYOUT CATEGORIA */
 .categoria-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -153,25 +173,9 @@ body {
     box-shadow: var(--sombra-card); height: fit-content; border: 1px solid var(--cor-ouro-claro);
     min-width: 0;
 }
-@media (max-width: 900px) {
-    .categoria-layout { grid-template-columns: 1fr; }
-}
-
-/* RODAPÉ */
-.rodape-profissional { background: var(--cor-esmeralda-escuro); border-top: 3px solid var(--cor-ouro); padding: 40px 24px 16px; margin-top: 40px; width: 100%; }
-.rodape-grid { max-width: 1480px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; margin-bottom: 24px; }
-.rodape-coluna h3, .rodape-coluna h4 { color: var(--cor-ouro); margin-bottom: 10px; }
-.rodape-coluna p, .rodape-coluna li { font-size: 13px; line-height: 1.6; color: #DDD; }
-.rodape-coluna ul { list-style: none; }
-.rodape-coluna ul li a { color: #DDD; text-decoration: none; }
-.rodape-copyright { text-align: center; font-size: 12px; color: #AAA; border-top: 1px solid var(--cor-ouro); padding-top: 16px; max-width: 1480px; margin: 0 auto; }
-
-/* BOTÃO WHATSAPP */
-.whatsapp-float { position: fixed; bottom: 20px; right: 20px; background: #25D366; color: #fff; border-radius: 50px; padding: 12px 24px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; text-decoration: none; font-size: 16px; display: flex; align-items: center; gap: 8px; border: 2px solid #fff; }
-.whatsapp-float:hover { transform: scale(1.05); }
 
 /* ============================================================
-   RESPONSIVIDADE MOBILE (CRÍTICO)
+   CORREÇÕES MOBILE & DROPDOWN
    ============================================================ */
 @media (max-width: 768px) {
     body { padding-top: 170px; }
@@ -182,7 +186,6 @@ body {
     .btn-entrar { font-size: 11px; padding: 4px 12px; }
     .carrinho-icone { font-size: 20px; }
 
-    /* Menu mobile */
     .menu-categorias { padding: 0; }
     #menuToggle { display: block; padding: 10px; }
     .menu-categorias ul {
@@ -202,33 +205,44 @@ body {
     .menu-categorias ul.menu-aberto { display: flex; }
     .menu-categorias ul li a { padding: 12px 24px; border-bottom: none; text-align: left; }
     .menu-categorias ul li a:hover { background: var(--cor-esmeralda); }
+    .submenu {
+        position: static;
+        background: var(--cor-esmeralda-escuro);
+        padding-left: 20px;
+        border: none;
+        box-shadow: none;
+    }
+    .dropdown:hover .submenu { display: block; }
 
-    /* Grid produtos mobile - 2 colunas */
     .grade-produtos {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px;
         padding: 0 10px;
     }
-    .produto-imagem { height: 130px; }
-    .produto-info h3 { font-size: 12px; }
-    .preco { font-size: 15px; }
+    .produto-imagem { height: 130px !important; }
+    .produto-info h3 { font-size: 12px !important; word-wrap: break-word; }
+    .preco { font-size: 15px !important; }
 
-    /* Vitrine */
     .vitrine-container {
         grid-template-columns: 1fr !important;
         padding: 0 10px !important;
     }
     .filtros-sidebar { width: 100%; margin-bottom: 15px; }
 
-    /* Carrossel */
     .slide-texto h2 { font-size: 20px; }
     .slide-texto p { font-size: 14px; }
     .slide { height: 180px; }
 
-    /* Balanço */
     .secao-balanco { padding: 16px; }
     .painel-faturamento { grid-template-columns: 1fr 1fr; }
-    
-    /* Carrinho */
     .carrinho-sidebar { max-width: 100%; }
+}
+
+/* ============================================================
+   LAYOUT CATEGORIA - SIDEBAR EM CIMA NO MOBILE
+   ============================================================ */
+@media (max-width: 900px) {
+    .categoria-layout {
+        grid-template-columns: 1fr !important;
+    }
 }
