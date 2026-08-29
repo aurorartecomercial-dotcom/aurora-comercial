@@ -745,3 +745,85 @@ a:focus-visible {
     outline: 3px solid var(--cor-ouro);
     outline-offset: 2px;
 }
+/* ============================================================
+   MENU SIMPLIFICADO - SEM DROPDOWNS PROBLEMÁTICOS
+   ============================================================ */
+.menu-categorias ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.menu-categorias ul li {
+    position: relative;
+}
+.menu-categorias ul li a {
+    display: block;
+    padding: 10px 14px;
+    color: #FFF;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.2s;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+}
+.menu-categorias ul li a:hover,
+.menu-categorias ul li a.ativo {
+    color: var(--cor-ouro);
+    border-bottom-color: var(--cor-ouro);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+/* ============================================================
+   FILTROS LATERAIS NA PÁGINA DE CATEGORIA
+   ============================================================ */
+.filtros-sidebar .subcategoria-link {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    text-decoration: none;
+    color: #666;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.filtros-sidebar .subcategoria-link:hover {
+    background: var(--cor-esmeralda-claro);
+    color: var(--cor-esmeralda);
+}
+.filtros-sidebar .subcategoria-link.ativa {
+    background: var(--cor-esmeralda-claro);
+    color: var(--cor-esmeralda);
+    font-weight: 600;
+}
+
+/* ============================================================
+   RESPONSIVIDADE DO MENU
+   ============================================================ */
+@media (max-width: 768px) {
+    .menu-categorias ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: var(--cor-esmeralda-escuro);
+        padding: 10px 0;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 999;
+        border-bottom: 2px solid var(--cor-ouro);
+    }
+    .menu-categorias ul.menu-aberto {
+        display: flex;
+    }
+    .menu-categorias ul li a {
+        padding: 12px 24px;
+        border-bottom: none;
+        text-align: left;
+    }
+    .menu-categorias ul li a:hover {
+        background: var(--cor-esmeralda);
+    }
+}

@@ -8,29 +8,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=4" />
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
 </head>
 <body>
 
-    <!-- TOAST -->
     <div id="toast-notificacao" role="alert" aria-live="polite">
         <span id="toastMensagem">Adicionado ao carrinho!</span>
         <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
     </div>
     <div class="carrinho-overlay" id="carrinhoOverlay"></div>
 
-    <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <!-- 👇 LOGO LEVA PARA A PÁGINA INICIAL -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
             </a>
-
             <form class="busca-container" role="search" onsubmit="event.preventDefault();">
                 <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
                 <button type="submit" aria-label="Pesquisar">🔍</button>
@@ -45,8 +41,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- MENU COM BOTÃO DE 4 PONTINHOS -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -56,32 +50,29 @@
                     <rect x="14" y="14" width="6" height="6" rx="1" />
                 </svg>
             </button>
-
             <ul id="menuCategorias">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
-                <li><a href="categoria.html?cat=consolas">Consolas</a></li>
+                <li><a href="categoria.html?cat=games">Games & Consolas</a></li>
+                <li><a href="categoria.html?cat=moda">Moda & Acessórios</a></li>
                 <li><a href="categoria.html?cat=beleza">Beleza</a></li>
-                <li><a href="categoria.html?cat=cozinha">Cozinha</a></li>
-                <li><a href="categoria.html?cat=colunas">Colunas</a></li>
+                <li><a href="categoria.html?cat=casa">Casa & Decoração</a></li>
+                <li><a href="categoria.html?cat=esporte">Esporte</a></li>
+                <li><a href="categoria.html?cat=infantil">Infantil</a></li>
+                <li><a href="categoria.html?cat=livros">Livros & Papelaria</a></li>
                 <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
-                <li><a href="categoria.html?cat=casa">Casa</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=feminino" role="menuitem">Feminino</a></li>
-                        <li><a href="categoria.html?cat=masculino" role="menuitem">Masculino</a></li>
-                        <li><a href="categoria.html?cat=calcados" role="menuitem">Sapatos</a></li>
-                        <li><a href="categoria.html?cat=joias" role="menuitem">Pulseiras</a></li>
-                    </ul>
-                </li>
-                <li><a href="categoria.html?cat=automoveis">Carros</a></li>
+                <li><a href="categoria.html?cat=alimentos">Alimentos</a></li>
+                <li><a href="categoria.html?cat=saude">Saúde</a></li>
+                <li><a href="categoria.html?cat=viagem">Viagem</a></li>
+                <li><a href="categoria.html?cat=musica">Música</a></li>
+                <li><a href="categoria.html?cat=pets">Pet Shop</a></li>
+                <li><a href="categoria.html?cat=escritorio">Escritório</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
+                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL DA CATEGORIA -->
     <main id="conteudo-categoria" style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
         <div class="breadcrumb">
             <a href="index.html">Home</a> &gt; 
@@ -90,16 +81,35 @@
 
         <h1 id="tituloCategoria" style="color:var(--cor-esmeralda); font-size: 2rem; margin: 20px 0 10px;">Produtos</h1>
 
-        <div id="carregandoCategoria" style="text-align:center; padding:40px; color:#999;">Carregando produtos desta categoria...</div>
-        
-        <div class="grade-produtos" id="gradeCategoria"></div>
-        
-        <div id="nenhumProduto" style="display:none; text-align:center; padding:60px 20px; color:#999; font-size:16px;">
-            Nenhum produto encontrado nesta categoria.
+        <div style="display:grid; grid-template-columns: 240px 1fr; gap: 24px;">
+            <aside class="filtros-sidebar">
+                <h3>Subcategorias</h3>
+                <div id="subcategoriasLista"></div>
+                <h3 style="margin-top:20px;">Filtrar por preço</h3>
+                <div class="filtro-preco">
+                    <label>Mínimo: <span id="precoMinLabelCat">0</span> Kz</label>
+                    <input type="range" id="precoMinCat" min="0" max="500000" value="0" step="1000" />
+                    <label style="margin-top:10px;">Máximo: <span id="precoMaxLabelCat">500000</span> Kz</label>
+                    <input type="range" id="precoMaxCat" min="0" max="500000" value="500000" step="1000" />
+                </div>
+                <h3 style="margin-top:20px;">Ordenar</h3>
+                <select id="ordenarCat">
+                    <option value="ordem">Destaque</option>
+                    <option value="preco-asc">Menor preço</option>
+                    <option value="preco-desc">Maior preço</option>
+                    <option value="nome">Nome A-Z</option>
+                </select>
+            </aside>
+            <section>
+                <div id="carregandoCategoria" style="text-align:center; padding:40px; color:#999;">Carregando produtos...</div>
+                <div class="grade-produtos" id="gradeCategoria"></div>
+                <div id="nenhumProduto" style="display:none; text-align:center; padding:60px 20px; color:#999; font-size:16px;">
+                    Nenhum produto encontrado nesta categoria.
+                </div>
+            </section>
         </div>
     </main>
 
-    <!-- CARRINHO LATERAL -->
     <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
         <div class="carrinho-header">
             <h2>🛒 Minha Sacola</h2>
@@ -115,7 +125,6 @@
         </div>
     </aside>
 
-    <!-- MODAL DO CLIENTE -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
             <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
@@ -139,7 +148,6 @@
         </div>
     </div>
 
-    <!-- RODAPÉ -->
     <footer class="rodape-profissional" style="margin-top:40px;">
         <div class="rodape-grid">
             <div class="rodape-coluna">
@@ -163,21 +171,11 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <!-- ✅ BOTÃO FLUTUANTE DO WHATSAPP -->
     <a href="https://wa.me/244925328181?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>
 
-    <script type="module" src="js/categoria.js?v=3"></script>
-    <script type="module" src="js/app.js?v=3"></script> <!-- Reutiliza a lógica do carrinho global -->
-
-    <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker registrado com sucesso!'))
-                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
-        }
-    </script>
+    <script type="module" src="js/categoria.js?v=4"></script>
+    <script type="module" src="js/app.js?v=4"></script>
 </body>
 </html>
