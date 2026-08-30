@@ -28,7 +28,6 @@
     <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <!-- 👇 LOGO AGORA É UM LINK PARA A HOME -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
@@ -49,7 +48,6 @@
             </div>
         </div>
 
-        <!-- MENU COM BOTÃO DE 4 PONTINHOS -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -59,9 +57,8 @@
                     <rect x="14" y="14" width="6" height="6" rx="1" />
                 </svg>
             </button>
-
             <ul id="menuCategorias">
-                <li><a href="index.html" data-categoria="todos">Todos</a></li>
+                <li><a href="index.html">Home</a></li>
                 <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
                 <li><a href="index.html#?cat=consolas">Consolas</a></li>
                 <li><a href="index.html#?cat=beleza">Beleza</a></li>
@@ -79,12 +76,38 @@
                     </ul>
                 </li>
                 <li><a href="index.html#?cat=automoveis">Carros</a></li>
+                <!-- NOVAS CATEGORIAS AGRUPADAS -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">📂 Mais Categorias ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="index.html#?cat=papelaria" role="menuitem">🏫 Papelaria</a></li>
+                        <li><a href="index.html#?cat=jardinagem" role="menuitem">🌱 Jardinagem</a></li>
+                        <li><a href="index.html#?cat=energia-solar" role="menuitem">☀️ Energia Solar</a></li>
+                        <li><a href="index.html#?cat=seguranca" role="menuitem">📹 Segurança</a></li>
+                        <li><a href="index.html#?cat=perfumaria" role="menuitem">💄 Perfumaria</a></li>
+                        <li><a href="index.html#?cat=relogios" role="menuitem">⌚ Relógios</a></li>
+                        <li><a href="index.html#?cat=oculos" role="menuitem">🕶️ Óculos</a></li>
+                        <li><a href="index.html#?cat=malas-mochilas" role="menuitem">🎒 Malas e Mochilas</a></li>
+                        <li><a href="index.html#?cat=instrumentos" role="menuitem">🎸 Instrumentos Musicais</a></li>
+                        <li><a href="index.html#?cat=artesanato" role="menuitem">🎨 Artesanato</a></li>
+                        <li><a href="index.html#?cat=festas" role="menuitem">🎉 Festas</a></li>
+                        <li><a href="index.html#?cat=automotivo" role="menuitem">🚗 Automotivo</a></li>
+                        <li><a href="index.html#?cat=construcao" role="menuitem">🏗️ Construção</a></li>
+                        <li><a href="index.html#?cat=limpeza" role="menuitem">🧼 Limpeza</a></li>
+                        <li><a href="index.html#?cat=saude" role="menuitem">💊 Saúde</a></li>
+                        <li><a href="index.html#?cat=eletrodomesticos" role="menuitem">🧊 Eletrodomésticos</a></li>
+                        <li><a href="index.html#?cat=gamer" role="menuitem">🎮 Acessórios Gamer</a></li>
+                        <li><a href="index.html#?cat=fotografia" role="menuitem">📷 Fotografia</a></li>
+                        <li><a href="index.html#?cat=utensilios-cozinha" role="menuitem">🍽️ Utensílios de Cozinha</a></li>
+                        <li><a href="index.html#?cat=viagem" role="menuitem">🧳 Viagem</a></li>
+                    </ul>
+                </li>
                 <li><a href="blog.html">📖 Blog</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- BANNER DE INSTALAÇÃO DO APP (FICA DENTRO DA PÁGINA) -->
+    <!-- BANNER DE INSTALAÇÃO DO APP -->
     <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
         <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
             <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
@@ -95,7 +118,7 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO (com breadcrumb) -->
+    <!-- CONTEÚDO -->
     <div class="container-detalhe">
         <div class="breadcrumb">
             <a href="index.html">Home</a> &gt; 
@@ -174,12 +197,10 @@
 
     <script type="module" src="js/detalhe-app.js?v=3"></script>
 
-    <!-- ✅ BOTÃO FLUTUANTE DO WHATSAPP -->
     <a href="https://wa.me/244925328181?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>
 
-    <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
@@ -188,7 +209,6 @@
         }
     </script>
 
-    <!-- ===== BOTÃO DE INSTALAÇÃO DENTRO DA PÁGINA E GUIA IOS ===== -->
     <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
             <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
@@ -203,51 +223,34 @@
     </div>
 
     <script>
-        // Detectar se já está instalado
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
         const banner = document.getElementById('pwa-install-banner');
-        
-        // Se NÃO estiver instalado, mostra o banner
-        if (!isStandalone) {
-            banner.style.display = 'block';
-        }
+        if (!isStandalone) banner.style.display = 'block';
 
-        // === Lógica de Instalação ===
         let deferredPrompt = null;
         const btnInstalar = document.getElementById('btn-instalar-inline');
         const btnFecharBanner = document.getElementById('btn-fechar-banner');
 
-        // Captura o evento de instalação (funciona no Android e Desktop)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             banner.style.display = 'block';
         });
 
-        // Ação do botão "Instalar Agora"
         btnInstalar.addEventListener('click', async () => {
             if (deferredPrompt) {
-                // ANDROID / DESKTOP: Abre a janela nativa de instalação
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    banner.style.display = 'none';
-                }
+                if (outcome === 'accepted') banner.style.display = 'none';
                 deferredPrompt = null;
             } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                // IPHONE: Mostra o guia manual (porque a Apple bloqueia a instalação automática)
                 document.getElementById('ios-guide-modal').style.display = 'flex';
             } else {
                 alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');
             }
         });
 
-        // Botão para fechar o banner
-        btnFecharBanner.addEventListener('click', () => {
-            banner.style.display = 'none';
-        });
-
-        // Fechar guia do iPhone
+        btnFecharBanner.addEventListener('click', () => { banner.style.display = 'none'; });
         document.getElementById('btn-fechar-guia-ios').addEventListener('click', () => {
             document.getElementById('ios-guide-modal').style.display = 'none';
         });

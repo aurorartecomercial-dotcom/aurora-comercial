@@ -18,7 +18,6 @@
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
-    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
 
@@ -79,6 +78,32 @@
                     </ul>
                 </li>
                 <li><a href="#" data-categoria="automoveis">Carros</a></li>
+                <!-- NOVAS CATEGORIAS AGRUPADAS -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">📂 Mais Categorias ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="papelaria" role="menuitem">🏫 Papelaria</a></li>
+                        <li><a href="#" data-categoria="jardinagem" role="menuitem">🌱 Jardinagem</a></li>
+                        <li><a href="#" data-categoria="energia-solar" role="menuitem">☀️ Energia Solar</a></li>
+                        <li><a href="#" data-categoria="seguranca" role="menuitem">📹 Segurança</a></li>
+                        <li><a href="#" data-categoria="perfumaria" role="menuitem">💄 Perfumaria</a></li>
+                        <li><a href="#" data-categoria="relogios" role="menuitem">⌚ Relógios</a></li>
+                        <li><a href="#" data-categoria="oculos" role="menuitem">🕶️ Óculos</a></li>
+                        <li><a href="#" data-categoria="malas-mochilas" role="menuitem">🎒 Malas e Mochilas</a></li>
+                        <li><a href="#" data-categoria="instrumentos" role="menuitem">🎸 Instrumentos Musicais</a></li>
+                        <li><a href="#" data-categoria="artesanato" role="menuitem">🎨 Artesanato</a></li>
+                        <li><a href="#" data-categoria="festas" role="menuitem">🎉 Festas</a></li>
+                        <li><a href="#" data-categoria="automotivo" role="menuitem">🚗 Automotivo</a></li>
+                        <li><a href="#" data-categoria="construcao" role="menuitem">🏗️ Construção</a></li>
+                        <li><a href="#" data-categoria="limpeza" role="menuitem">🧼 Limpeza</a></li>
+                        <li><a href="#" data-categoria="saude" role="menuitem">💊 Saúde</a></li>
+                        <li><a href="#" data-categoria="eletrodomesticos" role="menuitem">🧊 Eletrodomésticos</a></li>
+                        <li><a href="#" data-categoria="gamer" role="menuitem">🎮 Acessórios Gamer</a></li>
+                        <li><a href="#" data-categoria="fotografia" role="menuitem">📷 Fotografia</a></li>
+                        <li><a href="#" data-categoria="utensilios-cozinha" role="menuitem">🍽️ Utensílios de Cozinha</a></li>
+                        <li><a href="#" data-categoria="viagem" role="menuitem">🧳 Viagem</a></li>
+                    </ul>
+                </li>
                 <li><a href="blog.html">📖 Blog</a></li>
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
             </ul>
@@ -91,7 +116,6 @@
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
                         <div class="slide-texto">
                             <h2>🔥 Promoção Gamer!</h2>
@@ -100,7 +124,6 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" />
                         <div class="slide-texto">
                             <h2>⚡ Sinta a Ação</h2>
@@ -109,7 +132,6 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" />
                         <div class="slide-texto">
                             <h2>💅 📱 Eleve o seu Estilo</h2>
@@ -302,6 +324,26 @@
                     <li><a href="#" onclick="window.filtrarPorCategoria('cozinha')">Cozinha</a></li>
                     <li><a href="#" onclick="window.filtrarPorCategoria('casa')">Casa</a></li>
                     <li><a href="#" onclick="window.filtrarPorCategoria('automoveis')">Carros</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('papelaria')">Papelaria</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('jardinagem')">Jardinagem</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('energia-solar')">Energia Solar</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('seguranca')">Segurança</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('perfumaria')">Perfumaria</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('relogios')">Relógios</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('oculos')">Óculos</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('malas-mochilas')">Malas e Mochilas</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('instrumentos')">Instrumentos Musicais</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('artesanato')">Artesanato</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('festas')">Festas</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('automotivo')">Automotivo</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('construcao')">Construção</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('limpeza')">Limpeza</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('saude')">Saúde</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('eletrodomesticos')">Eletrodomésticos</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('gamer')">Acessórios Gamer</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('fotografia')">Fotografia</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('utensilios-cozinha')">Utensílios de Cozinha</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('viagem')">Viagem</a></li>
                 </ul>
             </div>
             <div class="rodape-coluna">

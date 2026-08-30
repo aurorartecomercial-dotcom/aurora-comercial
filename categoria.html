@@ -25,7 +25,6 @@
     <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <!-- 👇 LOGO LEVA PARA A PÁGINA INICIAL -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
@@ -46,7 +45,6 @@
             </div>
         </div>
 
-        <!-- MENU COM BOTÃO DE 4 PONTINHOS -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -56,7 +54,6 @@
                     <rect x="14" y="14" width="6" height="6" rx="1" />
                 </svg>
             </button>
-
             <ul id="menuCategorias">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
@@ -76,6 +73,32 @@
                     </ul>
                 </li>
                 <li><a href="categoria.html?cat=automoveis">Carros</a></li>
+                <!-- NOVAS CATEGORIAS AGRUPADAS -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">📂 Mais Categorias ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=papelaria" role="menuitem">🏫 Papelaria</a></li>
+                        <li><a href="categoria.html?cat=jardinagem" role="menuitem">🌱 Jardinagem</a></li>
+                        <li><a href="categoria.html?cat=energia-solar" role="menuitem">☀️ Energia Solar</a></li>
+                        <li><a href="categoria.html?cat=seguranca" role="menuitem">📹 Segurança</a></li>
+                        <li><a href="categoria.html?cat=perfumaria" role="menuitem">💄 Perfumaria</a></li>
+                        <li><a href="categoria.html?cat=relogios" role="menuitem">⌚ Relógios</a></li>
+                        <li><a href="categoria.html?cat=oculos" role="menuitem">🕶️ Óculos</a></li>
+                        <li><a href="categoria.html?cat=malas-mochilas" role="menuitem">🎒 Malas e Mochilas</a></li>
+                        <li><a href="categoria.html?cat=instrumentos" role="menuitem">🎸 Instrumentos Musicais</a></li>
+                        <li><a href="categoria.html?cat=artesanato" role="menuitem">🎨 Artesanato</a></li>
+                        <li><a href="categoria.html?cat=festas" role="menuitem">🎉 Festas</a></li>
+                        <li><a href="categoria.html?cat=automotivo" role="menuitem">🚗 Automotivo</a></li>
+                        <li><a href="categoria.html?cat=construcao" role="menuitem">🏗️ Construção</a></li>
+                        <li><a href="categoria.html?cat=limpeza" role="menuitem">🧼 Limpeza</a></li>
+                        <li><a href="categoria.html?cat=saude" role="menuitem">💊 Saúde</a></li>
+                        <li><a href="categoria.html?cat=eletrodomesticos" role="menuitem">🧊 Eletrodomésticos</a></li>
+                        <li><a href="categoria.html?cat=gamer" role="menuitem">🎮 Acessórios Gamer</a></li>
+                        <li><a href="categoria.html?cat=fotografia" role="menuitem">📷 Fotografia</a></li>
+                        <li><a href="categoria.html?cat=utensilios-cozinha" role="menuitem">🍽️ Utensílios de Cozinha</a></li>
+                        <li><a href="categoria.html?cat=viagem" role="menuitem">🧳 Viagem</a></li>
+                    </ul>
+                </li>
                 <li><a href="blog.html">📖 Blog</a></li>
             </ul>
         </nav>
@@ -169,9 +192,8 @@
     </a>
 
     <script type="module" src="js/categoria.js?v=3"></script>
-    <script type="module" src="js/app.js?v=3"></script> <!-- Reutiliza a lógica do carrinho global -->
+    <script type="module" src="js/app.js?v=3"></script>
 
-    <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
