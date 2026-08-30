@@ -347,6 +347,7 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
+// ✅ FUNÇÃO CORRIGIDA: gera código de rastreio manualmente e inclui no documento
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
@@ -357,7 +358,11 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 
     const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }));
 
+    // ✅ GERAR CÓDIGO DE RASTREIO AQUI (para não depender do updateDoc)
+    const codigoRastreio = 'AURORA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
     const novaVenda = {
+        codigoRastreio: codigoRastreio,
         dataHora: dataHoraFormatada,
         produtosResumo: produtosResumo,
         valorTotal: valorTotalPedido,
@@ -382,7 +387,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             user = cred.user;
         } catch (e) {
             console.error('Erro autenticação anónima:', e);
-            // Se não conseguir autenticar, salva localmente e avisa
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
             historicoLocal.push(novaVenda);
             localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
@@ -395,28 +399,28 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 
     try {
         const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
-        const codigoRastreio = 'AURORA-' + docRef.id.slice(-6).toUpperCase();
-        await updateDoc(doc(db, 'vendas', docRef.id), { codigoRastreio: codigoRastreio });
-        
-        await atualizarEstoque(itensVenda);
-        
+        // O código já está no documento, não precisa de updateDoc
+
         dadosVendaTemp.codigoRastreio = codigoRastreio;
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
         
+        // ✅ TENTA ATUALIZAR O ESTOQUE, MAS NÃO BLOQUEIA O PEDIDO SE FALHAR
+        await atualizarEstoque(itensVenda);
+
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
     } catch (e) {
         console.error('Erro ao salvar venda no Firestore:', e);
-        // Fallback: salva localmente
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
-        alert('⚠️ Não foi possível contactar o servidor. Pedido salvo localmente. Envie-nos uma mensagem no WhatsApp com o código: ' + dataHoraFormatada);
+        alert('⚠️ Não foi possível contactar o servidor. Pedido salvo localmente. Envie-nos uma mensagem no WhatsApp com o código: ' + codigoRastreio);
     }
 }
 
+// ✅ FUNÇÃO CORRIGIDA: atualiza estoque com try/catch e não interrompe o fluxo
 async function atualizarEstoque(itensVenda) {
     try {
         const produtosSnap = await getDocs(collection(db, 'produtos'));
@@ -436,6 +440,7 @@ async function atualizarEstoque(itensVenda) {
             }
         }
     } catch (e) {
-        console.error('Erro ao atualizar estoque:', e);
+        console.warn('Não foi possível atualizar o estoque automaticamente:', e);
+        // Não bloqueia o pedido
     }
 }
