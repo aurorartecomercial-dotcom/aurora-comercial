@@ -4,80 +4,63 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="paginaTitulo">Categoria - Aurora Comercial</title>
-    <meta name="description" content="Produtos da categoria selecionada na Aurora Comercial." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=8" />
+    <link rel="stylesheet" href="style.css?v=9" />
     <link rel="icon" type="image/png" href="logo auro.png" />
+    <style>
+        .carrinho-sidebar, #modalCliente { display: none !important; }
+        .carrinho-sidebar.ativo { display: flex !important; }
+        #modalCliente.ativo { display: flex !important; }
+    </style>
 </head>
 <body>
-    <div id="toast-notificacao" role="alert" aria-live="polite">
-        <span id="toastMensagem">Adicionado ao carrinho!</span>
-        <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
-    </div>
     <div class="carrinho-overlay" id="carrinhoOverlay"></div>
 
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo auro.png" alt="Logo Aurora Comercial" />
-                <span>Aurora<br /><span>Comercial</span></span>
-            </a>
-            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
-                <button type="submit" aria-label="Pesquisar">🔍</button>
-            </form>
+            <a href="index.html" class="logo"><img src="logo auro.png" alt="Logo" /><span>Aurora<br /><span>Comercial</span></span></a>
+            <form class="busca-container" onsubmit="event.preventDefault();"><input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" /><button type="submit">🔍</button></form>
             <div class="header-icones">
-                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small> Conta
-                </button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
+                <button class="btn-entrar" id="btnEntrar"><small>Olá, faça seu login</small> Conta</button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
             </div>
         </div>
-        <nav class="menu-categorias" aria-label="Categorias">
-            <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
-            </button>
+        <nav class="menu-categorias">
+            <button id="menuToggle" aria-label="Abrir menu"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
             <ul id="menuCategorias">
                 <li><a href="index.html">Home</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Eletrônicos ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=eletronicos" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=smartphones" role="menuitem">Smartphones</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Games ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=games" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=consolas" role="menuitem">Consolas</a></li>
-                    </ul>
-                </li>
+                <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="categoria.html?cat=games">Games</a></li>
+                <li><a href="categoria.html?cat=moda">Moda</a></li>
+                <li><a href="categoria.html?cat=beleza">Beleza</a></li>
+                <li><a href="categoria.html?cat=casa">Casa</a></li>
+                <li><a href="categoria.html?cat=esporte">Esporte</a></li>
+                <li><a href="categoria.html?cat=infantil">Infantil</a></li>
+                <li><a href="categoria.html?cat=livros">Livros</a></li>
+                <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
+                <li><a href="categoria.html?cat=alimentos">Alimentos</a></li>
+                <li><a href="categoria.html?cat=saude">Saúde</a></li>
+                <li><a href="categoria.html?cat=viagem">Viagem</a></li>
+                <li><a href="categoria.html?cat=musica">Música</a></li>
+                <li><a href="categoria.html?cat=pets">Pets</a></li>
+                <li><a href="categoria.html?cat=escritorio">Escritório</a></li>
+                <li><a href="categoria.html?cat=automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear</a></li>
             </ul>
         </nav>
     </header>
 
-    <main id="conteudo-categoria" style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
+    <main id="conteudo-categoria" style="max-width:1480px; margin:20px auto; padding:0 24px;">
         <div class="breadcrumb"><a href="index.html">Home</a> &gt; <span id="breadcrumbCat" style="font-weight:600; color:var(--cor-esmeralda);">Categoria</span></div>
-        <h1 id="tituloCategoria" style="color:var(--cor-esmeralda); font-size: 2rem; margin: 20px 0;">Produtos</h1>
+        <h1 id="tituloCategoria" style="color:var(--cor-esmeralda); font-size:2rem; margin:20px 0;">Produtos</h1>
 
         <div class="categoria-layout">
             <aside class="filtros-sidebar">
-                <h3>Subcategorias</h3>
-                <div id="subcategoriasLista"></div>
-                <h3 style="margin-top:20px;">Filtrar por preço</h3>
-                <div class="filtro-preco">
-                    <label>Mínimo: <span id="precoMinLabelCat">0</span> Kz</label>
-                    <input type="range" id="precoMinCat" min="0" max="500000" value="0" step="1000" />
-                    <label style="margin-top:10px;">Máximo: <span id="precoMaxLabelCat">500000</span> Kz</label>
-                    <input type="range" id="precoMaxCat" min="0" max="500000" value="500000" step="1000" />
-                </div>
+                <h3>Filtrar por preço</h3>
+                <label>Mínimo: <span id="precoMinLabelCat">0</span> Kz</label>
+                <input type="range" id="precoMinCat" min="0" max="500000" value="0" step="1000" />
+                <label style="margin-top:10px;">Máximo: <span id="precoMaxLabelCat">500000</span> Kz</label>
+                <input type="range" id="precoMaxCat" min="0" max="500000" value="500000" step="1000" />
                 <h3 style="margin-top:20px;">Ordenar</h3>
                 <select id="ordenarCat"><option value="ordem">Destaque</option><option value="preco-asc">Menor preço</option><option value="preco-desc">Maior preço</option><option value="nome">Nome A-Z</option></select>
             </aside>
@@ -89,11 +72,23 @@
         </div>
     </main>
 
-    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola">
+    <aside class="carrinho-sidebar" id="carrinhoSidebar">
         <div class="carrinho-header"><h2>🛒 Minha Sacola</h2><button class="btn-fechar-carrinho" id="btnFecharCarrinho">&times;</button></div>
         <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
         <div class="carrinho-footer"><div class="total-linha"><span>Total:</span><span><span id="totalCarrinhoLoja">0</span> Kz</span></div><button id="btnFinalizarWhatsApp" class="btn-finalizar">Enviar Pedido</button></div>
     </aside>
+
+    <div id="modalCliente" role="dialog">
+        <div>
+            <button id="btnFecharModal" class="btn-fechar-modal">&times;</button>
+            <h2>Dados do Cliente</h2>
+            <label>Nome *</label><input type="text" id="inputNome" placeholder="Ex: João Silva" />
+            <label>Telefone *</label><input type="tel" id="inputTelefone" placeholder="Ex: 934220337" />
+            <label>NIF *</label><input type="text" id="inputNif" placeholder="Ex: 5000171646" />
+            <label>Morada</label><input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, s/n" />
+            <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura</button>
+        </div>
+    </div>
 
     <footer class="rodape-profissional" style="margin-top:40px;">
         <div class="rodape-grid">
@@ -104,7 +99,7 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <script type="module" src="js/categoria.js?v=8"></script>
-    <script type="module" src="js/app.js?v=8"></script>
+    <script type="module" src="js/categoria.js?v=9"></script>
+    <script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>

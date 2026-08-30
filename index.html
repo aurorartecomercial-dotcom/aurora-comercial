@@ -4,43 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aurora Comercial</title>
-    <meta name="description" content="Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais." />
-    <meta name="keywords" content="aurora, comercial, angola, marketplace, eletrônicos, moda" />
-    <meta property="og:title" content="Aurora Comercial" />
-    <meta property="og:description" content="Os melhores produtos com frete grátis e descontos imperdíveis." />
-    <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
-    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/" />
-    <meta property="og:type" content="website" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=8" />
+    <meta name="description" content="Marketplace angolano com curadoria premium." />
+    <link rel="stylesheet" href="style.css?v=9" />
     <link rel="icon" type="image/png" href="logo auro.png" />
+    <style>
+        /* CSS DE EMERGÊNCIA PARA GARANTIR LAYOUT CORRETO */
+        #modalCliente, .carrinho-sidebar, .submenu { display: none !important; }
+        .carrinho-sidebar.ativo { display: flex !important; }
+        #modalCliente.ativo { display: flex !important; }
+        .menu-categorias ul li { list-style: none; }
+        @media (max-width: 768px) {
+            .menu-categorias ul { display: none !important; }
+            .menu-categorias ul.menu-aberto { display: flex !important; }
+        }
+    </style>
 </head>
 <body>
     <div id="toast-notificacao" role="alert" aria-live="polite">
         <span id="toastMensagem">Adicionado ao carrinho!</span>
-        <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
+        <button id="toastFechar">&times;</button>
     </div>
     <div class="carrinho-overlay" id="carrinhoOverlay"></div>
 
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+            <a href="index.html" class="logo">
+                <img src="logo auro.png" alt="Logo" />
                 <span>Aurora<br /><span>Comercial</span></span>
             </a>
-            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
-                <button type="submit" aria-label="Pesquisar">🔍</button>
+            <form class="busca-container" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" />
+                <button type="submit">🔍</button>
             </form>
             <div class="header-icones">
-                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small> Conta
-                </button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
+                <button class="btn-entrar" id="btnEntrar"><small>Olá, faça seu login</small> Conta</button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
             </div>
         </div>
         <nav class="menu-categorias" aria-label="Categorias">
@@ -49,53 +47,23 @@
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html" class="ativo">Home</a></li>
-                <!-- DROPDOWNS -->
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Eletrônicos ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=eletronicos" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=smartphones" role="menuitem">Smartphones</a></li>
-                        <li><a href="categoria.html?cat=tablets" role="menuitem">Tablets</a></li>
-                        <li><a href="categoria.html?cat=notebooks" role="menuitem">Notebooks</a></li>
-                        <li><a href="categoria.html?cat=acessorios-eletronicos" role="menuitem">Acessórios</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Games & Consolas ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=games" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=consolas" role="menuitem">Consolas</a></li>
-                        <li><a href="categoria.html?cat=jogos" role="menuitem">Jogos</a></li>
-                        <li><a href="categoria.html?cat=controles" role="menuitem">Controles</a></li>
-                        <li><a href="categoria.html?cat=headsets" role="menuitem">Headsets</a></li>
-                        <li><a href="categoria.html?cat=cadeiras-gamer" role="menuitem">Cadeiras Gamer</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Moda & Acessórios ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=moda" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=feminino" role="menuitem">Feminino</a></li>
-                        <li><a href="categoria.html?cat=masculino" role="menuitem">Masculino</a></li>
-                        <li><a href="categoria.html?cat=calcados" role="menuitem">Calçados</a></li>
-                        <li><a href="categoria.html?cat=joias" role="menuitem">Joias</a></li>
-                        <li><a href="categoria.html?cat=oculos" role="menuitem">Óculos</a></li>
-                        <li><a href="categoria.html?cat=relogios" role="menuitem">Relógios</a></li>
-                        <li><a href="categoria.html?cat=bolsas" role="menuitem">Bolsas</a></li>
-                        <li><a href="categoria.html?cat=cintos-bones" role="menuitem">Cintos & Bonés</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Beleza ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="categoria.html?cat=beleza" role="menuitem">Todos</a></li>
-                        <li><a href="categoria.html?cat=maquiagem" role="menuitem">Maquiagem</a></li>
-                        <li><a href="categoria.html?cat=cuidados-pele" role="menuitem">Cuidados Pele</a></li>
-                        <li><a href="categoria.html?cat=perfumes" role="menuitem">Perfumes</a></li>
-                        <li><a href="categoria.html?cat=manicure-pedicure" role="menuitem">Manicure</a></li>
-                    </ul>
-                </li>
-                <!-- ... (restantes dropdowns, pode copiar do seu original) ... -->
+                <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="categoria.html?cat=games">Games & Consolas</a></li>
+                <li><a href="categoria.html?cat=moda">Moda & Acessórios</a></li>
+                <li><a href="categoria.html?cat=beleza">Beleza</a></li>
+                <li><a href="categoria.html?cat=casa">Casa & Decoração</a></li>
+                <li><a href="categoria.html?cat=esporte">Esporte</a></li>
+                <li><a href="categoria.html?cat=infantil">Infantil</a></li>
+                <li><a href="categoria.html?cat=livros">Livros & Papelaria</a></li>
+                <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
+                <li><a href="categoria.html?cat=alimentos">Alimentos</a></li>
+                <li><a href="categoria.html?cat=saude">Saúde</a></li>
+                <li><a href="categoria.html?cat=viagem">Viagem</a></li>
+                <li><a href="categoria.html?cat=musica">Música</a></li>
+                <li><a href="categoria.html?cat=pets">Pet Shop</a></li>
+                <li><a href="categoria.html?cat=escritorio">Escritório</a></li>
+                <li><a href="categoria.html?cat=colunas">Colunas</a></li>
+                <li><a href="categoria.html?cat=automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear</a></li>
             </ul>
@@ -103,7 +71,8 @@
     </header>
 
     <main id="conteudo-principal" role="main">
-        <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
+        <!-- CARROSSEL -->
+        <section class="carrossel-ofertas" aria-label="Ofertas">
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo"><img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" /><div class="slide-texto"><h2>🔥 Promoção Gamer!</h2><p>PS5, Xbox e Nintendo Switch com até 20% OFF</p><a href="#" class="btn-slide">Aproveitar Oferta</a></div></div>
@@ -115,8 +84,8 @@
             </div>
         </section>
 
-        <div style="max-width:1480px; margin: 20px auto 0; padding: 0 24px; display:flex; justify-content:center;">
-            <a href="rastreio.html" style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px; display:inline-flex; align-items:center; gap:10px;">📦 Rastrear meu pedido</a>
+        <div style="max-width:1480px; margin:20px auto 0; padding:0 24px; display:flex; justify-content:center;">
+            <a href="rastreio.html" style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px;">📦 Rastrear meu pedido</a>
         </div>
 
         <section class="secao-mais-comprados" style="max-width:1480px; margin:30px auto 0; padding:0 24px;">
@@ -142,12 +111,14 @@
         </div>
     </main>
 
-    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
+    <!-- CARRINHO LATERAL (escondido por defeito) -->
+    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola">
         <div class="carrinho-header"><h2>🛒 Minha Sacola</h2><button class="btn-fechar-carrinho" id="btnFecharCarrinho">&times;</button></div>
         <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
         <div class="carrinho-footer"><div class="total-linha"><span>Total:</span><span><span id="totalCarrinhoLoja">0</span> Kz</span></div><button id="btnFinalizarWhatsApp" class="btn-finalizar">Finalizar Pedido</button></div>
     </aside>
 
+    <!-- MODAL CLIENTE (escondido por defeito) -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
             <button id="btnFecharModal" class="btn-fechar-modal">&times;</button>
@@ -172,10 +143,10 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <script type="module" src="js/app.js?v=8"></script>
+    <script type="module" src="js/app.js?v=9"></script>
     <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda" target="_blank" class="whatsapp-float">💬 Fale connosco</a>
     <script>
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
     </script>
 </body>
 </html>
