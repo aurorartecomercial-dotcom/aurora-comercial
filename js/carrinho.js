@@ -369,9 +369,11 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
         descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
         status: 'confirmado',
-        itens: itensVenda
+        itens: itensVenda,
+        criadoEm: new Date()
     };
 
+    // Garante autenticação anônima
     const auth = getAuth();
     let user = auth.currentUser;
     if (!user) {
@@ -380,9 +382,14 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             user = cred.user;
         } catch (e) {
             console.error('Erro autenticação anónima:', e);
+            // Se não conseguir autenticar, salva localmente e avisa
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
             historicoLocal.push(novaVenda);
             localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
+            dadosVendaTemp.itens = itensVenda;
+            dadosVendaTemp.valorTotal = valorTotalPedido;
+            alert('⚠️ Sem conexão com o servidor. Pedido salvo localmente. Entre em contacto pelo WhatsApp para confirmar.');
+            return;
         }
     }
 
@@ -399,14 +406,14 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
     } catch (e) {
-        console.error('Erro ao salvar venda:', e);
+        console.error('Erro ao salvar venda no Firestore:', e);
+        // Fallback: salva localmente
         const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
         historicoLocal.push(novaVenda);
         localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
-        // ✅ CORREÇÃO ADICIONADA: definir itens e valor total no catch
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
-        alert(`⚠️ Venda salva localmente (sem conexão).\nCódigo: ${dataHoraFormatada}`);
+        alert('⚠️ Não foi possível contactar o servidor. Pedido salvo localmente. Envie-nos uma mensagem no WhatsApp com o código: ' + dataHoraFormatada);
     }
 }
 

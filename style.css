@@ -87,7 +87,6 @@ body {
 .carrossel-container { position: relative; width: 100%; background: var(--cor-esmeralda-escuro); overflow: hidden; }
 .carrossel-slides { display: flex; transition: transform 0.6s ease; width: 100%; }
 
-/* ✅ CORREÇÃO CRÍTICA PARA O CARROSSEL FUNCIONAR */
 .slide { display: none; flex: 0 0 100%; position: relative; align-items: center; justify-content: center; height: 280px; }
 .slide.ativo { display: flex; }
 
@@ -354,6 +353,71 @@ body {
     .carrossel-ofertas { margin-top: 0; border-radius: 0; }
 }
 
+/* ========== NOVAS REGRAS PARA SUBMENU EM DUAS COLUNAS ========== */
+/* Desktop */
+@media (min-width: 769px) {
+    .dropdown .submenu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--cor-esmeralda);
+        border: 1px solid var(--cor-ouro);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        min-width: 320px;
+        padding: 8px;
+        grid-template-columns: 1fr 1fr; /* DUAS COLUNAS */
+        gap: 4px;
+        z-index: 999;
+    }
+    .dropdown:hover .submenu {
+        display: grid;
+    }
+    .dropdown .submenu li a {
+        padding: 8px 12px;
+        color: #fff;
+        font-size: 14px;
+        white-space: nowrap;
+        display: block;
+        border-radius: 4px;
+    }
+    .dropdown .submenu li a:hover {
+        background: var(--cor-ouro);
+        color: #000;
+    }
+}
+
+/* Mobile: submenu em lista vertical com duas colunas */
+@media (max-width: 768px) {
+    .menu-categorias ul li.dropdown.menu-aberto .submenu {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* DUAS COLUNAS NO MOBILE */
+        padding-left: 10px;
+        background: var(--cor-esmeralda-escuro);
+    }
+    .menu-categorias ul li.dropdown.menu-aberto .submenu li a {
+        padding: 8px;
+        font-size: 13px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+}
+
+/* ========== OVERFLOW X EM TABELAS (mobile) ========== */
+@media (max-width: 768px) {
+    .tabela-scroll, .tabela-historico-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #tabelaPedidos, #tabelaRelatorio {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ========== BOTÃO WHATSAPP FLUTUANTE ========== */
 .whatsapp-float {
     position: fixed;
     bottom: 20px;
@@ -708,11 +772,12 @@ body {
     width: 100% !important;
 }
 
-/* Apenas os contêineres dos gráficos terão altura limitada */
 .chart-container {
     max-height: 300px;
     overflow: hidden;
-}/* ============================================================
+}
+
+/* ============================================================
    RESPONSIVIDADE DA TABELA DE PEDIDOS (ADMIN)
    ============================================================ */
 @media (max-width: 768px) {

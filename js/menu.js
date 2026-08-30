@@ -1,10 +1,10 @@
 export function initMobileMenu() {
     const menuToggle = document.getElementById('menuToggle');
     const menuLista = document.getElementById('menuCategorias');
-    const dropdown = document.querySelector('.dropdown');
-    const dropdownToggle = document.querySelector('.dropdown-toggle');
-    const submenu = document.querySelector('.submenu');
+    const dropdowns = document.querySelectorAll('.dropdown');
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
 
+    // Abrir/fechar menu principal (hambúrguer)
     if (menuToggle && menuLista) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -17,26 +17,35 @@ export function initMobileMenu() {
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menu-categorias')) {
                 menuLista.classList.remove('menu-aberto');
-                if (dropdown) dropdown.classList.remove('menu-aberto');
+                dropdowns.forEach(d => d.classList.remove('menu-aberto'));
             }
         });
     }
 
-    // Dropdown acessível por clique/toque
-    if (dropdownToggle && submenu && dropdown) {
-        dropdownToggle.addEventListener('click', (e) => {
+    // Abrir/fechar dropdowns (Roupas, Mais Categorias) por clique
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
             e.preventDefault();
-            dropdown.classList.toggle('menu-aberto');
-            const isOpen = dropdown.classList.contains('menu-aberto');
-            dropdownToggle.setAttribute('aria-expanded', isOpen);
+            e.stopPropagation();
+            const parentDropdown = toggle.closest('.dropdown');
+            // Fecha os outros dropdowns
+            dropdowns.forEach(d => {
+                if (d !== parentDropdown) d.classList.remove('menu-aberto');
+            });
+            // Alterna o atual
+            parentDropdown.classList.toggle('menu-aberto');
+            toggle.setAttribute('aria-expanded', parentDropdown.classList.contains('menu-aberto'));
         });
-    }
+    });
 
-    // Fechar dropdown ao clicar em link do submenu
-    submenu?.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            dropdown.classList.remove('menu-aberto');
-            dropdownToggle.setAttribute('aria-expanded', 'false');
+    // Fechar dropdown ao clicar em um link do submenu
+    dropdowns.forEach(dropdown => {
+        const submenuLinks = dropdown.querySelectorAll('.submenu a');
+        submenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                dropdown.classList.remove('menu-aberto');
+                menuLista.classList.remove('menu-aberto');
+            });
         });
     });
 }
