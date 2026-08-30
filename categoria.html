@@ -25,7 +25,6 @@
     <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <!-- 👇 LOGO LEVA PARA A PÁGINA INICIAL -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
@@ -60,7 +59,11 @@
             <ul id="menuCategorias">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
+                <li><a href="categoria.html?cat=telefones">📱 Telefones & Tablets</a></li>
                 <li><a href="categoria.html?cat=consolas">Consolas</a></li>
+                <li><a href="categoria.html?cat=perfumes">💄 Perfumes</a></li>
+                <li><a href="categoria.html?cat=bebes">👶 Bebés & Crianças</a></li>
+                <li><a href="categoria.html?cat=petshop">🐾 Pet Shop</a></li>
                 <li><a href="categoria.html?cat=beleza">Beleza</a></li>
                 <li><a href="categoria.html?cat=cozinha">Cozinha</a></li>
                 <li><a href="categoria.html?cat=colunas">Colunas</a></li>
@@ -75,6 +78,18 @@
                         <li><a href="categoria.html?cat=joias" role="menuitem">Pulseiras</a></li>
                     </ul>
                 </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Esporte ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=futebol" role="menuitem">⚽ Futebol</a></li>
+                        <li><a href="categoria.html?cat=academia" role="menuitem">🏋️ Academia</a></li>
+                    </ul>
+                </li>
+                <li><a href="categoria.html?cat=jogos">🎮 Jogos & Brinquedos</a></li>
+                <li><a href="categoria.html?cat=livros">📚 Livros & Papelaria</a></li>
+                <li><a href="categoria.html?cat=suplementos">💪 Suplementos</a></li>
+                <li><a href="categoria.html?cat=moda-praia">🏖️ Moda Praia</a></li>
+                <li><a href="categoria.html?cat=escritorio">🏢 Escritório</a></li>
                 <li><a href="categoria.html?cat=automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
             </ul>
@@ -169,7 +184,7 @@
     </a>
 
     <script type="module" src="js/categoria.js?v=3"></script>
-    <script type="module" src="js/app.js?v=3"></script> <!-- Reutiliza a lógica do carrinho global -->
+    <script type="module" src="js/app.js?v=3"></script>
 
     <!-- ===== REGISTRO DO SERVICE WORKER (PWA) ===== -->
     <script>
