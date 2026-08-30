@@ -28,6 +28,7 @@
     <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
+            <!-- 👇 LOGO AGORA É UM LINK PARA A HOME -->
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
@@ -60,13 +61,9 @@
             </button>
 
             <ul id="menuCategorias">
-                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html" data-categoria="todos">Todos</a></li>
                 <li><a href="index.html#?cat=eletronicos">Eletrônicos</a></li>
-                <li><a href="index.html#?cat=telefones">📱 Telefones & Tablets</a></li>
                 <li><a href="index.html#?cat=consolas">Consolas</a></li>
-                <li><a href="index.html#?cat=perfumes">💄 Perfumes</a></li>
-                <li><a href="index.html#?cat=bebes">👶 Bebés & Crianças</a></li>
-                <li><a href="index.html#?cat=petshop">🐾 Pet Shop</a></li>
                 <li><a href="index.html#?cat=beleza">Beleza</a></li>
                 <li><a href="index.html#?cat=cozinha">Cozinha</a></li>
                 <li><a href="index.html#?cat=colunas">Colunas</a></li>
@@ -81,18 +78,6 @@
                         <li><a href="index.html#?cat=joias" role="menuitem">Pulseiras</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Esporte ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="index.html#?cat=futebol" role="menuitem">⚽ Futebol</a></li>
-                        <li><a href="index.html#?cat=academia" role="menuitem">🏋️ Academia</a></li>
-                    </ul>
-                </li>
-                <li><a href="index.html#?cat=jogos">🎮 Jogos & Brinquedos</a></li>
-                <li><a href="index.html#?cat=livros">📚 Livros & Papelaria</a></li>
-                <li><a href="index.html#?cat=suplementos">💪 Suplementos</a></li>
-                <li><a href="index.html#?cat=moda-praia">🏖️ Moda Praia</a></li>
-                <li><a href="index.html#?cat=escritorio">🏢 Escritório</a></li>
                 <li><a href="index.html#?cat=automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
             </ul>
@@ -242,6 +227,7 @@
         // Ação do botão "Instalar Agora"
         btnInstalar.addEventListener('click', async () => {
             if (deferredPrompt) {
+                // ANDROID / DESKTOP: Abre a janela nativa de instalação
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
@@ -249,6 +235,7 @@
                 }
                 deferredPrompt = null;
             } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                // IPHONE: Mostra o guia manual (porque a Apple bloqueia a instalação automática)
                 document.getElementById('ios-guide-modal').style.display = 'flex';
             } else {
                 alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');

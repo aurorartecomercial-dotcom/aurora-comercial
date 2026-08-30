@@ -18,6 +18,7 @@
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
+    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
 
@@ -62,11 +63,7 @@
             <ul id="menuCategorias">
                 <li><a href="index.html" class="ativo">Home</a></li>
                 <li><a href="#" data-categoria="eletronicos">Eletrônicos</a></li>
-                <li><a href="#" data-categoria="telefones">📱 Telefones & Tablets</a></li>
                 <li><a href="#" data-categoria="consolas">Consolas</a></li>
-                <li><a href="#" data-categoria="perfumes">💄 Perfumes</a></li>
-                <li><a href="#" data-categoria="bebes">👶 Bebés & Crianças</a></li>
-                <li><a href="#" data-categoria="petshop">🐾 Pet Shop</a></li>
                 <li><a href="#" data-categoria="beleza">Beleza</a></li>
                 <li><a href="#" data-categoria="cozinha">Cozinha</a></li>
                 <li><a href="#" data-categoria="colunas">Colunas</a></li>
@@ -81,18 +78,6 @@
                         <li><a href="#" data-categoria="joias" role="menuitem">Pulseiras</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Esporte ▾</a>
-                    <ul class="submenu" role="menu">
-                        <li><a href="#" data-categoria="futebol" role="menuitem">⚽ Futebol</a></li>
-                        <li><a href="#" data-categoria="academia" role="menuitem">🏋️ Academia</a></li>
-                    </ul>
-                </li>
-                <li><a href="#" data-categoria="jogos">🎮 Jogos & Brinquedos</a></li>
-                <li><a href="#" data-categoria="livros">📚 Livros & Papelaria</a></li>
-                <li><a href="#" data-categoria="suplementos">💪 Suplementos</a></li>
-                <li><a href="#" data-categoria="moda-praia">🏖️ Moda Praia</a></li>
-                <li><a href="#" data-categoria="escritorio">🏢 Escritório</a></li>
                 <li><a href="#" data-categoria="automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
                 <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
@@ -106,6 +91,7 @@
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
                         <div class="slide-texto">
                             <h2>🔥 Promoção Gamer!</h2>
@@ -114,6 +100,7 @@
                         </div>
                     </div>
                     <div class="slide">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" />
                         <div class="slide-texto">
                             <h2>⚡ Sinta a Ação</h2>
@@ -122,6 +109,7 @@
                         </div>
                     </div>
                     <div class="slide">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
                         <img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" />
                         <div class="slide-texto">
                             <h2>💅 📱 Eleve o seu Estilo</h2>
@@ -336,6 +324,7 @@
 
     <script type="module" src="js/app.js?v=3"></script>
     
+    <!-- 👇 BOTÃO FLUTUANTE COM O NÚMERO OFICIAL -->
     <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
         💬 Fale connosco
     </a>

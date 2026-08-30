@@ -87,6 +87,7 @@ body {
 .carrossel-container { position: relative; width: 100%; background: var(--cor-esmeralda-escuro); overflow: hidden; }
 .carrossel-slides { display: flex; transition: transform 0.6s ease; width: 100%; }
 
+/* ✅ CORREÇÃO CRÍTICA PARA O CARROSSEL FUNCIONAR */
 .slide { display: none; flex: 0 0 100%; position: relative; align-items: center; justify-content: center; height: 280px; }
 .slide.ativo { display: flex; }
 
@@ -492,6 +493,10 @@ body {
     }
 }
 
+/* ============================================================
+   NOVAS CORES ESCURAS PARA ADMIN E BLOG (MODO NOTURNO)
+   ============================================================ */
+
 .admin-page {
     background: #0d0d0d;
     color: #e0e0e0;
@@ -600,6 +605,7 @@ body {
     border-color: #D4AF37;
 }
 
+/* === BLOG DARK === */
 .blog-page {
     background: #0f0f0f;
     color: #f0f0f0;
@@ -665,6 +671,7 @@ body {
     color: #8b5cf6;
 }
 
+/* ===== BOTÃO DE ADICIONAR AO CARRINHO DENTRO DOS CARDS ===== */
 .btn-add-carrinho-card {
     background: var(--cor-ouro);
     color: #000;
@@ -688,6 +695,9 @@ body {
     transform: scale(0.95);
 }
 
+/* ============================================================
+   ✅ REGRAS CORRETAS PARA GRÁFICOS (SEM CORTAR TABELAS)
+   ============================================================ */
 #graficoVendas,
 #graficoProdutos,
 #graficoComparativo,
@@ -698,11 +708,13 @@ body {
     width: 100% !important;
 }
 
+/* Apenas os contêineres dos gráficos terão altura limitada */
 .chart-container {
     max-height: 300px;
     overflow: hidden;
-}
-
+}/* ============================================================
+   RESPONSIVIDADE DA TABELA DE PEDIDOS (ADMIN)
+   ============================================================ */
 @media (max-width: 768px) {
     #tabelaPedidos,
     #tabelaRelatorio {
@@ -723,6 +735,7 @@ body {
     }
 }
 
+/* Melhorias gerais de acessibilidade */
 button:focus-visible {
     outline: 3px solid var(--cor-ouro);
     outline-offset: 2px;
@@ -731,21 +744,4 @@ button:focus-visible {
 a:focus-visible {
     outline: 3px solid var(--cor-ouro);
     outline-offset: 2px;
-}
-
-/* Melhoria do menu em telas pequenas */
-@media (max-width: 768px) {
-    .menu-categorias ul.menu-aberto {
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-    .submenu {
-        position: static;
-        padding-left: 20px;
-        border: none;
-        background: transparent;
-    }
-    .menu-categorias ul li.dropdown.menu-aberto .submenu {
-        display: block;
-    }
 }
