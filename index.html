@@ -4,96 +4,163 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aurora Comercial</title>
-    <meta name="description" content="Marketplace angolano com curadoria premium." />
-    <link rel="stylesheet" href="style.css?v=9" />
+    <meta name="description" content="Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais." />
+    <meta name="keywords" content="aurora, comercial, angola, marketplace, eletrônicos, moda" />
+    <meta property="og:title" content="Aurora Comercial" />
+    <meta property="og:description" content="Os melhores produtos com frete grátis e descontos imperdíveis." />
+    <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
+    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/" />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=3" />
     <link rel="icon" type="image/png" href="logo auro.png" />
-    <style>
-        /* CSS DE EMERGÊNCIA PARA GARANTIR LAYOUT CORRETO */
-        #modalCliente, .carrinho-sidebar, .submenu { display: none !important; }
-        .carrinho-sidebar.ativo { display: flex !important; }
-        #modalCliente.ativo { display: flex !important; }
-        .menu-categorias ul li { list-style: none; }
-        @media (max-width: 768px) {
-            .menu-categorias ul { display: none !important; }
-            .menu-categorias ul.menu-aberto { display: flex !important; }
-        }
-    </style>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="logo auro.png" />
+    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
+
+    <!-- TOAST -->
     <div id="toast-notificacao" role="alert" aria-live="polite">
         <span id="toastMensagem">Adicionado ao carrinho!</span>
-        <button id="toastFechar">&times;</button>
+        <button id="toastFechar" aria-label="Fechar notificação">&times;</button>
     </div>
     <div class="carrinho-overlay" id="carrinhoOverlay"></div>
 
+    <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <a href="index.html" class="logo">
-                <img src="logo auro.png" alt="Logo" />
+            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
                 <span>Aurora<br /><span>Comercial</span></span>
             </a>
-            <form class="busca-container" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" />
-                <button type="submit">🔍</button>
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
+                <button type="submit" aria-label="Pesquisar">🔍</button>
             </form>
             <div class="header-icones">
-                <button class="btn-entrar" id="btnEntrar"><small>Olá, faça seu login</small> Conta</button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
+                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
             </div>
         </div>
+
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                    <rect x="4" y="4" width="6" height="6" rx="1" />
+                    <rect x="14" y="4" width="6" height="6" rx="1" />
+                    <rect x="4" y="14" width="6" height="6" rx="1" />
+                    <rect x="14" y="14" width="6" height="6" rx="1" />
+                </svg>
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html" class="ativo">Home</a></li>
-                <li><a href="categoria.html?cat=eletronicos">Eletrônicos</a></li>
-                <li><a href="categoria.html?cat=games">Games & Consolas</a></li>
-                <li><a href="categoria.html?cat=moda">Moda & Acessórios</a></li>
-                <li><a href="categoria.html?cat=beleza">Beleza</a></li>
-                <li><a href="categoria.html?cat=casa">Casa & Decoração</a></li>
-                <li><a href="categoria.html?cat=esporte">Esporte</a></li>
-                <li><a href="categoria.html?cat=infantil">Infantil</a></li>
-                <li><a href="categoria.html?cat=livros">Livros & Papelaria</a></li>
-                <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
-                <li><a href="categoria.html?cat=alimentos">Alimentos</a></li>
-                <li><a href="categoria.html?cat=saude">Saúde</a></li>
-                <li><a href="categoria.html?cat=viagem">Viagem</a></li>
-                <li><a href="categoria.html?cat=musica">Música</a></li>
-                <li><a href="categoria.html?cat=pets">Pet Shop</a></li>
-                <li><a href="categoria.html?cat=escritorio">Escritório</a></li>
-                <li><a href="categoria.html?cat=colunas">Colunas</a></li>
-                <li><a href="categoria.html?cat=automoveis">Carros</a></li>
+                <li><a href="#" data-categoria="eletronicos">Eletrônicos</a></li>
+                <li><a href="#" data-categoria="consolas">Consolas</a></li>
+                <li><a href="#" data-categoria="beleza">Beleza</a></li>
+                <li><a href="#" data-categoria="cozinha">Cozinha</a></li>
+                <li><a href="#" data-categoria="colunas">Colunas</a></li>
+                <li><a href="#" data-categoria="ferramentas">Ferramentas</a></li>
+                <li><a href="#" data-categoria="casa">Casa</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="#" data-categoria="feminino" role="menuitem">Feminino</a></li>
+                        <li><a href="#" data-categoria="masculino" role="menuitem">Masculino</a></li>
+                        <li><a href="#" data-categoria="calcados" role="menuitem">Sapatos</a></li>
+                        <li><a href="#" data-categoria="joias" role="menuitem">Pulseiras</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" data-categoria="automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
-                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear</a></li>
+                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
             </ul>
         </nav>
     </header>
 
     <main id="conteudo-principal" role="main">
         <!-- CARROSSEL -->
-        <section class="carrossel-ofertas" aria-label="Ofertas">
+        <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
-                    <div class="slide ativo"><img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" /><div class="slide-texto"><h2>🔥 Promoção Gamer!</h2><p>PS5, Xbox e Nintendo Switch com até 20% OFF</p><a href="#" class="btn-slide">Aproveitar Oferta</a></div></div>
-                    <div class="slide"><img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" /><div class="slide-texto"><h2>⚡ Sinta a Ação</h2><p>Equipa-te com os melhores acessórios</p><a href="#" class="btn-slide">Comprar Agora</a></div></div>
-                    <div class="slide"><img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" /><div class="slide-texto"><h2>💅 📱 Eleve o seu Estilo</h2><p>A melhor tecnologia para o seu dia a dia</p><a href="#" class="btn-slide">Aproveitar Agora</a></div></div>
+                    <div class="slide ativo">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
+                        <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
+                        <div class="slide-texto">
+                            <h2>🔥 Promoção Gamer!</h2>
+                            <p> PS5, Xbox e Nintendo Switch com até 20% OFF</p>
+                            <a href="#" class="btn-slide">Aproveitar Oferta</a>
+                        </div>
+                    </div>
+                    <div class="slide">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
+                        <img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" />
+                        <div class="slide-texto">
+                            <h2>⚡ Sinta a Ação</h2>
+                            <p>Equipa-te com os melhores acessórios para as tuas consolas favoritas</p>
+                            <a href="#" class="btn-slide">Comprar Agora</a>
+                        </div>
+                    </div>
+                    <div class="slide">
+                        <!-- 👇 REMOVIDO o loading="lazy" -->
+                        <img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" />
+                        <div class="slide-texto">
+                            <h2>💅 📱 Eleve o seu Estilo</h2>
+                            <p>A melhor tecnologia para o seu dia a dia</p>
+                            <a href="#" class="btn-slide">Aproveitar Agora</a>
+                        </div>
+                    </div>
                 </div>
-                <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)">❮</button>
-                <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)">❯</button>
+                <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)" aria-label="Slide anterior">❮</button>
+                <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)" aria-label="Próximo slide">❯</button>
+                <div class="carrossel-indicadores" id="carrosselIndicadores">
+                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0"></span>
+                    <span class="indicador" data-slide="1" role="button" tabindex="0"></span>
+                    <span class="indicador" data-slide="2" role="button" tabindex="0"></span>
+                </div>
             </div>
         </section>
 
-        <div style="max-width:1480px; margin:20px auto 0; padding:0 24px; display:flex; justify-content:center;">
-            <a href="rastreio.html" style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px;">📦 Rastrear meu pedido</a>
+        <!-- BOTÃO DE RASTREIO -->
+        <div style="max-width:1480px; margin: 20px auto 0; padding: 0 24px; display:flex; justify-content:center;">
+            <a href="rastreio.html" 
+               style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); 
+                      padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px; 
+                      display:inline-flex; align-items:center; gap:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+                      transition: 0.2s;">
+                📦 Rastrear meu pedido
+            </a>
         </div>
 
+        <!-- BANNER PWA -->
+        <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
+            <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
+                <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-instalar-inline" class="btn-instalar-inline" style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 700; cursor: pointer;">Instalar Agora</button>
+                    <button id="btn-fechar-banner" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIS COMPRADOS -->
         <section class="secao-mais-comprados" style="max-width:1480px; margin:30px auto 0; padding:0 24px;">
-            <div class="secao-titulo"><h2 style="color:#111;">⭐ Mais Comprados da Semana</h2><a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a></div>
+            <div class="secao-titulo">
+                <h2 style="color:#111;">⭐ Mais Comprados da Semana</h2>
+                <a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a>
+            </div>
             <div class="grade-produtos" id="maisCompradosGrid"></div>
         </section>
 
-        <div class="vitrine-container" style="max-width:1480px; margin:20px auto; padding:0 24px; display:grid; grid-template-columns:240px 1fr; gap:24px;">
+        <!-- VITRINE -->
+        <div class="vitrine-container">
             <aside class="filtros-sidebar">
                 <h3>Filtrar por</h3>
                 <div class="filtro-preco">
@@ -102,51 +169,219 @@
                     <label for="precoMax" style="margin-top:10px;">Preço máximo: <span id="precoMaxLabel">500000</span> Kz</label>
                     <input type="range" id="precoMax" min="0" max="500000" value="500000" step="1000" />
                 </div>
-                <div class="filtro-ordem" style="margin-top:16px;"><label for="ordenar">Ordenar por:</label><select id="ordenar"><option value="ordem">Destaque</option><option value="preco-asc">Menor preço</option><option value="preco-desc">Maior preço</option><option value="nome">Nome A-Z</option></select></div>
+                <div class="filtro-ordem" style="margin-top:16px;">
+                    <label for="ordenar">Ordenar por:</label>
+                    <select id="ordenar">
+                        <option value="ordem">Destaque</option>
+                        <option value="preco-asc">Menor preço</option>
+                        <option value="preco-desc">Maior preço</option>
+                        <option value="nome">Nome A-Z</option>
+                    </select>
+                </div>
             </aside>
-            <section style="min-width:0;">
+            <section>
                 <div id="carregandoProdutos" style="text-align:center; padding:40px; color:#999;">Carregando produtos...</div>
                 <div class="grade-produtos" id="gradeProdutos"></div>
+                <div id="paginaControles" style="display:flex; justify-content:center; margin:20px 0;">
+                    <button id="carregarMais" style="background:var(--cor-botao); border:none; padding:10px 30px; border-radius:20px; font-weight:600; cursor:pointer; color:#000;">Carregar mais</button>
+                </div>
             </section>
         </div>
     </main>
 
-    <!-- CARRINHO LATERAL (escondido por defeito) -->
-    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola">
-        <div class="carrinho-header"><h2>🛒 Minha Sacola</h2><button class="btn-fechar-carrinho" id="btnFecharCarrinho">&times;</button></div>
+    <!-- CARRINHO LATERAL -->
+    <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
+        <div class="carrinho-header">
+            <h2>🛒 Minha Sacola</h2>
+            <button class="btn-fechar-carrinho" id="btnFecharCarrinho" aria-label="Fechar sacola">&times;</button>
+        </div>
         <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
-        <div class="carrinho-footer"><div class="total-linha"><span>Total:</span><span><span id="totalCarrinhoLoja">0</span> Kz</span></div><button id="btnFinalizarWhatsApp" class="btn-finalizar">Finalizar Pedido</button></div>
+        <div class="cupom-container" style="display:flex; gap:8px; padding:0 24px 12px;">
+            <input type="text" id="inputCupom" placeholder="Cupom de desconto" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:8px; font-size:13px;" />
+            <button id="btnAplicarCupom" style="background:var(--cor-esmeralda); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Aplicar</button>
+        </div>
+        <div class="carrinho-footer">
+            <div class="total-linha">
+                <span>Total:</span>
+                <span><span id="totalCarrinhoLoja">0</span> Kz</span>
+            </div>
+            <button id="btnFinalizarWhatsApp" class="btn-finalizar">Finalizar Pedido</button>
+        </div>
     </aside>
 
-    <!-- MODAL CLIENTE (escondido por defeito) -->
+    <!-- MODAL DO CLIENTE -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
-            <button id="btnFecharModal" class="btn-fechar-modal">&times;</button>
+            <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
             <h2>Dados do Cliente</h2>
-            <label>Nome do Cliente *</label><input type="text" id="inputNome" placeholder="Ex: João Silva" required />
+            <label for="inputNome">Nome do Cliente *</label>
+            <input type="text" id="inputNome" placeholder="Ex: João Silva" required aria-required="true" />
             <span class="erro-validacao" id="erroNome"></span>
-            <label>Telefone *</label><input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required />
+            <label for="inputTelefone">Telefone *</label>
+            <input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required aria-required="true" />
             <span class="erro-validacao" id="erroTelefone"></span>
-            <label>NIF *</label><input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required />
+            <label for="inputNif">NIF *</label>
+            <input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required aria-required="true" />
             <span class="erro-validacao" id="erroNif"></span>
-            <label>Morada</label><input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, s/n" />
+            <label for="inputMorada">Morada</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, Castilhos, s/n" style="flex:1;" />
+                <button type="button" id="btnGPS" style="background:var(--cor-ouro); border:none; padding:8px 14px; border-radius:40px; font-weight:600; cursor:pointer;">📍 GPS</button>
+            </div>
+            <small style="display:block; margin-top:4px; color:#888; font-size:12px;">Clique em GPS para preencher automaticamente sua localização.</small>
             <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura e Pagar</button>
         </div>
     </div>
 
-    <footer class="rodape-profissional">
-        <div class="rodape-grid">
-            <div class="rodape-coluna"><h3>Aurora Comercial</h3><p>Marketplace angolano com curadoria premium.</p></div>
-            <div class="rodape-coluna"><h4>Contacto</h4><p>📞 +244 933 677 628</p><p>✉️ contacto@aurorarte.ao</p></div>
-            <div class="rodape-coluna"><h4>Institucional</h4><ul><li><a href="sobre.html">🏬 Sobre Nós</a></li><li><a href="politica.html">📜 Política</a></li><li><a href="blog.html">📖 Blog</a></li></ul></div>
+    <!-- MODAL DE PAGAMENTO MULTICAIXA -->
+    <div id="modalPagamento" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; max-width:450px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center; position:relative;">
+            <h2 style="color:var(--cor-esmeralda); margin-bottom:8px;">💳 Pagamento Multicaixa</h2>
+            <p style="color:#666; font-size:14px;">Transfira o valor usando os dados abaixo:</p>
+            
+            <div style="background:#f4f4f4; padding:16px; border-radius:12px; margin:16px 0; text-align:left; border:1px dashed var(--cor-ouro);">
+                <p style="margin:4px 0; font-size:13px;"><strong>Banco:</strong> BAI / Standard Bank</p>
+                <p style="margin:4px 0; font-size:13px;"><strong>NIF:</strong> 5000048151</p>
+                <p style="margin:4px 0; font-size:13px;"><strong>Valor:</strong> <span id="pagValor" style="color:var(--cor-esmeralda); font-weight:bold;">0 Kz</span></p>
+                <p style="margin:4px 0; font-size:13px;"><strong>Referência:</strong> <span id="pagRef" style="background:#222; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace;">PAY-2026-0000</span></p>
+            </div>
+
+            <div style="margin:10px 0;">
+                <img id="pagQR" src="" alt="QR Code para pagamento" style="width:140px; height:140px; border:1px solid #ddd; border-radius:8px; padding:4px;" />
+                <p style="font-size:11px; color:#888;">Escaneie pelo aplicativo do seu banco</p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+                <button id="btnCopiarRef" style="background:#D4AF37; color:#000; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">📋 Copiar Referência</button>
+                <button id="btnConfirmarPagamento" style="background:#25D366; color:#fff; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">✅ Já paguei, enviar pedido</button>
+                <button id="btnFecharPagamento" style="background:transparent; color:#999; border:none; cursor:pointer; font-size:13px;">Cancelar pedido</button>
+            </div>
+            <small style="display:block; margin-top:10px; color:#999; font-size:11px;">O pedido só será processado após a confirmação do pagamento via WhatsApp.</small>
         </div>
-        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </div>
+
+    <!-- BALANÇO -->
+    <section class="secao-balanco" id="balanco-secao">
+        <h2>📊 Balanço de Vendas & Histórico da Semana</h2>
+        <div class="painel-faturamento">
+            <div class="card-faturamento sucesso">
+                <p>Faturamento Total</p>
+                <h3><span id="faturamentoTotal">0</span> Kz</h3>
+            </div>
+            <div class="card-faturamento">
+                <p>Pedidos Concluídos</p>
+                <h3><span id="qtdPedidosTotal">0</span></h3>
+            </div>
+            <div class="card-faturamento">
+                <p>Itens Vendidos</p>
+                <h3><span id="itensVendidosTotal">0</span></h3>
+            </div>
+        </div>
+        <div class="tabela-historico-container">
+            <table class="tabela-historico">
+                <thead><tr><th>Data / Hora</th><th>Produtos</th><th>Total</th></tr></thead>
+                <tbody id="corpoTabelaHistorico"></tbody>
+            </table>
+        </div>
+        <button class="btn-limpar-balanco" id="btnLimparHistorico">Limpar Histórico da Semana</button>
+    </section>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape-profissional" id="sobre-empresa">
+        <div class="rodape-grid">
+            <div class="rodape-coluna">
+                <h3>Aurora Comercial</h3>
+                <p>Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais.</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Categorias</h4>
+                <ul>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('eletronicos')">Eletrônicos</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('consolas')">Consolas</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('beleza')">Beleza</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('cozinha')">Cozinha</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('casa')">Casa</a></li>
+                    <li><a href="#" onclick="window.filtrarPorCategoria('automoveis')">Carros</a></li>
+                </ul>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Institucional</h4>
+                <ul>
+                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
+                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
+                    <li><a href="blog.html">📖 Blog</a></li>
+                </ul>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Contacto</h4>
+                <p>📞 +244 933 677 628</p>
+                <p>✉️ contacto@aurorarte.ao</p>
+                <p>📍 Luanda, Angola</p>
+            </div>
+        </div>
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
     </footer>
 
-    <script type="module" src="js/app.js?v=9"></script>
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda" target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+    <script type="module" src="js/app.js?v=3"></script>
+    
+    <!-- 👇 BOTÃO FLUTUANTE COM O NÚMERO OFICIAL -->
+    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
+        💬 Fale connosco
+    </a>
+
     <script>
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
+        }
+    </script>
+
+    <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
+            <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
+            <p style="font-size:14px; line-height:1.6; color:#444; margin:8px 0;">Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
+            <p style="background:#f5f5f5; padding:12px; border-radius:10px; text-align:left;">
+                1. Toque no ícone <span style="display:inline-block; background:#007aff; color:#fff; padding:2px 10px; border-radius:6px; font-weight:bold; font-size:14px;">⬆</span> (Compartilhar) na barra inferior.<br>
+                2. Role para baixo e toque em <strong>"Adicionar à tela de início"</strong>.<br>
+                3. Toque em <strong>"Adicionar"</strong> no canto superior direito.
+            </p>
+            <button id="btn-fechar-guia-ios" style="background:var(--cor-ouro); border:none; padding:10px 30px; border-radius:40px; font-weight:700; cursor:pointer; margin-top:16px; color:#000;">✅ Entendi</button>
+        </div>
+    </div>
+
+    <script>
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const banner = document.getElementById('pwa-install-banner');
+        if (!isStandalone) banner.style.display = 'block';
+
+        let deferredPrompt = null;
+        const btnInstalar = document.getElementById('btn-instalar-inline');
+        const btnFecharBanner = document.getElementById('btn-fechar-banner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            banner.style.display = 'block';
+        });
+
+        btnInstalar.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') banner.style.display = 'none';
+                deferredPrompt = null;
+            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                document.getElementById('ios-guide-modal').style.display = 'flex';
+            } else {
+                alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');
+            }
+        });
+
+        btnFecharBanner.addEventListener('click', () => { banner.style.display = 'none'; });
+        document.getElementById('btn-fechar-guia-ios').addEventListener('click', () => {
+            document.getElementById('ios-guide-modal').style.display = 'none';
+        });
     </script>
 </body>
 </html>
