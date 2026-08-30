@@ -14,14 +14,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=10" />
     <link rel="icon" type="image/png" href="logo auro.png" />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="logo auro.png" />
-    <!-- 👇 REMOVIDOS os scripts pesados (jsPDF, autotable) -->
 </head>
 <body>
-
     <!-- TOAST -->
     <div id="toast-notificacao" role="alert" aria-live="polite">
         <span id="toastMensagem">Adicionado ao carrinho!</span>
@@ -42,8 +38,7 @@
             </form>
             <div class="header-icones">
                 <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small>
-                    Conta
+                    <small>Olá, faça seu login</small> Conta
                 </button>
                 <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
                     🛒 <span id="badgeContador">0</span>
@@ -51,116 +46,235 @@
             </div>
         </div>
 
+        <!-- MENU COMPLETO COM TODAS AS CATEGORIAS -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html" class="ativo">Home</a></li>
-                <li><a href="#" data-categoria="eletronicos">Eletrônicos</a></li>
-                <li><a href="#" data-categoria="consolas">Consolas</a></li>
-                <li><a href="#" data-categoria="beleza">Beleza</a></li>
-                <li><a href="#" data-categoria="cozinha">Cozinha</a></li>
-                <li><a href="#" data-categoria="colunas">Colunas</a></li>
-                <li><a href="#" data-categoria="ferramentas">Ferramentas</a></li>
-                <li><a href="#" data-categoria="casa">Casa</a></li>
+
+                <!-- Eletrônicos -->
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Roupas ▾</a>
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Eletrônicos ▾</a>
                     <ul class="submenu" role="menu">
-                        <li><a href="#" data-categoria="feminino" role="menuitem">Feminino</a></li>
-                        <li><a href="#" data-categoria="masculino" role="menuitem">Masculino</a></li>
-                        <li><a href="#" data-categoria="calcados" role="menuitem">Sapatos</a></li>
-                        <li><a href="#" data-categoria="joias" role="menuitem">Pulseiras</a></li>
+                        <li><a href="categoria.html?cat=eletronicos" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=smartphones" role="menuitem">Smartphones</a></li>
+                        <li><a href="categoria.html?cat=tablets" role="menuitem">Tablets</a></li>
+                        <li><a href="categoria.html?cat=notebooks" role="menuitem">Notebooks</a></li>
+                        <li><a href="categoria.html?cat=acessorios-eletronicos" role="menuitem">Acessórios</a></li>
                     </ul>
                 </li>
-                <li><a href="#" data-categoria="automoveis">Carros</a></li>
+
+                <!-- Games & Consolas -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Games ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=games" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=consolas" role="menuitem">Consolas</a></li>
+                        <li><a href="categoria.html?cat=jogos" role="menuitem">Jogos</a></li>
+                        <li><a href="categoria.html?cat=controles" role="menuitem">Controles</a></li>
+                        <li><a href="categoria.html?cat=headsets" role="menuitem">Headsets</a></li>
+                        <li><a href="categoria.html?cat=cadeiras-gamer" role="menuitem">Cadeiras Gamer</a></li>
+                    </ul>
+                </li>
+
+                <!-- Moda & Acessórios -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Moda ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=moda" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=feminino" role="menuitem">Feminino</a></li>
+                        <li><a href="categoria.html?cat=masculino" role="menuitem">Masculino</a></li>
+                        <li><a href="categoria.html?cat=calcados" role="menuitem">Calçados</a></li>
+                        <li><a href="categoria.html?cat=joias" role="menuitem">Joias</a></li>
+                        <li><a href="categoria.html?cat=oculos" role="menuitem">Óculos</a></li>
+                        <li><a href="categoria.html?cat=relogios" role="menuitem">Relógios</a></li>
+                        <li><a href="categoria.html?cat=bolsas" role="menuitem">Bolsas</a></li>
+                        <li><a href="categoria.html?cat=cintos-bones" role="menuitem">Cintos & Bonés</a></li>
+                    </ul>
+                </li>
+
+                <!-- Beleza -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Beleza ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=beleza" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=maquiagem" role="menuitem">Maquiagem</a></li>
+                        <li><a href="categoria.html?cat=cuidados-pele" role="menuitem">Cuidados com a Pele</a></li>
+                        <li><a href="categoria.html?cat=perfumes" role="menuitem">Perfumes</a></li>
+                        <li><a href="categoria.html?cat=manicure-pedicure" role="menuitem">Manicure & Pedicure</a></li>
+                    </ul>
+                </li>
+
+                <!-- Casa & Decoração -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Casa ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=casa" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=cozinha" role="menuitem">Cozinha</a></li>
+                        <li><a href="categoria.html?cat=decoracao" role="menuitem">Decoração</a></li>
+                        <li><a href="categoria.html?cat=iluminacao" role="menuitem">Iluminação</a></li>
+                        <li><a href="categoria.html?cat=jardinagem" role="menuitem">Jardinagem</a></li>
+                        <li><a href="categoria.html?cat=organizadores" role="menuitem">Organizadores</a></li>
+                    </ul>
+                </li>
+
+                <!-- Esporte & Lazer -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Esporte ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=esporte" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=futebol" role="menuitem">Futebol</a></li>
+                        <li><a href="categoria.html?cat=fitness" role="menuitem">Fitness</a></li>
+                        <li><a href="categoria.html?cat=ciclismo" role="menuitem">Ciclismo</a></li>
+                        <li><a href="categoria.html?cat=camping" role="menuitem">Camping</a></li>
+                    </ul>
+                </li>
+
+                <!-- Infantil & Brinquedos -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Infantil ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=infantil" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=bebes" role="menuitem">Bebês</a></li>
+                        <li><a href="categoria.html?cat=criancas" role="menuitem">Crianças</a></li>
+                        <li><a href="categoria.html?cat=bonecas" role="menuitem">Bonecas</a></li>
+                        <li><a href="categoria.html?cat=carrinhos" role="menuitem">Carrinhos</a></li>
+                        <li><a href="categoria.html?cat=quebra-cabecas" role="menuitem">Quebra-cabeças</a></li>
+                    </ul>
+                </li>
+
+                <!-- Livros & Papelaria -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Livros ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=livros" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=livros-tecnicos" role="menuitem">Técnicos</a></li>
+                        <li><a href="categoria.html?cat=bestsellers" role="menuitem">Bestsellers</a></li>
+                        <li><a href="categoria.html?cat=material-escolar" role="menuitem">Material Escolar</a></li>
+                        <li><a href="categoria.html?cat=escritorio" role="menuitem">Escritório</a></li>
+                    </ul>
+                </li>
+
+                <!-- Ferramentas & Construção -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Ferramentas ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=ferramentas" role="menuitem">Ferramentas</a></li>
+                        <li><a href="categoria.html?cat=eletrica" role="menuitem">Elétrica</a></li>
+                        <li><a href="categoria.html?cat=hidraulica" role="menuitem">Hidráulica</a></li>
+                        <li><a href="categoria.html?cat=tintas" role="menuitem">Tintas</a></li>
+                        <li><a href="categoria.html?cat=construcao" role="menuitem">Construção</a></li>
+                    </ul>
+                </li>
+
+                <!-- Alimentos & Bebidas -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Alimentos ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=alimentos" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=gourmet" role="menuitem">Gourmet</a></li>
+                        <li><a href="categoria.html?cat=cafes-chas" role="menuitem">Cafés & Chás</a></li>
+                        <li><a href="categoria.html?cat=snacks" role="menuitem">Snacks</a></li>
+                    </ul>
+                </li>
+
+                <!-- Saúde & Suplementos -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Saúde ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=saude" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=vitaminas" role="menuitem">Vitaminas</a></li>
+                        <li><a href="categoria.html?cat=proteinas" role="menuitem">Proteínas</a></li>
+                        <li><a href="categoria.html?cat=termogenicos" role="menuitem">Termogênicos</a></li>
+                        <li><a href="categoria.html?cat=equipamentos-medicao" role="menuitem">Equip. Medição</a></li>
+                    </ul>
+                </li>
+
+                <!-- Viagem & Malas -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Viagem ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=viagem" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=malas-mochilas" role="menuitem">Malas & Mochilas</a></li>
+                        <li><a href="categoria.html?cat=necessaires" role="menuitem">Necessaires</a></li>
+                        <li><a href="categoria.html?cat=travesseiros-viagem" role="menuitem">Travesseiros</a></li>
+                    </ul>
+                </li>
+
+                <!-- Música & Instrumentos -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Música ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=musica" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=violoes" role="menuitem">Violões</a></li>
+                        <li><a href="categoria.html?cat=teclados" role="menuitem">Teclados</a></li>
+                        <li><a href="categoria.html?cat=baterias" role="menuitem">Baterias</a></li>
+                        <li><a href="categoria.html?cat=acessorios-musica" role="menuitem">Acessórios Musicais</a></li>
+                    </ul>
+                </li>
+
+                <!-- Pet Shop -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Pets ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=pets" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=racao" role="menuitem">Ração</a></li>
+                        <li><a href="categoria.html?cat=brinquedos-pets" role="menuitem">Brinquedos</a></li>
+                        <li><a href="categoria.html?cat=banho-tosa" role="menuitem">Banho & Tosa</a></li>
+                        <li><a href="categoria.html?cat=roupas-pets" role="menuitem">Roupas</a></li>
+                    </ul>
+                </li>
+
+                <!-- Escritório & Informática -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" aria-haspopup="true">Escritório ▾</a>
+                    <ul class="submenu" role="menu">
+                        <li><a href="categoria.html?cat=escritorio" role="menuitem">Todos</a></li>
+                        <li><a href="categoria.html?cat=cadeiras-escritorio" role="menuitem">Cadeiras</a></li>
+                        <li><a href="categoria.html?cat=mesas" role="menuitem">Mesas</a></li>
+                        <li><a href="categoria.html?cat=impressoras" role="menuitem">Impressoras</a></li>
+                        <li><a href="categoria.html?cat=material-escritorio" role="menuitem">Material</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="categoria.html?cat=colunas">Colunas</a></li>
+                <li><a href="categoria.html?cat=automoveis">Carros</a></li>
                 <li><a href="blog.html">📖 Blog</a></li>
-                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear Pedido</a></li>
+                <li><a href="rastreio.html" style="color:#25D366; font-weight:700;">📦 Rastrear</a></li>
             </ul>
         </nav>
     </header>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <main id="conteudo-principal" role="main">
         <!-- CARROSSEL -->
         <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
-                    <div class="slide ativo">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
-                        <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
-                        <div class="slide-texto">
-                            <h2>🔥 Promoção Gamer!</h2>
-                            <p> PS5, Xbox e Nintendo Switch com até 20% OFF</p>
-                            <a href="#" class="btn-slide">Aproveitar Oferta</a>
-                        </div>
-                    </div>
-                    <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
-                        <img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" />
-                        <div class="slide-texto">
-                            <h2>⚡ Sinta a Ação</h2>
-                            <p>Equipa-te com os melhores acessórios para as tuas consolas favoritas</p>
-                            <a href="#" class="btn-slide">Comprar Agora</a>
-                        </div>
-                    </div>
-                    <div class="slide">
-                        <!-- 👇 REMOVIDO o loading="lazy" -->
-                        <img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" />
-                        <div class="slide-texto">
-                            <h2>💅 📱 Eleve o seu Estilo</h2>
-                            <p>A melhor tecnologia para o seu dia a dia</p>
-                            <a href="#" class="btn-slide">Aproveitar Agora</a>
-                        </div>
-                    </div>
+                    <div class="slide ativo"><img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" /><div class="slide-texto"><h2>🔥 Promoção Gamer!</h2><p>PS5, Xbox e Nintendo Switch com até 20% OFF</p><a href="#" class="btn-slide">Aproveitar Oferta</a></div></div>
+                    <div class="slide"><img src="https://i.ibb.co/Qv77KtnB/xbox.jpg" alt="Oferta 2" /><div class="slide-texto"><h2>⚡ Sinta a Ação</h2><p>Equipa-te com os melhores acessórios</p><a href="#" class="btn-slide">Comprar Agora</a></div></div>
+                    <div class="slide"><img src="https://i.ibb.co/kskH2R9h/baixados-1-111111123.png" alt="Oferta 3" /><div class="slide-texto"><h2>💅 📱 Eleve o seu Estilo</h2><p>A melhor tecnologia para o seu dia a dia</p><a href="#" class="btn-slide">Aproveitar Agora</a></div></div>
                 </div>
-                <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)" aria-label="Slide anterior">❮</button>
-                <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)" aria-label="Próximo slide">❯</button>
-                <div class="carrossel-indicadores" id="carrosselIndicadores">
-                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0"></span>
-                    <span class="indicador" data-slide="1" role="button" tabindex="0"></span>
-                    <span class="indicador" data-slide="2" role="button" tabindex="0"></span>
-                </div>
+                <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)">❮</button>
+                <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)">❯</button>
             </div>
         </section>
 
-        <!-- BOTÃO DE RASTREIO -->
+        <!-- BOTÃO RASTREIO -->
         <div style="max-width:1480px; margin: 20px auto 0; padding: 0 24px; display:flex; justify-content:center;">
-            <a href="rastreio.html" 
-               style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); 
-                      padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px; 
-                      display:inline-flex; align-items:center; gap:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-                      transition: 0.2s;">
-                📦 Rastrear meu pedido
-            </a>
-        </div>
-
-        <!-- BANNER PWA -->
-        <div id="pwa-install-banner" class="pwa-install-banner" style="display:none; max-width:1480px; margin: 20px auto 0; padding: 0 24px;">
-            <div style="background: var(--cor-esmeralda); color: white; padding: 14px 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%; border: 1px solid var(--cor-ouro);">
-                <span style="font-weight: 600; font-size: 16px;">📲 Baixe o App Aurora para uma experiência mais rápida!</span>
-                <div style="display: flex; gap: 10px;">
-                    <button id="btn-instalar-inline" class="btn-instalar-inline" style="background: var(--cor-ouro); color: #000; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 700; cursor: pointer;">Instalar Agora</button>
-                    <button id="btn-fechar-banner" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
-                </div>
-            </div>
+            <a href="rastreio.html" style="background:var(--cor-esmeralda); color:#FFF; border:2px solid var(--cor-ouro); padding:15px 40px; border-radius:50px; text-decoration:none; font-weight:700; font-size:18px; display:inline-flex; align-items:center; gap:10px;">📦 Rastrear meu pedido</a>
         </div>
 
         <!-- MAIS COMPRADOS -->
         <section class="secao-mais-comprados" style="max-width:1480px; margin:30px auto 0; padding:0 24px;">
-            <div class="secao-titulo">
-                <h2 style="color:#111;">⭐ Mais Comprados da Semana</h2>
-                <a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a>
-            </div>
+            <div class="secao-titulo"><h2 style="color:#111;">⭐ Mais Comprados da Semana</h2><a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a></div>
             <div class="grade-produtos" id="maisCompradosGrid"></div>
         </section>
 
         <!-- VITRINE -->
-        <div class="vitrine-container">
+        <div class="vitrine-container" style="max-width:1480px; margin:20px auto; padding:0 24px; display:grid; grid-template-columns:240px 1fr; gap:24px;">
             <aside class="filtros-sidebar">
                 <h3>Filtrar por</h3>
                 <div class="filtro-preco">
@@ -169,219 +283,52 @@
                     <label for="precoMax" style="margin-top:10px;">Preço máximo: <span id="precoMaxLabel">500000</span> Kz</label>
                     <input type="range" id="precoMax" min="0" max="500000" value="500000" step="1000" />
                 </div>
-                <div class="filtro-ordem" style="margin-top:16px;">
-                    <label for="ordenar">Ordenar por:</label>
-                    <select id="ordenar">
-                        <option value="ordem">Destaque</option>
-                        <option value="preco-asc">Menor preço</option>
-                        <option value="preco-desc">Maior preço</option>
-                        <option value="nome">Nome A-Z</option>
-                    </select>
-                </div>
+                <div class="filtro-ordem" style="margin-top:16px;"><label for="ordenar">Ordenar por:</label><select id="ordenar"><option value="ordem">Destaque</option><option value="preco-asc">Menor preço</option><option value="preco-desc">Maior preço</option><option value="nome">Nome A-Z</option></select></div>
             </aside>
-            <section>
+            <section style="min-width:0;">
                 <div id="carregandoProdutos" style="text-align:center; padding:40px; color:#999;">Carregando produtos...</div>
                 <div class="grade-produtos" id="gradeProdutos"></div>
-                <div id="paginaControles" style="display:flex; justify-content:center; margin:20px 0;">
-                    <button id="carregarMais" style="background:var(--cor-botao); border:none; padding:10px 30px; border-radius:20px; font-weight:600; cursor:pointer; color:#000;">Carregar mais</button>
-                </div>
             </section>
         </div>
     </main>
 
     <!-- CARRINHO LATERAL -->
     <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
-        <div class="carrinho-header">
-            <h2>🛒 Minha Sacola</h2>
-            <button class="btn-fechar-carrinho" id="btnFecharCarrinho" aria-label="Fechar sacola">&times;</button>
-        </div>
+        <div class="carrinho-header"><h2>🛒 Minha Sacola</h2><button class="btn-fechar-carrinho" id="btnFecharCarrinho">&times;</button></div>
         <ul class="carrinho-corpo" id="itensCarrinhoLoja"></ul>
-        <div class="cupom-container" style="display:flex; gap:8px; padding:0 24px 12px;">
-            <input type="text" id="inputCupom" placeholder="Cupom de desconto" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:8px; font-size:13px;" />
-            <button id="btnAplicarCupom" style="background:var(--cor-esmeralda); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Aplicar</button>
-        </div>
-        <div class="carrinho-footer">
-            <div class="total-linha">
-                <span>Total:</span>
-                <span><span id="totalCarrinhoLoja">0</span> Kz</span>
-            </div>
-            <button id="btnFinalizarWhatsApp" class="btn-finalizar">Finalizar Pedido</button>
-        </div>
+        <div class="carrinho-footer"><div class="total-linha"><span>Total:</span><span><span id="totalCarrinhoLoja">0</span> Kz</span></div><button id="btnFinalizarWhatsApp" class="btn-finalizar">Finalizar Pedido</button></div>
     </aside>
 
-    <!-- MODAL DO CLIENTE -->
+    <!-- MODAL CLIENTE -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
-            <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
+            <button id="btnFecharModal" class="btn-fechar-modal">&times;</button>
             <h2>Dados do Cliente</h2>
-            <label for="inputNome">Nome do Cliente *</label>
-            <input type="text" id="inputNome" placeholder="Ex: João Silva" required aria-required="true" />
+            <label>Nome do Cliente *</label><input type="text" id="inputNome" placeholder="Ex: João Silva" required />
             <span class="erro-validacao" id="erroNome"></span>
-            <label for="inputTelefone">Telefone *</label>
-            <input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required aria-required="true" />
+            <label>Telefone *</label><input type="tel" id="inputTelefone" placeholder="Ex: 934220337" pattern="[0-9]{9,15}" required />
             <span class="erro-validacao" id="erroTelefone"></span>
-            <label for="inputNif">NIF *</label>
-            <input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required aria-required="true" />
+            <label>NIF *</label><input type="text" id="inputNif" placeholder="Ex: 5000171646" pattern="[0-9]{10}" required />
             <span class="erro-validacao" id="erroNif"></span>
-            <label for="inputMorada">Morada</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, Castilhos, s/n" style="flex:1;" />
-                <button type="button" id="btnGPS" style="background:var(--cor-ouro); border:none; padding:8px 14px; border-radius:40px; font-weight:600; cursor:pointer;">📍 GPS</button>
-            </div>
-            <small style="display:block; margin-top:4px; color:#888; font-size:12px;">Clique em GPS para preencher automaticamente sua localização.</small>
+            <label>Morada</label><input type="text" id="inputMorada" placeholder="Ex: Rua da Ende, s/n" />
             <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura e Pagar</button>
         </div>
     </div>
 
-    <!-- MODAL DE PAGAMENTO MULTICAIXA -->
-    <div id="modalPagamento" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:#fff; max-width:450px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center; position:relative;">
-            <h2 style="color:var(--cor-esmeralda); margin-bottom:8px;">💳 Pagamento Multicaixa</h2>
-            <p style="color:#666; font-size:14px;">Transfira o valor usando os dados abaixo:</p>
-            
-            <div style="background:#f4f4f4; padding:16px; border-radius:12px; margin:16px 0; text-align:left; border:1px dashed var(--cor-ouro);">
-                <p style="margin:4px 0; font-size:13px;"><strong>Banco:</strong> BAI / Standard Bank</p>
-                <p style="margin:4px 0; font-size:13px;"><strong>NIF:</strong> 5000048151</p>
-                <p style="margin:4px 0; font-size:13px;"><strong>Valor:</strong> <span id="pagValor" style="color:var(--cor-esmeralda); font-weight:bold;">0 Kz</span></p>
-                <p style="margin:4px 0; font-size:13px;"><strong>Referência:</strong> <span id="pagRef" style="background:#222; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace;">PAY-2026-0000</span></p>
-            </div>
-
-            <div style="margin:10px 0;">
-                <img id="pagQR" src="" alt="QR Code para pagamento" style="width:140px; height:140px; border:1px solid #ddd; border-radius:8px; padding:4px;" />
-                <p style="font-size:11px; color:#888;">Escaneie pelo aplicativo do seu banco</p>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
-                <button id="btnCopiarRef" style="background:#D4AF37; color:#000; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">📋 Copiar Referência</button>
-                <button id="btnConfirmarPagamento" style="background:#25D366; color:#fff; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">✅ Já paguei, enviar pedido</button>
-                <button id="btnFecharPagamento" style="background:transparent; color:#999; border:none; cursor:pointer; font-size:13px;">Cancelar pedido</button>
-            </div>
-            <small style="display:block; margin-top:10px; color:#999; font-size:11px;">O pedido só será processado após a confirmação do pagamento via WhatsApp.</small>
-        </div>
-    </div>
-
-    <!-- BALANÇO -->
-    <section class="secao-balanco" id="balanco-secao">
-        <h2>📊 Balanço de Vendas & Histórico da Semana</h2>
-        <div class="painel-faturamento">
-            <div class="card-faturamento sucesso">
-                <p>Faturamento Total</p>
-                <h3><span id="faturamentoTotal">0</span> Kz</h3>
-            </div>
-            <div class="card-faturamento">
-                <p>Pedidos Concluídos</p>
-                <h3><span id="qtdPedidosTotal">0</span></h3>
-            </div>
-            <div class="card-faturamento">
-                <p>Itens Vendidos</p>
-                <h3><span id="itensVendidosTotal">0</span></h3>
-            </div>
-        </div>
-        <div class="tabela-historico-container">
-            <table class="tabela-historico">
-                <thead><tr><th>Data / Hora</th><th>Produtos</th><th>Total</th></tr></thead>
-                <tbody id="corpoTabelaHistorico"></tbody>
-            </table>
-        </div>
-        <button class="btn-limpar-balanco" id="btnLimparHistorico">Limpar Histórico da Semana</button>
-    </section>
-
     <!-- RODAPÉ -->
-    <footer class="rodape-profissional" id="sobre-empresa">
+    <footer class="rodape-profissional">
         <div class="rodape-grid">
-            <div class="rodape-coluna">
-                <h3>Aurora Comercial</h3>
-                <p>Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais.</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Categorias</h4>
-                <ul>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('eletronicos')">Eletrônicos</a></li>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('consolas')">Consolas</a></li>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('beleza')">Beleza</a></li>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('cozinha')">Cozinha</a></li>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('casa')">Casa</a></li>
-                    <li><a href="#" onclick="window.filtrarPorCategoria('automoveis')">Carros</a></li>
-                </ul>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Institucional</h4>
-                <ul>
-                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
-                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
-                    <li><a href="blog.html">📖 Blog</a></li>
-                </ul>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Contacto</h4>
-                <p>📞 +244 933 677 628</p>
-                <p>✉️ contacto@aurorarte.ao</p>
-                <p>📍 Luanda, Angola</p>
-            </div>
+            <div class="rodape-coluna"><h3>Aurora Comercial</h3><p>Marketplace angolano com curadoria premium.</p></div>
+            <div class="rodape-coluna"><h4>Contacto</h4><p>📞 +244 933 677 628</p><p>✉️ contacto@aurorarte.ao</p></div>
+            <div class="rodape-coluna"><h4>Institucional</h4><ul><li><a href="sobre.html">🏬 Sobre Nós</a></li><li><a href="politica.html">📜 Política</a></li><li><a href="blog.html">📖 Blog</a></li></ul></div>
         </div>
-        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <script type="module" src="js/app.js?v=3"></script>
-    
-    <!-- 👇 BOTÃO FLUTUANTE COM O NÚMERO OFICIAL -->
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
-        💬 Fale connosco
-    </a>
-
+    <script type="module" src="js/app.js?v=10"></script>
+    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda" target="_blank" class="whatsapp-float">💬 Fale connosco</a>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker registrado com sucesso!'))
-                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
-        }
-    </script>
-
-    <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
-            <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
-            <p style="font-size:14px; line-height:1.6; color:#444; margin:8px 0;">Para instalar o app Aurora no seu iPhone, siga estes passos:</p>
-            <p style="background:#f5f5f5; padding:12px; border-radius:10px; text-align:left;">
-                1. Toque no ícone <span style="display:inline-block; background:#007aff; color:#fff; padding:2px 10px; border-radius:6px; font-weight:bold; font-size:14px;">⬆</span> (Compartilhar) na barra inferior.<br>
-                2. Role para baixo e toque em <strong>"Adicionar à tela de início"</strong>.<br>
-                3. Toque em <strong>"Adicionar"</strong> no canto superior direito.
-            </p>
-            <button id="btn-fechar-guia-ios" style="background:var(--cor-ouro); border:none; padding:10px 30px; border-radius:40px; font-weight:700; cursor:pointer; margin-top:16px; color:#000;">✅ Entendi</button>
-        </div>
-    </div>
-
-    <script>
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-        const banner = document.getElementById('pwa-install-banner');
-        if (!isStandalone) banner.style.display = 'block';
-
-        let deferredPrompt = null;
-        const btnInstalar = document.getElementById('btn-instalar-inline');
-        const btnFecharBanner = document.getElementById('btn-fechar-banner');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            banner.style.display = 'block';
-        });
-
-        btnInstalar.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') banner.style.display = 'none';
-                deferredPrompt = null;
-            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                document.getElementById('ios-guide-modal').style.display = 'flex';
-            } else {
-                alert('Seu navegador não suporta instalação automática. Use o menu do navegador para adicionar à tela inicial.');
-            }
-        });
-
-        btnFecharBanner.addEventListener('click', () => { banner.style.display = 'none'; });
-        document.getElementById('btn-fechar-guia-ios').addEventListener('click', () => {
-            document.getElementById('ios-guide-modal').style.display = 'none';
-        });
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
     </script>
 </body>
 </html>
