@@ -1,0 +1,10 @@
+name = "aurora-comercial"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aurora-db"
+database_id = "6185ec4d-873f-4c8f-8c7b-35fcef4fa3e2"
+
+[ai]
+binding = "AI"

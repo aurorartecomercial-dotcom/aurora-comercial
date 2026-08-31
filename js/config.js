@@ -1,27 +1,9 @@
-// =========================================================
-// CONFIGURAÇÃO DO FIREBASE - AURORA COMERCIAL
-// =========================================================
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+// Configuração da API
+export const API_URL = ''; // Deixe vazio, pois as rotas são relativas ao domínio atual
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDhXoAdNf7eAT0GqrpNSHDN1x_Hd5JvzH4",
-  authDomain: "aurora-comerciall.firebaseapp.com",
-  projectId: "aurora-comerciall",
-  storageBucket: "aurora-comerciall.firebasestorage.app",
-  messagingSenderId: "998765354073",
-  appId: "1:998765354073:web:ea2c6934e8e9d4cad3a548",
-  measurementId: "G-FLB61EN4Q9"
-};
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-
-// ⚠️ NÃO ESQUEÇA DE EXPORTAR O CONFIG!
 export const CONFIG = {
     CACHE_KEY: 'aurora_catalogo_cache',
-    CACHE_TTL: 30 * 60 * 1000, // 30 minutos (reduzido de 1h)
-    NUMERO_WHATSAPP: '244933677628'
+    CACHE_TTL: 30 * 60 * 1000, // 30 minutos
+    NUMERO_WHATSAPP: '244933677628',
+    IMAGEM_FALLBACK: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5TZW0gSW1hZ2VtPC90ZXh0Pjwvc3ZnPg=='
 };

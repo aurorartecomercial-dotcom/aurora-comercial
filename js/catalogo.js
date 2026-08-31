@@ -1,7 +1,6 @@
-import { db, CONFIG } from './config.js';
-import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
+import { CONFIG } from './config.js';
 import { obterAvaliacao } from './avaliacoes.js';
+import { extrairValorNumerico } from './utils.js';
 
 // Cache em memória para buscas rápidas
 let cacheMemoria = null;
@@ -12,7 +11,7 @@ export async function carregarCatalogo() {
     if (catalogoPromise) return catalogoPromise;
 
     catalogoPromise = new Promise(async (resolve) => {
-        // 1. LocalStorage (instantâneo)
+        // 1. Tenta buscar do cache local (instantâneo)
         try {
             const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
             if (cachedStr) {
@@ -20,37 +19,30 @@ export async function carregarCatalogo() {
                 if (cache.data && cache.data.length > 0) {
                     cacheMemoria = cache.data;
                     resolve(cacheMemoria);
-                    atualizarDoFirebase();
+                    // Atualiza em segundo plano
+                    atualizarDoServidor();
                     return;
                 }
             }
         } catch (e) {}
 
-        // 2. Firebase
-        try {
-            const snapshot = await getDocs(collection(db, 'produtos'));
-            const produtos = snapshot.docs.map(doc => doc.data());
-            cacheMemoria = produtos;
-            localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
-            resolve(produtos);
-        } catch (e) {
-            console.warn('Falha ao buscar do Firestore:', e);
-            if (cacheMemoria) resolve(cacheMemoria);
-            else resolve([]);
-        }
+        // 2. Busca da API do Cloudflare
+        await atualizarDoServidor(resolve);
     });
 
     return catalogoPromise;
 }
 
-async function atualizarDoFirebase() {
+async function atualizarDoServidor(resolveCallback) {
     try {
-        const snapshot = await getDocs(collection(db, 'produtos'));
-        const produtos = snapshot.docs.map(doc => doc.data());
+        const response = await fetch('/api/produtos');
+        const produtos = await response.json();
         cacheMemoria = produtos;
         localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
+        if (resolveCallback) resolveCallback(produtos);
     } catch (e) {
-        console.warn('Falha ao atualizar do Firebase:', e);
+        console.warn('Falha ao buscar produtos do servidor:', e);
+        if (resolveCallback) resolveCallback([]);
     }
 }
 
@@ -61,7 +53,7 @@ export function criarCardProduto(prod) {
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : IMAGEM_FALLBACK;
+    let imgSrc = prod.imagem || CONFIG.IMAGEM_FALLBACK;
 
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
     const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
@@ -69,27 +61,27 @@ export function criarCardProduto(prod) {
     let html = `
         <div class="produto-imagem">
             <img src="${imgSrc}" alt="${prod.nome}" loading="lazy" decoding="async" 
-                 onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">
+                 onerror="this.onerror=null; this.src='${CONFIG.IMAGEM_FALLBACK}';">
         </div>
         <div class="produto-info">
             <span class="categoria-tag">${prod.tag || prod.categoria}</span>
             <h3>${prod.nome}</h3>
     `;
 
-    if (prod.precoAntigo) {
+    if (prod.preco_antigo) {
         html += `<p class="preco"><span class="desconto">${prod.desconto || ''}</span> ${prod.preco}</p>`;
-        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.precoAntigo}</span>`;
+        html += `<span style="text-decoration:line-through;color:#999;font-size:14px;">${prod.preco_antigo}</span>`;
     } else {
         html += `<p class="preco">${prod.preco}</p>`;
     }
 
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
 
-    // ⭐ SELOS DE ENTREGA (novo)
-    if (prod.freteGratis) {
-        if (prod.prazoEntrega === 'hoje') {
+    // Selos de entrega
+    if (prod.frete_gratis) {
+        if (prod.prazo_entrega === 'hoje') {
             html += `<span class="selo-entrega hoje">Chegará grátis hoje</span>`;
-        } else if (prod.prazoEntrega === 'amanha') {
+        } else if (prod.prazo_entrega === 'amanha') {
             html += `<span class="selo-entrega amanha">Chegará grátis amanhã ⚡ FULL</span>`;
         } else {
             html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
@@ -133,7 +125,7 @@ export function criarCardProduto(prod) {
 export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao) {
     let filtrados = produtos.filter(prod => {
         const matchCategoria = categoria === 'todos' || prod.categoria === categoria;
-        const matchBusca = !busca || prod.nome.toLowerCase().includes(busca.toLowerCase()) || prod.tag.toLowerCase().includes(busca.toLowerCase()) || prod.categoria.toLowerCase().includes(busca.toLowerCase());
+        const matchBusca = !busca || prod.nome.toLowerCase().includes(busca.toLowerCase()) || (prod.tag || '').toLowerCase().includes(busca.toLowerCase()) || prod.categoria.toLowerCase().includes(busca.toLowerCase());
         const precoNum = extrairValorNumerico(prod.preco);
         const matchPreco = precoNum >= min && precoNum <= max;
         return matchCategoria && matchBusca && matchPreco;
