@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {}
     }
 
-    // ✅ 2. Se não tem cache, busca do Firebase, mas agora com tempo limite
+    // ✅ 2. Se não tem cache, busca da API
     if (catalogo.length === 0) {
         catalogo = await carregarCatalogo();
     }
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ✅ 3. Renderiza o produto IMEDIATAMENTE (sem esperar avaliação)
     renderizarDetalhes(prod);
-    atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
+    atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagem || '');
 
     // ✅ 4. Carrega a avaliação em segundo plano e atualiza o DOM
     carregarAvaliacaoAsync(prod.id);
@@ -72,9 +72,9 @@ function renderizarDetalhes(prod) {
     }
     if (prodName) prodName.textContent = prod.nome;
 
-    // ✅ VERIFICAÇÃO PARA EVITAR UNDEFINED
-    const imagemPrincipal = (prod.imagens && prod.imagens.length > 0) ? prod.imagens[0] : IMAGEM_FALLBACK;
-    const miniaturasImagens = (prod.imagens && prod.imagens.length > 0) ? prod.imagens : [IMAGEM_FALLBACK];
+    // ✅ CORREÇÃO: usa prod.imagem (string única) em vez de prod.imagens[0]
+    const imagemPrincipal = prod.imagem || IMAGEM_FALLBACK;
+    const miniaturasImagens = [prod.imagem || IMAGEM_FALLBACK];
 
     let miniaturasHtml = miniaturasImagens.map((src, i) =>
         `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" 
@@ -104,12 +104,12 @@ function renderizarDetalhes(prod) {
                 <span class="categoria-tag">${prod.tag || prod.categoria}</span>
                 <h2>${prod.nome}</h2>
                 <div class="detalhes-precos">
-                    ${prod.precoAntigo ? `<span class="preco-antigo">${prod.precoAntigo}</span>` : ''}
+                    ${prod.preco_antigo ? `<span class="preco-antigo">${prod.preco_antigo}</span>` : ''}
                     <span class="preco-destaque">${prod.preco}</span>
                     ${prod.desconto ? `<span class="desconto-badge">${prod.desconto} OFF</span>` : ''}
                 </div>
                 ${prod.parcelas ? `<div class="parcelas">${prod.parcelas}</div>` : ''}
-                ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
+                ${prod.frete_gratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
                 <div class="descricao">${prod.descricao || 'Descrição não disponível.'}</div>
                 
                 ${videoHtml}
