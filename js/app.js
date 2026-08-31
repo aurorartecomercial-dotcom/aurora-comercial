@@ -68,25 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300));
     }
 
-    document.querySelectorAll('.menu-categorias a[data-categoria]').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.menu-categorias a[data-categoria]').forEach(l => l.classList.remove('ativo'));
-            link.classList.add('ativo');
-            categoriaAtiva = link.dataset.categoria;
-            paginaAtual = 1;
-            aplicarFiltros();
-        });
-    });
-
-    document.querySelectorAll('.filtro-rapido').forEach(el => {
-        el.addEventListener('click', () => {
-            const cat = el.dataset.categoria;
-            const link = document.querySelector(`.menu-categorias a[data-categoria="${cat}"]`);
-            if (link) link.click();
-        });
-    });
-
+    // ✅ 5. Preço mínimo e máximo
     const precoMinInput = document.getElementById('precoMin');
     const precoMaxInput = document.getElementById('precoMax');
     const precoMinLabel = document.getElementById('precoMinLabel');
@@ -109,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ✅ 6. Ordenação
     const ordenarSelect = document.getElementById('ordenar');
     if (ordenarSelect) {
         ordenarSelect.addEventListener('change', (e) => {
@@ -118,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ✅ 7. Botão "Carregar mais"
     const carregarMaisBtn = document.getElementById('carregarMais');
     if (carregarMaisBtn) {
         carregarMaisBtn.addEventListener('click', () => {
@@ -126,18 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const btnLimparHistorico = document.getElementById('btnLimparHistorico');
-    if (btnLimparHistorico) {
-        btnLimparHistorico.addEventListener('click', () => {
-            if (confirm('Deseja zerar o balanço e limpar o histórico de vendas da semana?')) {
-                localStorage.removeItem('aurora_historico_vendas');
-                renderizarBalancoSemanal();
-                mostrarToast('Histórico limpo!', 'sucesso');
-            }
-        });
-    }
-
-    renderizarBalancoSemanal();
     await aplicarFiltros();
 });
 
@@ -221,44 +193,9 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
-function renderizarBalancoSemanal() {
-    const historico = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
-    const corpoTabela = document.getElementById('corpoTabelaHistorico');
-    const faturamentoTotalHTML = document.getElementById('faturamentoTotal');
-    const qtdPedidosTotalHTML = document.getElementById('qtdPedidosTotal');
-    const itensVendidosTotalHTML = document.getElementById('itensVendidosTotal');
-
-    if (corpoTabela) {
-        corpoTabela.innerHTML = '';
-        let faturamentoAcumulado = 0;
-        let totalItensVendidos = 0;
-
-        if (historico.length === 0) {
-            corpoTabela.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">Nenhuma venda registada esta semana.</td></tr>`;
-        } else {
-            historico.forEach(venda => {
-                faturamentoAcumulado += venda.valorTotal || 0;
-                totalItensVendidos += venda.totalItens || 0;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${venda.dataHora || ''}</strong></td>
-                    <td>${venda.produtosResumo || ''}</td>
-                    <td style="color:#25D366; font-weight:bold;">${(venda.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
-                `;
-                corpoTabela.appendChild(tr);
-            });
-        }
-        if (faturamentoTotalHTML) faturamentoTotalHTML.textContent = faturamentoAcumulado.toLocaleString('pt-AO');
-        if (qtdPedidosTotalHTML) qtdPedidosTotalHTML.textContent = historico.length;
-        if (itensVendidosTotalHTML) itensVendidosTotalHTML.textContent = totalItensVendidos;
-    }
-}
-
+// ✅ Função de redirecionamento por categoria (para links do rodapé)
 window.filtrarPorCategoria = function(categoria) {
-    const link = document.querySelector(`.menu-categorias a[data-categoria="${categoria}"]`);
-    if (link) link.click();
-    else { categoriaAtiva = categoria; paginaAtual = 1; aplicarFiltros(); }
-    document.getElementById('conteudo-principal')?.scrollIntoView({ behavior: 'smooth' });
+    window.location.href = `categoria.html?cat=${categoria}`;
 };
 
 window.mudarSlide = function(direcao) {

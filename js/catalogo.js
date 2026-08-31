@@ -84,7 +84,17 @@ export function criarCardProduto(prod) {
     }
 
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
-    if (prod.freteGratis) { html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`; }
+
+    // ⭐ SELOS DE ENTREGA (novo)
+    if (prod.freteGratis) {
+        if (prod.prazoEntrega === 'hoje') {
+            html += `<span class="selo-entrega hoje">Chegará grátis hoje</span>`;
+        } else if (prod.prazoEntrega === 'amanha') {
+            html += `<span class="selo-entrega amanha">Chegará grátis amanhã ⚡ FULL</span>`;
+        } else {
+            html += `<span class="selo-frete"><strong>Frete grátis</strong> FULL</span>`;
+        }
+    }
 
     if (prod.estoque !== undefined) {
         if (prod.estoque <= 0) html += `<span style="display:block; color:#E74C3C; font-weight:700; margin-top:6px;">🚫 Esgotado</span>`;

@@ -164,6 +164,29 @@ body {
 .selo-frete { display: block; margin-top: 4px; font-size: 13px; background: var(--cor-esmeralda-claro); color: var(--cor-esmeralda); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
 .selo-frete strong { color: var(--cor-ouro); }
 
+/* ============================================================
+   SELOS DE ENTREGA (HOJE / AMANHÃ)
+   ============================================================ */
+.selo-entrega {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+.selo-entrega.hoje {
+    background: #e6f6e6;
+    color: #1a7f37;
+    border: 1px solid #1a7f37;
+}
+.selo-entrega.amanha {
+    background: #fff8e1;
+    color: #b8860b;
+    border: 1px solid #b8860b;
+}
+
 .carrinho-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 90, 76, 0.25); backdrop-filter: blur(4px); z-index: 1500; }
 .carrinho-sidebar { position: fixed; top: 0; right: -440px; width: 100%; max-width: 420px; height: 100vh; background: #FFF; box-shadow: -4px 0 30px rgba(0, 90, 76, 0.1); z-index: 2000; transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 2px solid var(--cor-ouro); }
 .carrinho-sidebar.ativo { right: 0; }
@@ -320,6 +343,58 @@ body {
 #previewImagens img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e0e0e0; background: #f9f9f9; transition: transform 0.2s ease; }
 #previewImagens img:hover { transform: scale(1.05); }
 
+/* ============================================================
+   GRADE DE CATEGORIAS (NOVA - SUBSTITUI O BALANÇO)
+   ============================================================ */
+.secao-categorias {
+    max-width: 1480px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+.secao-categorias h2 {
+    color: var(--cor-esmeralda);
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--cor-ouro);
+    padding-bottom: 10px;
+}
+.grade-categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+.categoria-card {
+    background: #fff;
+    border: 1px solid var(--cor-ouro-claro);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--cor-texto);
+    transition: all 0.3s ease;
+    box-shadow: var(--sombra-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+}
+.categoria-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--sombra-hover);
+    border-color: var(--cor-ouro);
+}
+.categoria-icone {
+    font-size: 48px;  /* Ícones maiores */
+    margin-bottom: 12px;
+    line-height: 1;
+}
+.categoria-nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cor-esmeralda);
+}
+
 .secao-balanco { max-width: 1480px; margin: 40px auto; padding: 24px 32px; background: #FFF; border-radius: 24px; box-shadow: var(--sombra-card); border: 1px solid var(--cor-ouro); }
 .secao-balanco h2 { margin-bottom: 16px; color: var(--cor-esmeralda); }
 .painel-faturamento { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
@@ -393,6 +468,22 @@ body {
     .menu-categorias ul li.dropdown.menu-aberto .submenu li a { padding: 8px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 
     .carrossel-ofertas { margin-top: 0; border-radius: 0; }
+    
+    /* Ajuste da grade de categorias no mobile */
+    .grade-categorias {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    .categoria-card {
+        padding: 12px 6px;
+        min-height: 90px;
+    }
+    .categoria-icone {
+        font-size: 32px;
+    }
+    .categoria-nome {
+        font-size: 12px;
+    }
 }
 
 /* ========== NOVAS REGRAS PARA SUBMENU EM DUAS COLUNAS (DESKTOP) ========== */
