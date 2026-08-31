@@ -69,6 +69,9 @@ body {
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
 #carrinhoTotalItens { font-size: 12px; color: var(--cor-ouro); }
 
+/* ============================================================
+   MENU PRINCIPAL - ESTRUTURA ATUALIZADA COM DROPDOWN 2 COLUNAS
+   ============================================================ */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; gap: 0; flex-wrap: wrap; }
 .menu-categorias ul li a {
@@ -76,10 +79,45 @@ body {
     font-size: 14px; font-weight: 500; transition: 0.2s; white-space: nowrap; border-bottom: 3px solid transparent;
 }
 .menu-categorias ul li a:hover, .menu-categorias ul li a.ativo { color: var(--cor-ouro); border-bottom-color: var(--cor-ouro); }
-.submenu { display: none; position: absolute; background: var(--cor-esmeralda); box-shadow: var(--sombra-hover); padding: 8px 0; border-radius: 0 0 8px 8px; min-width: 160px; border: 1px solid var(--cor-ouro); border-top: none; }
-.dropdown:hover .submenu { display: block; }
-.submenu li a { color: #FFF !important; }
-.submenu li a:hover { background: var(--cor-ouro); color: #000 !important; }
+
+/* Dropdown principal (Categorias) */
+.dropdown { position: relative; }
+.dropdown .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--cor-esmeralda);
+    border: 1px solid var(--cor-ouro);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    min-width: 340px;
+    padding: 8px;
+    grid-template-columns: 1fr 1fr; /* Duas colunas */
+    gap: 4px;
+    z-index: 1000;
+    max-height: 420px;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.dropdown:hover .submenu,
+.dropdown.menu-aberto .submenu {
+    display: grid;
+}
+.dropdown .submenu li a {
+    color: #FFFFFF;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    display: block;
+    text-decoration: none;
+}
+.dropdown .submenu li a:hover {
+    background: var(--cor-ouro);
+    color: #000;
+    border-bottom: none;
+}
 
 #menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-right: 0; }
 
@@ -340,6 +378,8 @@ body {
         color: var(--cor-ouro);
         border-bottom: none;
     }
+    
+    /* Dropdown em mobile */
     .dropdown:hover .submenu { display: none; }
     .submenu {
         position: static;
@@ -349,12 +389,13 @@ body {
         padding-left: 20px;
         border: none;
     }
-    .menu-categorias ul li.dropdown.menu-aberto .submenu { display: block; }
+    .menu-categorias ul li.dropdown.menu-aberto .submenu { display: grid; grid-template-columns: 1fr 1fr; padding-left: 10px; }
+    .menu-categorias ul li.dropdown.menu-aberto .submenu li a { padding: 8px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
     .carrossel-ofertas { margin-top: 0; border-radius: 0; }
 }
 
-/* ========== NOVAS REGRAS PARA SUBMENU EM DUAS COLUNAS ========== */
-/* Desktop */
+/* ========== NOVAS REGRAS PARA SUBMENU EM DUAS COLUNAS (DESKTOP) ========== */
 @media (min-width: 769px) {
     .dropdown .submenu {
         display: none;
@@ -385,21 +426,6 @@ body {
     .dropdown .submenu li a:hover {
         background: var(--cor-ouro);
         color: #000;
-    }
-}
-
-/* Mobile: submenu em lista vertical com duas colunas */
-@media (max-width: 768px) {
-    .menu-categorias ul li.dropdown.menu-aberto .submenu {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* DUAS COLUNAS NO MOBILE */
-        padding-left: 10px;
-        background: var(--cor-esmeralda-escuro);
-    }
-    .menu-categorias ul li.dropdown.menu-aberto .submenu li a {
-        padding: 8px;
-        font-size: 13px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 }
 
