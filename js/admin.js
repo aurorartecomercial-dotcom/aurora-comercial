@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLogin.addEventListener('click', async () => {
         try {
-            const response = await fetch('/api/admin/login', {
+            // ✅ CORREÇÃO: usa /api/login em vez de /api/admin/login
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailInput.value, password: senhaInput.value })
@@ -128,7 +129,7 @@ function iniciarAdmin() {
             preco: precoValor,
             preco_antigo: precoAntigo.value.trim() || null,
             descricao: descricao.value.trim(),
-            imagem: imagens.value.split(',')[0].trim() || '', // Apenas a primeira imagem
+            imagem: imagens.value.split(',')[0].trim() || '',
             estoque: parseInt(estoque.value) || 0,
             tag: tag.value.trim() || categoria.value,
             frete_gratis: freteGratis.checked ? 1 : 0,
@@ -177,7 +178,7 @@ function iniciarAdmin() {
         tag.value = prod.tag || '';
         preco.value = prod.preco;
         precoAntigo.value = prod.preco_antigo || '';
-        custo.value = prod.custo || ''; // (Nota: O campo custo não está na API, mas deixamos para compatibilidade)
+        custo.value = prod.custo || '';
         desconto.value = prod.desconto || '';
         parcelas.value = prod.parcelas || '';
         freteGratis.checked = prod.frete_gratis === 1;

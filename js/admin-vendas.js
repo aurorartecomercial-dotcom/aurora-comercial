@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLogin.addEventListener('click', async () => {
         try {
-            const response = await fetch('/api/admin/login', {
+            // ✅ CORREÇÃO: usa /api/login em vez de /api/admin/login
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailInput.value, password: senhaInput.value })
@@ -72,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarPedidos();
     });
 
-    // Configurar botões de exportação
     const botoes = ['Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'];
     botoes.forEach(tipo => {
         const btnPdf = document.getElementById(`btnExportarPDF${tipo}`);
