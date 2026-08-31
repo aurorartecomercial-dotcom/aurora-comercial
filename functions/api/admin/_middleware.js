@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const { request, env, next } = context;
   
-  // Se a rota NÃO começar por /api/admin, deixa passar
+  // Se a rota NÃO começar por /api/admin, deixa passar (permite HTML normal)
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/admin')) {
     return next();
