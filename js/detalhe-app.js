@@ -2,7 +2,7 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
-import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
+import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK, extrairValorNumerico } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
     let catalogo = [];
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
@@ -25,7 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {}
     }
 
-    // ✅ 2. Se não tem cache, busca da API
     if (catalogo.length === 0) {
         catalogo = await carregarCatalogo();
     }
@@ -42,11 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // ✅ 3. Renderiza o produto IMEDIATAMENTE (sem esperar avaliação)
     renderizarDetalhes(prod);
+    adicionarJSONLD(prod);
     atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagem || '');
-
-    // ✅ 4. Carrega a avaliação em segundo plano e atualiza o DOM
     carregarAvaliacaoAsync(prod.id);
 });
 
@@ -60,7 +56,6 @@ function mostrarErro(mensagem) {
     `;
 }
 
-// ✅ Função de renderização SEM `await` (síncrona)
 function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
@@ -72,7 +67,6 @@ function renderizarDetalhes(prod) {
     }
     if (prodName) prodName.textContent = prod.nome;
 
-    // ✅ CORREÇÃO: usa prod.imagem (string única) em vez de prod.imagens[0]
     const imagemPrincipal = prod.imagem || IMAGEM_FALLBACK;
     const miniaturasImagens = [prod.imagem || IMAGEM_FALLBACK];
 
@@ -92,7 +86,6 @@ function renderizarDetalhes(prod) {
         `;
     }
 
-    // ✅ Define um placeholder para a avaliação
     container.innerHTML = `
         <div class="detalhes-grid">
             <div class="detalhes-imagem-principal">
@@ -122,7 +115,6 @@ function renderizarDetalhes(prod) {
         </div>
     `;
 
-    // ✅ Configura miniaturas
     const miniaturas = document.querySelectorAll('#miniaturas img');
     const imgPrincipal = document.getElementById('detalhesImg');
     miniaturas.forEach(img => {
@@ -133,13 +125,11 @@ function renderizarDetalhes(prod) {
         });
     });
 
-    // ✅ Botão de comprar
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
-        adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
+        adicionarProdutoCarrinho(prod.id, prod.nome, prod.preco, prod.estoque);
     });
 }
 
-// ✅ Carrega avaliação sem bloquear a renderização
 async function carregarAvaliacaoAsync(prodId) {
     try {
         const avaliacao = await obterAvaliacao(prodId);
@@ -176,4 +166,23 @@ async function carregarAvaliacaoAsync(prodId) {
             containerAvaliacao.innerHTML = '<span>⭐ Sem avaliações</span>';
         }
     }
+}
+
+function adicionarJSONLD(prod) {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": prod.nome,
+        "image": prod.imagem,
+        "description": prod.descricao,
+        "offers": {
+            "@type": "Offer",
+            "priceCurrency": "AOA",
+            "price": extrairValorNumerico(prod.preco),
+            "availability": "https://schema.org/InStock"
+        }
+    });
+    document.head.appendChild(script);
 }

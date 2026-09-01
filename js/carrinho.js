@@ -179,7 +179,6 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-// ✅ ALTERAÇÃO: adicionado o parâmetro `id` como primeiro argumento
 export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
     const existente = carrinho.find(i => i.id === id);
@@ -192,7 +191,6 @@ export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
 
 export async function aplicarCupom(codigoCupom) {
     if (!codigoCupom) return;
-    // Exemplo simples: cupons pré-definidos
     const cupons = { 'AURORA10': 10, 'BEMVINDO': 15 };
     if (cupons[codigoCupom.toUpperCase()]) {
         cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: cupons[codigoCupom.toUpperCase()] };
@@ -224,6 +222,15 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada) {
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
+    // Obter frete dinâmico
+    const bairro = prompt('Digite o bairro para calcular o frete:');
+    if (bairro) {
+        try {
+            const res = await fetch('/api/frete/calcular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bairro, itens: carrinho }) });
+            const data = await res.json();
+            if (data.frete) totalComDesconto += data.frete;
+        } catch(e) { console.warn('Erro ao calcular frete', e); }
+    }
     await salvarVendaNoHistorico(nome, telefone, nif, morada, cupomSalvo);
     abrirModalPagamento(totalComDesconto, nome);
 }
@@ -241,9 +248,14 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
         navigator.clipboard.writeText(referencia);
         alert('✅ Referência copiada! Cole no Multicaixa.');
     };
-    document.getElementById('btnConfirmarPagamento').onclick = () => {
-        fecharModalPagamento();
-        enviarPedidoWhatsApp();
+    document.getElementById('btnConfirmarPagamento').onclick = async () => {
+        // Chamar API de criar pagamento
+        const res = await fetch('/api/pagamento/criar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedidoId: dadosVendaTemp.id, valor: valorTotal }) });
+        const data = await res.json();
+        if (data.success) {
+            fecharModalPagamento();
+            enviarPedidoWhatsApp();
+        }
     };
     document.getElementById('btnFecharPagamento').onclick = () => {
         fecharModalPagamento();
@@ -336,14 +348,12 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
-// ✅ ALTERAÇÃO: envia ID do produto no corpo da requisição
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
 
-    // ✅ ALTERAÇÃO: inclui `id` no item
     const itensVenda = carrinho.map(item => ({ 
         id: item.id, 
         nome: item.nome, 
@@ -371,6 +381,12 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             dadosVendaTemp.codigoRastreio = data.codigo;
             dadosVendaTemp.itens = itensVenda;
             dadosVendaTemp.valorTotal = valorTotalPedido;
+            dadosVendaTemp.id = data.id; // Adicionar ID para pagamento
+            // Se cliente logado, adicionar pontos
+            const clienteToken = localStorage.getItem('cliente_token');
+            if (clienteToken) {
+                fetch('/api/pontos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: getClienteIdFromToken(), valorCompra: valorTotalPedido }) });
+            }
             alert(`✅ Pedido registado!\nCódigo de rastreio: ${data.codigo}`);
         } else {
             throw new Error('Erro ao registar venda');

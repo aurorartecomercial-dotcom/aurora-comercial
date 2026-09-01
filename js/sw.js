@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v6';
+const CACHE_NAME = 'aurora-cache-v7';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -21,7 +21,9 @@ const urlsToCache = [
     '/js/detalhe-app.js',
     '/js/categoria.js',
     '/js/admin.js',
-    '/js/admin-vendas.js'
+    '/js/admin-vendas.js',
+    '/js/produtos-lib.js',
+    '/js/cliente-ui.js'
 ];
 
 self.addEventListener('install', event => {
@@ -82,4 +84,15 @@ self.addEventListener('fetch', event => {
                 }).catch(() => caches.match('/index.html')))
         );
     }
+});
+
+// Push
+self.addEventListener('push', event => {
+    const data = event.data.json();
+    const options = {
+        body: data.body,
+        icon: 'logo auro.png',
+        badge: 'logo auro.png'
+    };
+    event.waitUntil(self.registration.showNotification(data.title, options));
 });

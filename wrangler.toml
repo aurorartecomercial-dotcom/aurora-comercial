@@ -8,3 +8,8 @@ database_id = "6185ec4d-873f-4c8f-8c7b-35fcef4fa3e2"
 
 [ai]
 binding = "AI"
+
+[vars]
+ADMIN_EMAIL = "admin@aurora.ao"
+ADMIN_PASSWORD = "password123"
+SECRET_KEY = "segredo-super-secreto"

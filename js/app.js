@@ -2,6 +2,7 @@ import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
+import { initClienteUI } from './cliente-ui.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -13,12 +14,12 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ Inicializa o carrinho (verifica se elementos existem)
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
+    initClienteUI();
 
     const carregando = document.getElementById('carregandoProdutos');
     if (carregando) {
@@ -26,7 +27,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregando.textContent = '⏳ Carregando produtos...';
     }
 
-    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
     let catalogoCarregado = false;
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { console.warn('Cache inválido:', e); }
     }
 
-    // ✅ 2. Se não tem cache, busca do Firebase
     if (!catalogoCarregado) {
         try {
             catalogo = await carregarCatalogo();
@@ -49,16 +48,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ✅ 3. Renderiza os produtos
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // Se veio do cache, atualiza em segundo plano com os dados do Firebase
     if (catalogoCarregado) {
         atualizarCatalogoDoFirebase();
     }
 
-    // ✅ 4. Configuração dos filtros (sempre executada!)
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -68,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300));
     }
 
-    // ✅ 5. Preço mínimo e máximo
     const precoMinInput = document.getElementById('precoMin');
     const precoMaxInput = document.getElementById('precoMax');
     const precoMinLabel = document.getElementById('precoMinLabel');
@@ -91,7 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 6. Ordenação
     const ordenarSelect = document.getElementById('ordenar');
     if (ordenarSelect) {
         ordenarSelect.addEventListener('change', (e) => {
@@ -101,7 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 7. Botão "Carregar mais"
     const carregarMaisBtn = document.getElementById('carregarMais');
     if (carregarMaisBtn) {
         carregarMaisBtn.addEventListener('click', () => {
@@ -111,32 +104,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await aplicarFiltros();
+    carregarRecomendacoes();
 });
 
-// ✅ DELEGAÇÃO GLOBAL DE EVENTOS (funciona para qualquer card, mesmo carregado depois)
 document.addEventListener('click', function(e) {
-    // Botão Adicionar ao Carrinho
     const btnAdd = e.target.closest('.btn-add-carrinho-card');
     if (btnAdd) {
         e.preventDefault();
         e.stopPropagation();
-        // ✅ ALTERAÇÃO: extrai o ID do produto
         const id = btnAdd.dataset.id;
         const nome = btnAdd.dataset.nome;
         const preco = btnAdd.dataset.preco;
         const estoque = parseInt(btnAdd.dataset.estoque) || 0;
         const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
         if (precoNum > 0) {
-            // ✅ ALTERAÇÃO: passa o ID para a função
             adicionarProdutoCarrinho(id, nome, preco, estoque);
         } else {
-            console.warn('Preço inválido, não foi possível adicionar.');
+            console.warn('Preço inválido.');
             mostrarToast('Erro ao adicionar produto.', 'info');
         }
         return;
     }
 
-    // Botão Partilhar
     const btnShare = e.target.closest('.btn-share');
     if (btnShare) {
         e.preventDefault();
@@ -149,7 +138,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ✅ Funções auxiliares
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
@@ -158,7 +146,6 @@ function renderizarTudo() {
 async function atualizarCatalogoDoFirebase() {
     try {
         catalogo = await carregarCatalogo();
-        // Após atualizar o catálogo, re-renderiza a lista para refletir os dados mais recentes
         renderizarTudo();
     } catch (e) {
         console.warn('Erro ao atualizar do Firebase:', e);
@@ -196,7 +183,30 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
-// ✅ Função de redirecionamento por categoria (para links do rodapé)
+async function carregarRecomendacoes() {
+    const token = localStorage.getItem('cliente_token');
+    if (!token) return;
+    try {
+        const res = await fetch('/api/recomendacoes', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const produtos = await res.json();
+        const container = document.getElementById('recomendacoesGrid');
+        if (container && produtos.length > 0) {
+            container.innerHTML = '';
+            produtos.forEach(p => container.appendChild(criarCardProduto(p)));
+            document.getElementById('secaoRecomendacoes').style.display = 'block';
+        }
+    } catch (e) {
+        console.warn('Erro ao carregar recomendações:', e);
+    }
+}
+
+window.shareProduct = function(nome, preco, link) {
+    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+};
+
 window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
@@ -225,8 +235,3 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
         indicadores[i].classList.add('ativo');
     });
 });
-
-window.shareProduct = function(nome, preco, link) {
-    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
-};

@@ -1,22 +1,30 @@
 export async function onRequest(context) {
-  const { request, env, next } = context;
-  
-  // Se a rota NÃO começar por /api/admin, deixa passar (permite HTML normal)
-  const url = new URL(request.url);
-  if (!url.pathname.startsWith('/api/admin')) {
-    return next();
-  }
-
-  // Se for API admin, exige token
-  const authHeader = request.headers.get('Authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
-  
-  try {
-    const [email, timestamp, password] = atob(token).split(':');
-    if (email === env.ADMIN_EMAIL && password === env.ADMIN_PASSWORD) {
-      return next();
+    const { request, env, next } = context;
+    const url = new URL(request.url);
+    
+    if (!url.pathname.startsWith('/api/admin')) {
+        return next();
     }
-  } catch (e) { }
 
-  return new Response("Não autorizado", { status: 401 });
+    const authHeader = request.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
+    
+    try {
+        const [header, payload, sig] = token.split('.');
+        const data = `${header}.${payload}`;
+        const expectedSig = await sign(data, env.SECRET_KEY || 'segredo');
+        if (sig !== expectedSig) throw new Error('Assinatura inválida');
+        const payloadObj = JSON.parse(atob(payload));
+        if (payloadObj.exp < Date.now()) throw new Error('Token expirado');
+        return next();
+    } catch (e) {
+        return new Response("Não autorizado", { status: 401 });
+    }
+}
+
+async function sign(data, secret) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
+    return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
