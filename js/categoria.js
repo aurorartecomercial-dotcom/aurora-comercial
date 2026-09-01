@@ -1,6 +1,5 @@
-export { criarCardProduto, filtrarEOrdenar, renderizarGrade } from './produtos-lib.js';
-// Manter as funções de carregar catálogo (igual a catalogo.js)
 import { CONFIG } from './config.js';
+import { criarCardProduto, filtrarEOrdenar, renderizarGrade } from './produtos-lib.js';
 
 let cacheMemoria = null;
 let catalogoPromise = null;
@@ -41,3 +40,5 @@ async function atualizarDoServidor(resolveCallback) {
         if (resolveCallback) resolveCallback([]);
     }
 }
+
+export { criarCardProduto, filtrarEOrdenar, renderizarGrade };

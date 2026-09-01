@@ -1,7 +1,8 @@
-export { criarCardProduto, filtrarEOrdenar, renderizarGrade } from './produtos-lib.js';
-export { carregarCatalogo } from './produtos-lib.js'; // Se quiser manter a função de carregar catálogo
-// Na verdade, carregarCatalogo já estava em catalogo.js. Vamos incluir a função de carregar catálogo:
 import { CONFIG } from './config.js';
+import { criarCardProduto, filtrarEOrdenar, renderizarGrade } from './produtos-lib.js';
+
+let cacheMemoria = null;
+let catalogoPromise = null;
 
 export async function carregarCatalogo() {
     if (cacheMemoria) return cacheMemoria;
@@ -27,9 +28,6 @@ export async function carregarCatalogo() {
     return catalogoPromise;
 }
 
-let cacheMemoria = null;
-let catalogoPromise = null;
-
 async function atualizarDoServidor(resolveCallback) {
     try {
         const response = await fetch('/api/produtos');
@@ -42,3 +40,5 @@ async function atualizarDoServidor(resolveCallback) {
         if (resolveCallback) resolveCallback([]);
     }
 }
+
+export { criarCardProduto, filtrarEOrdenar, renderizarGrade };

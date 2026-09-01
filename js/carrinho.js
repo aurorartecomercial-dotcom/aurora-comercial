@@ -381,11 +381,20 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
             dadosVendaTemp.codigoRastreio = data.codigo;
             dadosVendaTemp.itens = itensVenda;
             dadosVendaTemp.valorTotal = valorTotalPedido;
-            dadosVendaTemp.id = data.id; // Adicionar ID para pagamento
+            dadosVendaTemp.id = data.id;
+
             // Se cliente logado, adicionar pontos
             const clienteToken = localStorage.getItem('cliente_token');
             if (clienteToken) {
-                fetch('/api/pontos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: getClienteIdFromToken(), valorCompra: valorTotalPedido }) });
+                try {
+                    const resMe = await fetch('/api/cliente/me', {
+                        headers: { 'Authorization': `Bearer ${clienteToken}` }
+                    });
+                    const dataMe = await resMe.json();
+                    if (dataMe.id) {
+                        await fetch('/api/pontos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: dataMe.id, valorCompra: valorTotalPedido }) });
+                    }
+                } catch(e) { console.warn('Erro ao adicionar pontos'); }
             }
             alert(`✅ Pedido registado!\nCódigo de rastreio: ${data.codigo}`);
         } else {

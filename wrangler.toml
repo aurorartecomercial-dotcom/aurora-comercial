@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "aurora-db"
-database_id = "6185ec4d-873f-4c8f-8c7b-35fcef4fa3e2"
+database_id = "6f85eda-873f-4c8f-8c7b-35fcef4fa3e2"
 
 [ai]
 binding = "AI"
@@ -13,3 +13,8 @@ binding = "AI"
 ADMIN_EMAIL = "admin@aurora.ao"
 ADMIN_PASSWORD = "password123"
 SECRET_KEY = "segredo-super-secreto"
+
+# Configuração de assets (ficheiros estáticos)
+[assets]
+directory = "."
+binding = "ASSETS"

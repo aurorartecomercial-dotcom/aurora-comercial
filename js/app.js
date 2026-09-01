@@ -1,7 +1,7 @@
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
-import { debounce, mostrarToast } from './utils.js';
+import { debounce, mostrarToast, extrairValorNumerico } from './utils.js';
 import { initClienteUI } from './cliente-ui.js';
 
 let catalogo = [];
