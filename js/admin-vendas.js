@@ -122,18 +122,33 @@ function trocarAba(abaId) {
     }
 }
 
+// ✅ FUNÇÃO CORRIGIDA PARA LER QUALQUER TIPO DE DATA
 function parseDataHora(dataStr) {
     if (!dataStr) return null;
+    
+    // Se for ISO (2026-09-01T10:00:00)
+    if (dataStr.includes('T')) {
+        return new Date(dataStr);
+    }
+    
+    // Formato brasileiro (01/09/2026 10:00)
     const regex = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/;
     const match = dataStr.match(regex);
     if (match) {
-        const dia = parseInt(match[1]);
-        const mes = parseInt(match[2]) - 1;
-        const ano = parseInt(match[3]);
-        const hora = match[4] ? parseInt(match[4]) : 0;
-        const minuto = match[5] ? parseInt(match[5]) : 0;
-        return new Date(ano, mes, dia, hora, minuto);
+        return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]), parseInt(match[4] || 0), parseInt(match[5] || 0));
     }
+    
+    // Formato americano/ISO sem hora (2026-09-01)
+    const regexISO = /^(\d{4})-(\d{2})-(\d{2})/;
+    const matchISO = dataStr.match(regexISO);
+    if (matchISO) {
+        return new Date(parseInt(matchISO[1]), parseInt(matchISO[2]) - 1, parseInt(matchISO[3]));
+    }
+    
+    // Tenta criar data diretamente
+    const date = new Date(dataStr);
+    if (!isNaN(date.getTime())) return date;
+    
     return null;
 }
 
@@ -165,6 +180,7 @@ function calcularMargemVenda(venda) {
     return receita > 0 ? (calcularLucroVenda(venda) / receita) * 100 : 0;
 }
 
+// ===================== DASHBOARD =====================
 function renderizarDashboard() {
     const vendas = todasVendas;
     const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valor_total || 0), 0);
@@ -207,6 +223,7 @@ function setText(id, valor) {
     if (el) el.textContent = valor;
 }
 
+// ✅ RESUMO DIÁRIO CORRIGIDO
 function renderizarResumoDiario(vendas) {
     const tbody = document.getElementById('corpoResumoDiario');
     if (!tbody) return;
@@ -243,6 +260,7 @@ function renderizarResumoDiario(vendas) {
     });
 }
 
+// ✅ VENDAS POR MÊS CORRIGIDO
 function renderizarGraficoVendasMes(vendas) {
     const porMes = {};
     vendas.forEach(v => {
@@ -255,14 +273,14 @@ function renderizarGraficoVendasMes(vendas) {
         porMes[key] += 1;
     });
     const keys = Object.keys(porMes).sort();
+    const ctx = document.getElementById('graficoVendasMes');
+    if (!ctx || keys.length === 0) return;
+
     const labels = keys.map(k => {
         const [ano, mes] = k.split('-');
         return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
     });
     const valores = keys.map(k => porMes[k]);
-
-    const ctx = document.getElementById('graficoVendasMes');
-    if (!ctx || labels.length === 0) return;
 
     if (typeof Chart !== 'undefined') {
         if (graficos.vendasMes) graficos.vendasMes.destroy();
@@ -274,13 +292,17 @@ function renderizarGraficoVendasMes(vendas) {
     }
 }
 
+// ✅ DISTRIBUIÇÃO POR CATEGORIA CORRIGIDO
 function renderizarGraficoRosca(vendas) {
     const porCategoria = {};
     vendas.forEach(v => {
-        if (v.categoria) {
-            if (!porCategoria[v.categoria]) porCategoria[v.categoria] = 0;
-            porCategoria[v.categoria] += v.valor_total || 0;
+        let categoria = v.categoria || 'geral';
+        if (!categoria && v.itens && v.itens.length > 0) {
+            const prod = catalogo.find(p => p.nome === v.itens[0].nome);
+            if (prod) categoria = prod.categoria;
         }
+        if (!porCategoria[categoria]) porCategoria[categoria] = 0;
+        porCategoria[categoria] += v.valor_total || 0;
     });
     const ctx = document.getElementById('graficoRoscaCategorias');
     if (!ctx) return;
@@ -298,6 +320,7 @@ function renderizarGraficoRosca(vendas) {
     }
 }
 
+// ✅ TOP 5 CLIENTES (JÁ FUNCIONAVA, MANTIDO)
 function renderizarGraficoTopClientes(vendas) {
     const porCliente = {};
     vendas.forEach(v => {
@@ -322,6 +345,7 @@ function renderizarGraficoTopClientes(vendas) {
     }
 }
 
+// ✅ LUCRATIVIDADE (MARGEM %) CORRIGIDO
 function renderizarGraficoLucratividade(vendas) {
     const porMes = {};
     vendas.forEach(v => {
@@ -357,6 +381,7 @@ function renderizarGraficoLucratividade(vendas) {
     }
 }
 
+// ✅ FATURAMENTO DIÁRIO CORRIGIDO
 function renderizarGraficoVendasDiarias(vendas) {
     const porDia = {};
     vendas.forEach(v => {
@@ -386,6 +411,7 @@ function renderizarGraficoVendasDiarias(vendas) {
     }
 }
 
+// ✅ PRODUTOS MAIS VENDIDOS CORRIGIDO
 function renderizarGraficoProdutosMaisVendidos(vendas) {
     const porProduto = {};
     vendas.forEach(venda => {
@@ -393,6 +419,12 @@ function renderizarGraficoProdutosMaisVendidos(vendas) {
             venda.itens.forEach(item => {
                 if (!porProduto[item.nome]) porProduto[item.nome] = 0;
                 porProduto[item.nome] += item.quantidade || 1;
+            });
+        } else if (venda.produtos_resumo) {
+            const nomes = venda.produtos_resumo.split(',').map(s => s.split('(')[0].trim());
+            nomes.forEach(nome => {
+                if (!porProduto[nome]) porProduto[nome] = 0;
+                porProduto[nome] += 1;
             });
         }
     });
@@ -413,6 +445,7 @@ function renderizarGraficoProdutosMaisVendidos(vendas) {
     }
 }
 
+// ✅ SALDO ACUMULADO CORRIGIDO
 function renderizarGraficoSaldo(vendas) {
     const porDia = {};
     vendas.forEach(v => {
@@ -909,6 +942,7 @@ window.atualizarStatus = async function(id, novoStatus) {
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
+// ✅ FUNÇÃO DE IMPRESSÃO DA FATURA
 window.imprimirFatura = function(id) {
     const venda = todasVendas.find(v => String(v.id) === String(id));
     if (!venda) return;
