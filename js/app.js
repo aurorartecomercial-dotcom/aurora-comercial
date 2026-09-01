@@ -120,12 +120,15 @@ document.addEventListener('click', function(e) {
     if (btnAdd) {
         e.preventDefault();
         e.stopPropagation();
+        // ✅ ALTERAÇÃO: extrai o ID do produto
+        const id = btnAdd.dataset.id;
         const nome = btnAdd.dataset.nome;
         const preco = btnAdd.dataset.preco;
         const estoque = parseInt(btnAdd.dataset.estoque) || 0;
         const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
         if (precoNum > 0) {
-            adicionarProdutoCarrinho(nome, preco, estoque);
+            // ✅ ALTERAÇÃO: passa o ID para a função
+            adicionarProdutoCarrinho(id, nome, preco, estoque);
         } else {
             console.warn('Preço inválido, não foi possível adicionar.');
             mostrarToast('Erro ao adicionar produto.', 'info');

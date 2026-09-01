@@ -179,12 +179,13 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
+// ✅ ALTERAÇÃO: adicionado o parâmetro `id` como primeiro argumento
+export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
-    const existente = carrinho.find(i => i.nome === nome);
+    const existente = carrinho.find(i => i.id === id);
     let quantidadeAtual = existente ? existente.quantidade : 0;
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) { mostrarToast('🚫 Estoque esgotado!', 'info'); return; }
-    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1 }); }
+    if (existente) { existente.quantidade += 1; } else { carrinho.push({ id, nome, preco, quantidade: 1 }); }
     atualizarCarrinho();
     mostrarToast('Produto adicionado!', 'sucesso');
 }
@@ -335,13 +336,20 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
+// ✅ ALTERAÇÃO: envia ID do produto no corpo da requisição
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
 
-    const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }));
+    // ✅ ALTERAÇÃO: inclui `id` no item
+    const itensVenda = carrinho.map(item => ({ 
+        id: item.id, 
+        nome: item.nome, 
+        quantidade: item.quantidade, 
+        preco: extrairValorNumerico(item.preco) 
+    }));
 
     try {
         const resposta = await fetch('/api/vendas', {
