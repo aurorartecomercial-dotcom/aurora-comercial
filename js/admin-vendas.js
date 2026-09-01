@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => trocarAba(btn.dataset.aba));
     });
 
+    // Filtros
     document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
     document.getElementById('btnLimparDia')?.addEventListener('click', () => {
         document.getElementById('inputDiaDiario').value = '';
@@ -193,6 +194,12 @@ function renderizarDashboard() {
 
     renderizarResumoDiario(vendas);
     renderizarGraficoVendasMes(vendas);
+    renderizarGraficoRosca(vendas);
+    renderizarGraficoTopClientes(vendas);
+    renderizarGraficoLucratividade(vendas);
+    renderizarGraficoVendasDiarias(vendas);
+    renderizarGraficoProdutosMaisVendidos(vendas);
+    renderizarGraficoSaldo(vendas);
 }
 
 function setText(id, valor) {
@@ -263,6 +270,178 @@ function renderizarGraficoVendasMes(vendas) {
             type: 'bar',
             data: { labels: labels, datasets: [{ label: 'Pedidos', data: valores, backgroundColor: '#2ecc71' }] },
             options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function renderizarGraficoRosca(vendas) {
+    const porCategoria = {};
+    vendas.forEach(v => {
+        if (v.categoria) {
+            if (!porCategoria[v.categoria]) porCategoria[v.categoria] = 0;
+            porCategoria[v.categoria] += v.valor_total || 0;
+        }
+    });
+    const ctx = document.getElementById('graficoRoscaCategorias');
+    if (!ctx) return;
+    const labels = Object.keys(porCategoria);
+    const data = Object.values(porCategoria);
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.rosca) graficos.rosca.destroy();
+        graficos.rosca = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: data, backgroundColor: ['#D4AF37', '#005A4C', '#3498db', '#e74c3c', '#27ae60', '#9b59b6'] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function renderizarGraficoTopClientes(vendas) {
+    const porCliente = {};
+    vendas.forEach(v => {
+        const nome = v.nome_cliente || 'Desconhecido';
+        if (!porCliente[nome]) porCliente[nome] = 0;
+        porCliente[nome] += v.valor_total || 0;
+    });
+    const top = Object.entries(porCliente).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const ctx = document.getElementById('graficoTopClientes');
+    if (!ctx) return;
+    const labels = top.map(t=>t[0]);
+    const data = top.map(t=>t[1]);
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.topClientes) graficos.topClientes.destroy();
+        graficos.topClientes = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Total gasto (Kz)', data: data, backgroundColor: '#3498db' }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function renderizarGraficoLucratividade(vendas) {
+    const porMes = {};
+    vendas.forEach(v => {
+        const data = parseDataHora(v.data_hora);
+        if (!data) return;
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const key = `${ano}-${mes}`;
+        if (!porMes[key]) porMes[key] = { fat: 0, lucro: 0 };
+        porMes[key].fat += v.valor_total || 0;
+        porMes[key].lucro += calcularLucroVenda(v);
+    });
+    const keys = Object.keys(porMes).sort();
+    const ctx = document.getElementById('graficoLucratividade');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes] = k.split('-');
+        return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes] + ' ' + ano;
+    });
+    const margens = keys.map(k => {
+        const info = porMes[k];
+        return info.fat > 0 ? (info.lucro / info.fat) * 100 : 0;
+    });
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.lucratividade) graficos.lucratividade.destroy();
+        graficos.lucratividade = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Margem (%)', data: margens, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.2)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+    }
+}
+
+function renderizarGraficoVendasDiarias(vendas) {
+    const porDia = {};
+    vendas.forEach(v => {
+        const data = parseDataHora(v.data_hora);
+        if (!data) return;
+        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        if (!porDia[dataStr]) porDia[dataStr] = 0;
+        porDia[dataStr] += v.valor_total || 0;
+    });
+    const keys = Object.keys(porDia).sort();
+    const ctx = document.getElementById('graficoVendas');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes, dia] = k.split('-');
+        return `${dia}/${mes}/${ano}`;
+    });
+    const data = keys.map(k => porDia[k]);
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.vendasDiarias) graficos.vendasDiarias.destroy();
+        graficos.vendasDiarias = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Faturamento (Kz)', data: data, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.2)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function renderizarGraficoProdutosMaisVendidos(vendas) {
+    const porProduto = {};
+    vendas.forEach(venda => {
+        if (venda.itens && Array.isArray(venda.itens)) {
+            venda.itens.forEach(item => {
+                if (!porProduto[item.nome]) porProduto[item.nome] = 0;
+                porProduto[item.nome] += item.quantidade || 1;
+            });
+        }
+    });
+    const top = Object.entries(porProduto).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const ctx = document.getElementById('graficoProdutos');
+    if (!ctx) return;
+    const labels = top.map(t=>t[0]);
+    const data = top.map(t=>t[1]);
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.produtos) graficos.produtos.destroy();
+        graficos.produtos = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Qtd vendida', data: data, backgroundColor: '#9b59b6' }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+function renderizarGraficoSaldo(vendas) {
+    const porDia = {};
+    vendas.forEach(v => {
+        const data = parseDataHora(v.data_hora);
+        if (!data) return;
+        const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
+        if (!porDia[dataStr]) porDia[dataStr] = 0;
+        porDia[dataStr] += v.valor_total || 0;
+    });
+    const keys = Object.keys(porDia).sort();
+    const ctx = document.getElementById('graficoSaldo');
+    if (!ctx) return;
+    const labels = keys.map(k => {
+        const [ano, mes, dia] = k.split('-');
+        return `${dia}/${mes}/${ano}`;
+    });
+    let acumulado = 0;
+    const data = keys.map(k => {
+        acumulado += porDia[k];
+        return acumulado;
+    });
+    if (labels.length === 0) return;
+
+    if (typeof Chart !== 'undefined') {
+        if (graficos.saldo) graficos.saldo.destroy();
+        graficos.saldo = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Saldo acumulado (Kz)', data: data, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.2)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
 }
@@ -711,6 +890,7 @@ function renderizarPedidos() {
             <td style="padding:8px; display:flex; gap:4px; flex-wrap:wrap;">
                 <button onclick="window.atualizarStatus('${v.id}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>
                 <button onclick="window.atualizarStatus('${v.id}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
+                <button onclick="window.imprimirFatura('${v.id}')" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️ Imprimir</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -727,6 +907,56 @@ window.atualizarStatus = async function(id, novoStatus) {
         });
         carregarDados();
     } catch(e) { alert('Erro: ' + e.message); }
+};
+
+window.imprimirFatura = function(id) {
+    const venda = todasVendas.find(v => String(v.id) === String(id));
+    if (!venda) return;
+
+    let produtosDetalhados = '';
+    if (venda.itens && venda.itens.length > 0) {
+        venda.itens.forEach(item => {
+            produtosDetalhados += `<tr><td>${item.nome}</td><td>${item.quantidade}</td><td>${item.preco}</td><td>${item.preco * item.quantidade}</td></tr>`;
+        });
+    } else {
+        produtosDetalhados = `<tr><td colspan="4">${venda.produtos_resumo || 'N/A'}</td></tr>`;
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><title>Fatura - ${venda.codigo_rastreio}</title>
+<style>
+    body { font-family: Arial, sans-serif; }
+    h1 { color: #005A4C; text-align: center; }
+    h2 { color: #D4AF37; text-align: center; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #005A4C; color: white; }
+    .total { font-weight: bold; text-align: right; font-size: 18px; }
+</style>
+</head>
+<body>
+<h1>AURORA COMERCIAL</h1>
+<h2>Contribuinte: 5000048151 | Tel: +244 933 677 628</h2>
+<hr>
+<p><strong>Fatura Nº:</strong> ${venda.codigo_rastreio}</p>
+<p><strong>Data:</strong> ${venda.data_hora}</p>
+<p><strong>Cliente:</strong> ${venda.nome_cliente}</p>
+<p><strong>Telefone:</strong> ${venda.telefone_cliente}</p>
+<p><strong>NIF:</strong> ${venda.nif_cliente}</p>
+<p><strong>Morada:</strong> ${venda.morada_cliente}</p>
+<table>
+<thead><tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+<tbody>${produtosDetalhados}</tbody>
+</table>
+<p class="total">Total: ${venda.valor_total} Kz</p>
+<script>window.print();</script>
+</body>
+</html>`;
+    
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
 };
 
 // ===================== EXPORTAÇÕES =====================

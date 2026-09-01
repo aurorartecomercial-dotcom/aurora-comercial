@@ -3,6 +3,9 @@ import { mostrarToast } from './utils.js';
 let produtos = [];
 let editandoId = null;
 
+// ========== CHAVE DO IMGBB ==========
+const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69'; // 🔴 COLOQUE SUA CHAVE AQUI
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
     const conteudoAdmin = document.getElementById('conteudoAdmin');
@@ -64,6 +67,57 @@ function iniciarAdmin() {
     const ordem = document.getElementById('ordem');
     const estoque = document.getElementById('estoque');
     const video = document.getElementById('video');
+
+    // ========== UPLOAD DE IMAGEM VIA IMGBB ==========
+    const btnUploadImg = document.getElementById('btnUploadImg');
+    const imgUpload = document.getElementById('imgUpload');
+    const uploadProgress = document.getElementById('uploadProgress');
+
+    if (btnUploadImg && imgUpload) {
+        btnUploadImg.addEventListener('click', async () => {
+            if (!imgUpload.files.length) {
+                alert('Selecione pelo menos uma imagem.');
+                return;
+            }
+
+            if (!IMGBB_API_KEY || IMGBB_API_KEY === 'SUA_CHAVE_AQUI') {
+                alert('Configure a chave da API do ImgBB no arquivo admin.js (const IMGBB_API_KEY).');
+                return;
+            }
+
+            uploadProgress.textContent = '⏳ Enviando imagens...';
+            
+            for (const file of imgUpload.files) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const url = data.data.url;
+                        if (imagens.value.trim() === '') {
+                            imagens.value = url;
+                        } else {
+                            imagens.value += ', ' + url;
+                        }
+                        uploadProgress.textContent = '✅ Imagem enviada: ' + url;
+                    } else {
+                        uploadProgress.textContent = '❌ Erro: ' + data.error.message;
+                    }
+                } catch (e) {
+                    uploadProgress.textContent = '❌ Erro de rede: ' + e.message;
+                }
+            }
+
+            uploadProgress.textContent = '✅ Upload concluído!';
+            imgUpload.value = '';
+        });
+    }
 
     function mostrarMensagem(texto, tipo = 'info') {
         statusMsg.style.display = 'block';
