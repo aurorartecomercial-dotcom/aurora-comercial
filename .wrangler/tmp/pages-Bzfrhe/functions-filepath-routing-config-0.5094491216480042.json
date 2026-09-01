@@ -1,0 +1,237 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/admin/produtos",
+      "mountPath": "/api/admin",
+      "method": "DELETE",
+      "module": [
+        "api/admin/produtos.js:onRequestDelete"
+      ]
+    },
+    {
+      "routePath": "/api/admin/produtos",
+      "mountPath": "/api/admin",
+      "method": "GET",
+      "module": [
+        "api/admin/produtos.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/admin/produtos",
+      "mountPath": "/api/admin",
+      "method": "POST",
+      "module": [
+        "api/admin/produtos.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/admin/produtos",
+      "mountPath": "/api/admin",
+      "method": "PUT",
+      "module": [
+        "api/admin/produtos.js:onRequestPut"
+      ]
+    },
+    {
+      "routePath": "/api/admin/vendas",
+      "mountPath": "/api/admin",
+      "method": "GET",
+      "module": [
+        "api/admin/vendas.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/admin/vendas",
+      "mountPath": "/api/admin",
+      "method": "POST",
+      "module": [
+        "api/admin/vendas.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/admin/vendas",
+      "mountPath": "/api/admin",
+      "method": "PUT",
+      "module": [
+        "api/admin/vendas.js:onRequestPut"
+      ]
+    },
+    {
+      "routePath": "/api/cliente/login",
+      "mountPath": "/api/cliente",
+      "method": "POST",
+      "module": [
+        "api/cliente/login.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/cliente/me",
+      "mountPath": "/api/cliente",
+      "method": "GET",
+      "module": [
+        "api/cliente/me.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/cliente/registar",
+      "mountPath": "/api/cliente",
+      "method": "POST",
+      "module": [
+        "api/cliente/registar.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/frete/calcular",
+      "mountPath": "/api/frete",
+      "method": "POST",
+      "module": [
+        "api/frete/calcular.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/pagamento/criar",
+      "mountPath": "/api/pagamento",
+      "method": "POST",
+      "module": [
+        "api/pagamento/criar.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/pagamento/webhook",
+      "mountPath": "/api/pagamento",
+      "method": "POST",
+      "module": [
+        "api/pagamento/webhook.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/avaliacoes",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/avaliacoes.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/avaliacoes",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/avaliacoes.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/chat",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/chat.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/login",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/login.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/pontos",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/pontos.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/pontos",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/pontos.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/produtos",
+      "mountPath": "/api",
+      "method": "DELETE",
+      "module": [
+        "api/produtos.js:onRequestDelete"
+      ]
+    },
+    {
+      "routePath": "/api/produtos",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/produtos.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/produtos",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/produtos.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/produtos",
+      "mountPath": "/api",
+      "method": "PUT",
+      "module": [
+        "api/produtos.js:onRequestPut"
+      ]
+    },
+    {
+      "routePath": "/api/rastreio",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/rastreio.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/recomendacoes",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/recomendacoes.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/vendas",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/vendas.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/vendas",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/vendas.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/vendas",
+      "mountPath": "/api",
+      "method": "PUT",
+      "module": [
+        "api/vendas.js:onRequestPut"
+      ]
+    },
+    {
+      "routePath": "/api/admin",
+      "mountPath": "/api/admin",
+      "method": "",
+      "middleware": [
+        "api/admin/_middleware.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}
