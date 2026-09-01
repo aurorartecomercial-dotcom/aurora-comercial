@@ -4,7 +4,7 @@ let produtos = [];
 let editandoId = null;
 
 // ========== CHAVE DO IMGBB ==========
-const IMGBB_API_KEY = 'SUA_CHAVE_AQUI'; // 🔴 COLOQUE SUA CHAVE AQUI
+const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69'; // 🔴 COLOQUE SUA CHAVE AQUI
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginDiv = document.getElementById('loginAdmin');
