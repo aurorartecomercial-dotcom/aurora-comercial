@@ -1,5 +1,0 @@
-INSERT INTO produtos (nome, categoria, preco, preco_antigo, descricao, imagem, estoque, tag, frete_gratis, prazo_entrega, ordem, video, custo) VALUES
-('Notebook Acer Nitro V 16', 'eletronicos', 'KZ 101.000,00', 'KZ 120.000,00', 'HP Laptop de 14 polegadas...', 'https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg', 10, 'Eletrônicos', 1, 'normal', 1, '', 'KZ 60.000,00'),
-('PlayStation 5 Slim', 'consolas', 'KZ 180.000,00', 'KZ 200.000,00', 'Console PS5 com 1TB...', 'https://i.ibb.co/C3HtWv8N/PS5-PASTA.jpg', 10, 'Consolas', 1, 'normal', 2, '', 'KZ 120.000,00'),
-('Vestido Floral Longo', 'feminino', 'KZ 12.500,00', 'KZ 15.000,00', 'Viscose floral, alças finas...', 'https://i.ibb.co/x8gTzPKq/PANELAS-PRETA.jpg', 10, 'Moda Feminina', 0, 'normal', 3, '', 'KZ 5.000,00'),
-('Tênis Casual Couro', 'calcados', 'KZ 14.000,00', 'KZ 18.000,00', 'Couro legítimo...', 'https://i.ibb.co/YThMhNBw/ppp.jpg', 10, 'Calçados', 1, 'normal', 4, '', 'KZ 8.000,00');
