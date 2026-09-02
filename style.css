@@ -69,6 +69,9 @@ body {
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
 #carrinhoTotalItens { font-size: 12px; color: var(--cor-ouro); }
 
+/* ============================================================
+   MENU PRINCIPAL - ESTRUTURA ATUALIZADA COM DROPDOWN 2 COLUNAS
+   ============================================================ */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; gap: 0; flex-wrap: wrap; }
 .menu-categorias ul li a {
@@ -77,6 +80,7 @@ body {
 }
 .menu-categorias ul li a:hover, .menu-categorias ul li a.ativo { color: var(--cor-ouro); border-bottom-color: var(--cor-ouro); }
 
+/* Dropdown principal (Categorias) */
 .dropdown { position: relative; }
 .dropdown .submenu {
     display: none;
@@ -89,7 +93,7 @@ body {
     border-radius: 0 0 12px 12px;
     min-width: 340px;
     padding: 8px;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; /* Duas colunas */
     gap: 4px;
     z-index: 1000;
     max-height: 420px;
@@ -160,6 +164,9 @@ body {
 .selo-frete { display: block; margin-top: 4px; font-size: 13px; background: var(--cor-esmeralda-claro); color: var(--cor-esmeralda); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
 .selo-frete strong { color: var(--cor-ouro); }
 
+/* ============================================================
+   SELOS DE ENTREGA (HOJE / AMANHÃ)
+   ============================================================ */
 .selo-entrega {
     display: block;
     margin-top: 6px;
@@ -336,6 +343,9 @@ body {
 #previewImagens img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e0e0e0; background: #f9f9f9; transition: transform 0.2s ease; }
 #previewImagens img:hover { transform: scale(1.05); }
 
+/* ============================================================
+   GRADE DE CATEGORIAS (NOVA - SUBSTITUI O BALANÇO)
+   ============================================================ */
 .secao-categorias {
     max-width: 1480px;
     margin: 40px auto;
@@ -375,7 +385,7 @@ body {
     border-color: var(--cor-ouro);
 }
 .categoria-icone {
-    font-size: 48px;
+    font-size: 48px;  /* Ícones maiores */
     margin-bottom: 12px;
     line-height: 1;
 }
@@ -444,6 +454,7 @@ body {
         border-bottom: none;
     }
     
+    /* Dropdown em mobile */
     .dropdown:hover .submenu { display: none; }
     .submenu {
         position: static;
@@ -458,6 +469,7 @@ body {
 
     .carrossel-ofertas { margin-top: 0; border-radius: 0; }
     
+    /* Ajuste da grade de categorias no mobile */
     .grade-categorias {
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
@@ -474,6 +486,7 @@ body {
     }
 }
 
+/* ========== NOVAS REGRAS PARA SUBMENU EM DUAS COLUNAS (DESKTOP) ========== */
 @media (min-width: 769px) {
     .dropdown .submenu {
         display: none;
@@ -486,7 +499,7 @@ body {
         border-radius: 0 0 8px 8px;
         min-width: 320px;
         padding: 8px;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr; /* DUAS COLUNAS */
         gap: 4px;
         z-index: 999;
     }
@@ -507,6 +520,7 @@ body {
     }
 }
 
+/* ========== OVERFLOW X EM TABELAS (mobile) ========== */
 @media (max-width: 768px) {
     .tabela-scroll, .tabela-historico-container {
         overflow-x: auto;
@@ -520,6 +534,7 @@ body {
     }
 }
 
+/* ========== BOTÃO WHATSAPP FLUTUANTE ========== */
 .whatsapp-float {
     position: fixed;
     bottom: 20px;
@@ -659,6 +674,10 @@ body {
     }
 }
 
+/* ============================================================
+   NOVAS CORES ESCURAS PARA ADMIN E BLOG (MODO NOTURNO)
+   ============================================================ */
+
 .admin-page {
     background: #0d0d0d;
     color: #e0e0e0;
@@ -767,6 +786,7 @@ body {
     border-color: #D4AF37;
 }
 
+/* === BLOG DARK === */
 .blog-page {
     background: #0f0f0f;
     color: #f0f0f0;
@@ -832,6 +852,7 @@ body {
     color: #8b5cf6;
 }
 
+/* ===== BOTÃO DE ADICIONAR AO CARRINHO DENTRO DOS CARDS ===== */
 .btn-add-carrinho-card {
     background: var(--cor-ouro);
     color: #000;
@@ -855,6 +876,9 @@ body {
     transform: scale(0.95);
 }
 
+/* ============================================================
+   ✅ REGRAS CORRETAS PARA GRÁFICOS (SEM CORTAR TABELAS)
+   ============================================================ */
 #graficoVendas,
 #graficoProdutos,
 #graficoComparativo,
@@ -870,6 +894,9 @@ body {
     overflow: hidden;
 }
 
+/* ============================================================
+   RESPONSIVIDADE DA TABELA DE PEDIDOS (ADMIN)
+   ============================================================ */
 @media (max-width: 768px) {
     #tabelaPedidos,
     #tabelaRelatorio {
@@ -890,6 +917,7 @@ body {
     }
 }
 
+/* Melhorias gerais de acessibilidade */
 button:focus-visible {
     outline: 3px solid var(--cor-ouro);
     outline-offset: 2px;
@@ -898,20 +926,4 @@ button:focus-visible {
 a:focus-visible {
     outline: 3px solid var(--cor-ouro);
     outline-offset: 2px;
-}
-
-/* ===== MODAL DE LOGIN/REGISTO ===== */
-#modalClienteLogin {
-    backdrop-filter: blur(6px);
-}
-#modalClienteLogin input {
-    margin-bottom: 10px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    width: 100%;
-}
-#modalClienteLogin button {
-    width: 100%;
-    margin-top: 8px;
 }

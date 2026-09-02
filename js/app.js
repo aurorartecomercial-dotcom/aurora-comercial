@@ -1,8 +1,7 @@
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
-import { debounce, mostrarToast, extrairValorNumerico } from './utils.js';
-import { initClienteUI } from './cliente-ui.js';
+import { debounce, mostrarToast } from './utils.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -14,12 +13,12 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Inicializa componentes em paralelo (mais rápido)
-    Promise.all([
-        initCarrinho(),
-        initMobileMenu(),
-        initClienteUI()
-    ]).catch(e => console.warn('Erro ao inicializar componentes:', e));
+    // ✅ Inicializa o carrinho (verifica se elementos existem)
+    if (!window.__carrinhoInicializado) {
+        initCarrinho();
+        window.__carrinhoInicializado = true;
+    }
+    initMobileMenu();
 
     const carregando = document.getElementById('carregandoProdutos');
     if (carregando) {
@@ -27,27 +26,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregando.textContent = '⏳ Carregando produtos...';
     }
 
-    // Carrega catálogo e recomendações em paralelo
-    const [catalogoData] = await Promise.all([
-        carregarCatalogo().catch(() => []),
-        carregarRecomendacoes().catch(() => [])
-    ]);
+    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
+    let catalogoCarregado = false;
+    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
+    if (cachedStr) {
+        try {
+            const cache = JSON.parse(cachedStr);
+            if (cache.data && cache.data.length > 0) {
+                catalogo = cache.data;
+                catalogoCarregado = true;
+            }
+        } catch (e) { console.warn('Cache inválido:', e); }
+    }
 
-    catalogo = catalogoData;
+    // ✅ 2. Se não tem cache, busca do Firebase
+    if (!catalogoCarregado) {
+        try {
+            catalogo = await carregarCatalogo();
+        } catch (e) {
+            console.error('Erro ao carregar catálogo:', e);
+            catalogo = [];
+        }
+    }
 
+    // ✅ 3. Renderiza os produtos
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // Atualiza catálogo em segundo plano (sem bloquear)
-    setTimeout(async () => {
-        const freshCatalogo = await carregarCatalogo().catch(() => []);
-        if (freshCatalogo.length > 0) {
-            catalogo = freshCatalogo;
-            renderizarTudo();
-        }
-    }, 5000);
+    // Se veio do cache, atualiza em segundo plano com os dados do Firebase
+    if (catalogoCarregado) {
+        atualizarCatalogoDoFirebase();
+    }
 
-    // Configuração dos filtros (com debounce para evitar excesso de chamadas)
+    // ✅ 4. Configuração dos filtros (sempre executada!)
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -57,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300));
     }
 
+    // ✅ 5. Preço mínimo e máximo
     const precoMinInput = document.getElementById('precoMin');
     const precoMaxInput = document.getElementById('precoMax');
     const precoMinLabel = document.getElementById('precoMinLabel');
@@ -79,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ✅ 6. Ordenação
     const ordenarSelect = document.getElementById('ordenar');
     if (ordenarSelect) {
         ordenarSelect.addEventListener('change', (e) => {
@@ -88,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ✅ 7. Botão "Carregar mais"
     const carregarMaisBtn = document.getElementById('carregarMais');
     if (carregarMaisBtn) {
         carregarMaisBtn.addEventListener('click', () => {
@@ -99,25 +113,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     await aplicarFiltros();
 });
 
+// ✅ DELEGAÇÃO GLOBAL DE EVENTOS (funciona para qualquer card, mesmo carregado depois)
 document.addEventListener('click', function(e) {
+    // Botão Adicionar ao Carrinho
     const btnAdd = e.target.closest('.btn-add-carrinho-card');
     if (btnAdd) {
         e.preventDefault();
         e.stopPropagation();
-        const id = btnAdd.dataset.id;
         const nome = btnAdd.dataset.nome;
         const preco = btnAdd.dataset.preco;
         const estoque = parseInt(btnAdd.dataset.estoque) || 0;
         const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
         if (precoNum > 0) {
-            adicionarProdutoCarrinho(id, nome, preco, estoque);
+            adicionarProdutoCarrinho(nome, preco, estoque);
         } else {
-            console.warn('Preço inválido.');
+            console.warn('Preço inválido, não foi possível adicionar.');
             mostrarToast('Erro ao adicionar produto.', 'info');
         }
         return;
     }
 
+    // Botão Partilhar
     const btnShare = e.target.closest('.btn-share');
     if (btnShare) {
         e.preventDefault();
@@ -130,9 +146,20 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// ✅ Funções auxiliares
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
+}
+
+async function atualizarCatalogoDoFirebase() {
+    try {
+        catalogo = await carregarCatalogo();
+        // Após atualizar o catálogo, re-renderiza a lista para refletir os dados mais recentes
+        renderizarTudo();
+    } catch (e) {
+        console.warn('Erro ao atualizar do Firebase:', e);
+    }
 }
 
 async function aplicarFiltros(resetPagina = true) {
@@ -166,30 +193,7 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
-async function carregarRecomendacoes() {
-    const token = localStorage.getItem('cliente_token');
-    if (!token) return;
-    try {
-        const res = await fetch('/api/recomendacoes', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const produtos = await res.json();
-        const container = document.getElementById('recomendacoesGrid');
-        if (container && produtos.length > 0) {
-            container.innerHTML = '';
-            produtos.forEach(p => container.appendChild(criarCardProduto(p)));
-            document.getElementById('secaoRecomendacoes').style.display = 'block';
-        }
-    } catch (e) {
-        console.warn('Erro ao carregar recomendações:', e);
-    }
-}
-
-window.shareProduct = function(nome, preco, link) {
-    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
-};
-
+// ✅ Função de redirecionamento por categoria (para links do rodapé)
 window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
@@ -218,3 +222,8 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
         indicadores[i].classList.add('ativo');
     });
 });
+
+window.shareProduct = function(nome, preco, link) {
+    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+};

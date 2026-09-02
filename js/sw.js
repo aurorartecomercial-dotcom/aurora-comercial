@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v7';
+const CACHE_NAME = 'aurora-cache-v5';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -21,15 +21,15 @@ const urlsToCache = [
     '/js/detalhe-app.js',
     '/js/categoria.js',
     '/js/admin.js',
-    '/js/admin-vendas.js',
-    '/js/produtos-lib.js',
-    '/js/cliente-ui.js'
+    '/js/admin-vendas.js'
 ];
 
+// ✅ Instalação: cacheia apenas ficheiros que existem
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
+                // Usamos Promise.allSettled para não falhar se algum ficheiro não existir
                 return Promise.allSettled(
                     urlsToCache.map(url => cache.add(url).catch(err => {
                         console.warn(`Falha ao cachear: ${url}`, err);
@@ -40,6 +40,7 @@ self.addEventListener('install', event => {
     );
 });
 
+// ✅ Ativação: limpa caches antigos
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys()
@@ -50,7 +51,9 @@ self.addEventListener('activate', event => {
     );
 });
 
+// ✅ Estratégia: network-first para JS, cache-first para o resto
 self.addEventListener('fetch', event => {
+    // Se a requisição for para ficheiros JavaScript, busca primeiro na rede (para evitar versões antigas)
     if (event.request.url.endsWith('.js')) {
         event.respondWith(
             fetch(event.request)
@@ -62,6 +65,7 @@ self.addEventListener('fetch', event => {
                 .catch(() => caches.match(event.request).then(cached => cached || caches.match('/index.html')))
         );
     } 
+    // Para imagens, tenta cache primeiro e depois rede
     else if (event.request.url.endsWith('.jpg') || event.request.url.endsWith('.png') || event.request.url.endsWith('.webp') || event.request.url.includes('i.ibb.co')) {
         event.respondWith(
             caches.match(event.request)
@@ -72,10 +76,12 @@ self.addEventListener('fetch', event => {
                 }).catch(() => caches.match('/logo auro.png')))
         );
     }
+    // Para o resto: cache primeiro, depois rede
     else {
         event.respondWith(
             caches.match(event.request)
                 .then(cached => cached || fetch(event.request).then(response => {
+                    // Cacheia apenas respostas válidas (status 200)
                     if (response.ok) {
                         const copy = response.clone();
                         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
@@ -84,15 +90,4 @@ self.addEventListener('fetch', event => {
                 }).catch(() => caches.match('/index.html')))
         );
     }
-});
-
-// Push
-self.addEventListener('push', event => {
-    const data = event.data.json();
-    const options = {
-        body: data.body,
-        icon: 'logo auro.png',
-        badge: 'logo auro.png'
-    };
-    event.waitUntil(self.registration.showNotification(data.title, options));
 });

@@ -1,5 +1,7 @@
 import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura } from './utils.js';
-import { CONFIG } from './config.js';
+import { db, CONFIG } from './config.js';
+import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -179,25 +181,36 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(id, nome, preco, estoqueDisponivel) {
+export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
-    const existente = carrinho.find(i => i.id === id);
+    const existente = carrinho.find(i => i.nome === nome);
     let quantidadeAtual = existente ? existente.quantidade : 0;
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) { mostrarToast('🚫 Estoque esgotado!', 'info'); return; }
-    if (existente) { existente.quantidade += 1; } else { carrinho.push({ id, nome, preco, quantidade: 1 }); }
+    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1 }); }
     atualizarCarrinho();
     mostrarToast('Produto adicionado!', 'sucesso');
 }
 
 export async function aplicarCupom(codigoCupom) {
     if (!codigoCupom) return;
-    const cupons = { 'AURORA10': 10, 'BEMVINDO': 15 };
-    if (cupons[codigoCupom.toUpperCase()]) {
-        cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: cupons[codigoCupom.toUpperCase()] };
-        mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${cupons[codigoCupom.toUpperCase()]}% OFF`, 'sucesso');
-        atualizarCarrinho();
-    } else {
-        mostrarToast('Cupom inválido!', 'info');
+    try {
+        const q = query(collection(db, 'cupons'), where('codigo', '==', codigoCupom));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const cupom = snapshot.docs[0].data();
+            if (cupom.ativo) {
+                cupomAplicado = { codigo: codigoCupom.toUpperCase(), desconto: cupom.percentual };
+                mostrarToast(`Cupom ${codigoCupom.toUpperCase()} aplicado! ${cupom.percentual}% OFF`, 'sucesso');
+                atualizarCarrinho();
+            } else {
+                mostrarToast('Cupom inválido!', 'info');
+            }
+        } else {
+            mostrarToast('Cupom inválido!', 'info');
+        }
+    } catch (e) {
+        console.error('Erro ao validar cupom:', e);
+        mostrarToast('Erro ao validar cupom. Tente novamente.', 'info');
     }
 }
 
@@ -222,28 +235,8 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada) {
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
-    
-    // Melhoria: calcular frete sem bloquear com prompt() (usa try/catch)
-    const bairro = obterBairro();
-    if (bairro) {
-        try {
-            const res = await fetch('/api/frete/calcular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bairro, itens: carrinho }) });
-            const data = await res.json();
-            if (data.frete) totalComDesconto += data.frete;
-        } catch(e) { console.warn('Erro ao calcular frete', e); }
-    }
-    
     await salvarVendaNoHistorico(nome, telefone, nif, morada, cupomSalvo);
     abrirModalPagamento(totalComDesconto, nome);
-}
-
-// Função para obter bairro sem prompt() bloqueante - pode ser substituída por um input no modal
-function obterBairro() {
-    try {
-        return prompt('Digite o bairro para calcular o frete:');
-    } catch(e) {
-        return null;
-    }
 }
 
 function abrirModalPagamento(valorTotal, nomeCliente) {
@@ -259,15 +252,9 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
         navigator.clipboard.writeText(referencia);
         alert('✅ Referência copiada! Cole no Multicaixa.');
     };
-    document.getElementById('btnConfirmarPagamento').onclick = async () => {
-        const res = await fetch('/api/pagamento/criar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedidoId: dadosVendaTemp.id, valor: valorTotal }) });
-        const data = await res.json();
-        if (data.success) {
-            fecharModalPagamento();
-            enviarPedidoWhatsApp();
-        } else {
-            alert('Erro ao criar pagamento. Tente novamente.');
-        }
+    document.getElementById('btnConfirmarPagamento').onclick = () => {
+        fecharModalPagamento();
+        enviarPedidoWhatsApp();
     };
     document.getElementById('btnFecharPagamento').onclick = () => {
         fecharModalPagamento();
@@ -280,7 +267,7 @@ async function enviarPedidoWhatsApp() {
     let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
-    gerarFaturaHTML(carrinho, nome, telefone, nif, morada, totalComDesconto);
+    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, totalComDesconto);
     limparCarrinho();
 
     let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
@@ -360,59 +347,100 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
+// ✅ FUNÇÃO CORRIGIDA: gera código de rastreio manualmente e inclui no documento
 async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
+    let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+    const agora = new Date();
+    const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const itensVenda = carrinho.map(item => ({ 
-        id: item.id, 
-        nome: item.nome, 
-        quantidade: item.quantidade, 
-        preco: extrairValorNumerico(item.preco) 
-    }));
+    const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }));
 
-    try {
-        const resposta = await fetch('/api/vendas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nome: nomeCliente,
-                telefone: telefoneCliente,
-                nif: nifCliente,
-                morada: moradaCliente,
-                produtos: produtosResumo,
-                total: valorTotalPedido,
-                itens: itensVenda
-            })
-        });
+    // ✅ GERAR CÓDIGO DE RASTREIO AQUI (para não depender do updateDoc)
+    const codigoRastreio = 'AURORA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-        const data = await resposta.json();
-        if (data.success) {
-            dadosVendaTemp.codigoRastreio = data.codigo;
+    const novaVenda = {
+        codigoRastreio: codigoRastreio,
+        dataHora: dataHoraFormatada,
+        produtosResumo: produtosResumo,
+        valorTotal: valorTotalPedido,
+        totalItens: totalItensPedido,
+        nomeCliente: nomeCliente,
+        telefoneCliente: telefoneCliente,
+        nifCliente: nifCliente,
+        moradaCliente: moradaCliente,
+        cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
+        descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
+        status: 'confirmado',
+        itens: itensVenda,
+        criadoEm: new Date()
+    };
+
+    // Garante autenticação anônima
+    const auth = getAuth();
+    let user = auth.currentUser;
+    if (!user) {
+        try {
+            const cred = await signInAnonymously(auth);
+            user = cred.user;
+        } catch (e) {
+            console.error('Erro autenticação anónima:', e);
+            const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
+            historicoLocal.push(novaVenda);
+            localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
             dadosVendaTemp.itens = itensVenda;
             dadosVendaTemp.valorTotal = valorTotalPedido;
-            dadosVendaTemp.id = data.id;
+            alert('⚠️ Sem conexão com o servidor. Pedido salvo localmente. Entre em contacto pelo WhatsApp para confirmar.');
+            return;
+        }
+    }
 
-            // Se cliente logado, adicionar pontos
-            const clienteToken = localStorage.getItem('cliente_token');
-            if (clienteToken) {
-                try {
-                    const resMe = await fetch('/api/cliente/me', {
-                        headers: { 'Authorization': `Bearer ${clienteToken}` }
-                    });
-                    const dataMe = await resMe.json();
-                    if (dataMe.id) {
-                        await fetch('/api/pontos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: dataMe.id, valorCompra: valorTotalPedido }) });
-                    }
-                } catch(e) { console.warn('Erro ao adicionar pontos'); }
+    try {
+        const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
+        // O código já está no documento, não precisa de updateDoc
+
+        dadosVendaTemp.codigoRastreio = codigoRastreio;
+        dadosVendaTemp.itens = itensVenda;
+        dadosVendaTemp.valorTotal = valorTotalPedido;
+        
+        // ✅ TENTA ATUALIZAR O ESTOQUE, MAS NÃO BLOQUEIA O PEDIDO SE FALHAR
+        await atualizarEstoque(itensVenda);
+
+        alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
+    } catch (e) {
+        console.error('Erro ao salvar venda no Firestore:', e);
+        const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
+        historicoLocal.push(novaVenda);
+        localStorage.setItem('aurora_historico_vendas', JSON.stringify(historicoLocal));
+        dadosVendaTemp.itens = itensVenda;
+        dadosVendaTemp.valorTotal = valorTotalPedido;
+        alert('⚠️ Não foi possível contactar o servidor. Pedido salvo localmente. Envie-nos uma mensagem no WhatsApp com o código: ' + codigoRastreio);
+    }
+}
+
+// ✅ FUNÇÃO CORRIGIDA: atualiza estoque com try/catch e não interrompe o fluxo
+async function atualizarEstoque(itensVenda) {
+    try {
+        const produtosSnap = await getDocs(collection(db, 'produtos'));
+        const produtosMap = new Map();
+        produtosSnap.forEach(doc => produtosMap.set(doc.data().nome, doc.id));
+
+        for (const item of itensVenda) {
+            const prodId = produtosMap.get(item.nome);
+            if (prodId) {
+                const prodRef = doc(db, 'produtos', prodId);
+                const prodSnap = await getDoc(prodRef);
+                if (prodSnap.exists()) {
+                    const estoqueAtual = prodSnap.data().estoque || 0;
+                    const novoEstoque = Math.max(0, estoqueAtual - item.quantidade);
+                    await updateDoc(prodRef, { estoque: novoEstoque });
+                }
             }
-            alert(`✅ Pedido registado!\nCódigo de rastreio: ${data.codigo}`);
-        } else {
-            throw new Error('Erro ao registar venda');
         }
     } catch (e) {
-        console.error('Erro ao salvar venda:', e);
-        alert('⚠️ Não foi possível contactar o servidor. Pedido salvo localmente. Envie-nos uma mensagem no WhatsApp para confirmar.');
+        console.warn('Não foi possível atualizar o estoque automaticamente:', e);
+        // Não bloqueia o pedido
     }
 }
