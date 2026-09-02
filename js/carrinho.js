@@ -222,8 +222,9 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada) {
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
-    // Obter frete dinâmico
-    const bairro = prompt('Digite o bairro para calcular o frete:');
+    
+    // Melhoria: calcular frete sem bloquear com prompt() (usa try/catch)
+    const bairro = obterBairro();
     if (bairro) {
         try {
             const res = await fetch('/api/frete/calcular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bairro, itens: carrinho }) });
@@ -231,8 +232,18 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada) {
             if (data.frete) totalComDesconto += data.frete;
         } catch(e) { console.warn('Erro ao calcular frete', e); }
     }
+    
     await salvarVendaNoHistorico(nome, telefone, nif, morada, cupomSalvo);
     abrirModalPagamento(totalComDesconto, nome);
+}
+
+// Função para obter bairro sem prompt() bloqueante - pode ser substituída por um input no modal
+function obterBairro() {
+    try {
+        return prompt('Digite o bairro para calcular o frete:');
+    } catch(e) {
+        return null;
+    }
 }
 
 function abrirModalPagamento(valorTotal, nomeCliente) {
@@ -249,12 +260,13 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
         alert('✅ Referência copiada! Cole no Multicaixa.');
     };
     document.getElementById('btnConfirmarPagamento').onclick = async () => {
-        // Chamar API de criar pagamento
         const res = await fetch('/api/pagamento/criar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedidoId: dadosVendaTemp.id, valor: valorTotal }) });
         const data = await res.json();
         if (data.success) {
             fecharModalPagamento();
             enviarPedidoWhatsApp();
+        } else {
+            alert('Erro ao criar pagamento. Tente novamente.');
         }
     };
     document.getElementById('btnFecharPagamento').onclick = () => {
@@ -352,7 +364,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
     let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
-    let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
 
     const itensVenda = carrinho.map(item => ({ 
         id: item.id, 

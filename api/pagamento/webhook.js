@@ -6,14 +6,11 @@ export async function onRequestPost({ request, env }) {
             return Response.json({ success: false, error: "Dados incompletos" }, { status: 400 });
         }
 
-        // Normaliza o status
         const statusNormalizado = status === 'pago' ? 'pago' : 'falhou';
 
-        // Atualiza o status do pagamento na venda correspondente
         const result = await env.DB.prepare('UPDATE vendas SET status_pagamento = ? WHERE referencia_pagamento = ?')
             .bind(statusNormalizado, referencia).run();
 
-        // Se nenhuma linha foi afetada, a referência não existe
         if (result.meta.changes === 0) {
             return Response.json({ success: false, error: "Referência não encontrada" }, { status: 404 });
         }

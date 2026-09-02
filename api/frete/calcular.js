@@ -2,7 +2,6 @@ export async function onRequestPost({ request, env }) {
     try {
         const { bairro, itens } = await request.json();
 
-        // Validação básica
         if (!bairro) {
             return Response.json({ error: 'Bairro não informado' }, { status: 400 });
         }
@@ -10,7 +9,6 @@ export async function onRequestPost({ request, env }) {
             return Response.json({ error: 'Itens inválidos' }, { status: 400 });
         }
 
-        // Busca a taxa do bairro na tabela bairros_frete
         const bairroInfo = await env.DB.prepare('SELECT taxa FROM bairros_frete WHERE nome = ?').bind(bairro).first();
         if (!bairroInfo) {
             return Response.json({ error: 'Bairro não atendido' }, { status: 404 });
@@ -18,12 +16,10 @@ export async function onRequestPost({ request, env }) {
 
         let total = bairroInfo.taxa;
 
-        // Adiciona custo extra por peso (se os itens tiverem peso)
         for (const item of itens) {
             if (item.peso && item.peso > 0) {
-                total += item.peso * 50; // Exemplo: 50 Kz por kg
+                total += item.peso * 50;
             }
-            // Se a quantidade existir, multiplica o peso pela quantidade
             if (item.quantidade && item.peso) {
                 total += (item.peso * item.quantidade) * 50;
             }

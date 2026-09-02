@@ -2,6 +2,10 @@ import { obterAvaliacao } from './avaliacoes.js';
 import { extrairValorNumerico } from './utils.js';
 import { CONFIG } from './config.js';
 
+// Cache em memória para evitar múltiplas buscas
+let cacheMemoria = null;
+let cachePromessa = null;
+
 export function criarCardProduto(prod) {
     const card = document.createElement('a');
     card.className = 'produto-card';
@@ -97,6 +101,45 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao)
         default: filtrados.sort((a, b) => (a.ordem || a.id) - (b.ordem || b.id));
     }
     return filtrados;
+}
+
+export async function carregarCatalogo() {
+    // Retorna cache em memória se existir
+    if (cacheMemoria) return cacheMemoria;
+    if (cachePromessa) return cachePromessa;
+
+    cachePromessa = new Promise(async (resolve) => {
+        try {
+            const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
+            if (cachedStr) {
+                const cache = JSON.parse(cachedStr);
+                if (cache.data && cache.data.length > 1) {
+                    cacheMemoria = cache.data;
+                    resolve(cacheMemoria);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        try {
+            const response = await fetch('/api/produtos');
+            const produtos = await response.json();
+            if (produtos && produtos.length > 0) {
+                cacheMemoria = produtos;
+                localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
+                resolve(produtos);
+            } else {
+                throw new Error('Lista vazia');
+            }
+        } catch (e) {
+            console.warn('Falha ao buscar produtos:', e);
+            resolve([]);
+        } finally {
+            cachePromessa = null;
+        }
+    });
+
+    return cachePromessa;
 }
 
 export async function renderizarGrade(produtosFiltrados, container, pagina = 1, itensPorPagina = 10) {

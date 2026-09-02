@@ -14,12 +14,12 @@ let precoMax = Infinity;
 let ordenacao = 'ordem';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (!window.__carrinhoInicializado) {
-        initCarrinho();
-        window.__carrinhoInicializado = true;
-    }
-    initMobileMenu();
-    initClienteUI();
+    // Inicializa componentes em paralelo (mais rápido)
+    Promise.all([
+        initCarrinho(),
+        initMobileMenu(),
+        initClienteUI()
+    ]).catch(e => console.warn('Erro ao inicializar componentes:', e));
 
     const carregando = document.getElementById('carregandoProdutos');
     if (carregando) {
@@ -27,34 +27,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregando.textContent = '⏳ Carregando produtos...';
     }
 
-    let catalogoCarregado = false;
-    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
-    if (cachedStr) {
-        try {
-            const cache = JSON.parse(cachedStr);
-            if (cache.data && cache.data.length > 0) {
-                catalogo = cache.data;
-                catalogoCarregado = true;
-            }
-        } catch (e) { console.warn('Cache inválido:', e); }
-    }
+    // Carrega catálogo e recomendações em paralelo
+    const [catalogoData] = await Promise.all([
+        carregarCatalogo().catch(() => []),
+        carregarRecomendacoes().catch(() => [])
+    ]);
 
-    if (!catalogoCarregado) {
-        try {
-            catalogo = await carregarCatalogo();
-        } catch (e) {
-            console.error('Erro ao carregar catálogo:', e);
-            catalogo = [];
-        }
-    }
+    catalogo = catalogoData;
 
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    if (catalogoCarregado) {
-        atualizarCatalogoDoFirebase();
-    }
+    // Atualiza catálogo em segundo plano (sem bloquear)
+    setTimeout(async () => {
+        const freshCatalogo = await carregarCatalogo().catch(() => []);
+        if (freshCatalogo.length > 0) {
+            catalogo = freshCatalogo;
+            renderizarTudo();
+        }
+    }, 5000);
 
+    // Configuração dos filtros (com debounce para evitar excesso de chamadas)
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -104,7 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await aplicarFiltros();
-    carregarRecomendacoes();
 });
 
 document.addEventListener('click', function(e) {
@@ -141,15 +133,6 @@ document.addEventListener('click', function(e) {
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
-}
-
-async function atualizarCatalogoDoFirebase() {
-    try {
-        catalogo = await carregarCatalogo();
-        renderizarTudo();
-    } catch (e) {
-        console.warn('Erro ao atualizar do Firebase:', e);
-    }
 }
 
 async function aplicarFiltros(resetPagina = true) {

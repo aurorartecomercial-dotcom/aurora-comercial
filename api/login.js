@@ -1,18 +1,30 @@
 export async function onRequestPost({ request, env }) {
-    const { email, senha } = await request.json();
-    const cliente = await env.DB.prepare('SELECT * FROM clientes WHERE email = ?').bind(email).first();
-    if (!cliente) return Response.json({ success: false }, { status: 401 });
-    
-    const hash = await hashSenha(senha);
-    if (hash !== cliente.senha_hash) return Response.json({ success: false }, { status: 401 });
-    
-    // Gera token do cliente com JWT similar ao admin
-    const token = await criarJWT({ id: cliente.id, email: cliente.email, exp: Date.now() + 86400000 }, env.SECRET_KEY || 'segredo');
-    return Response.json({ success: true, token, cliente: { nome: cliente.nome, email: cliente.email } });
+    try {
+        const { email, password } = await request.json();
+
+        if (!email || !password) {
+            return Response.json({ success: false, message: "Email e senha são obrigatórios" }, { status: 400 });
+        }
+
+        if (email === env.ADMIN_EMAIL && password === env.ADMIN_PASSWORD) {
+            const token = await criarJWT({ email, exp: Date.now() + 3600000 }, env.SECRET_KEY || 'segredo');
+            return Response.json({ success: true, token });
+        }
+
+        return Response.json({ success: false, message: "Credenciais inválidas" }, { status: 401 });
+    } catch (e) {
+        return Response.json({ success: false, message: "Erro no servidor" }, { status: 500 });
+    }
 }
 
-async function hashSenha(senha) {
-    const data = new TextEncoder().encode(senha);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+async function criarJWT(payload, secret) {
+    const encoder = new TextEncoder();
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const headerB64 = btoa(JSON.stringify(header));
+    const payloadB64 = btoa(JSON.stringify(payload));
+    const data = `${headerB64}.${payloadB64}`;
+    const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
+    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+    return `${data}.${sigB64}`;
 }
