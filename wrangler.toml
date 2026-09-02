@@ -1,5 +1,6 @@
 name = "aurora-comercial"
 compatibility_date = "2024-01-01"
+pages_build_output_dir = "."
 
 [[d1_databases]]
 binding = "DB"
@@ -13,8 +14,3 @@ binding = "AI"
 ADMIN_EMAIL = "admin@aurora.ao"
 ADMIN_PASSWORD = "password123"
 SECRET_KEY = "segredo-super-secreto"
-
-# Configuração de assets (ficheiros estáticos)
-[assets]
-directory = "."
-binding = "ASSETS"
