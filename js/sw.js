@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v5';
+const CACHE_NAME = 'aurora-cache-v7';   // use um número maior
 const urlsToCache = [
     '/',
     '/index.html',
