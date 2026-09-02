@@ -2,6 +2,7 @@ import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
+import { initFidelidade } from './fidelidade.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
+    initFidelidade(); // 🔐 Inicializa sistema de login/pontos
 
     const carregando = document.getElementById('carregandoProdutos');
     if (carregando) {
@@ -226,4 +228,13 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+};
+
+// ✅ NOVO: Função global para adicionar com observação (chamada pelo botão do card)
+window.adicionarComObservacao = function(btn) {
+    const nome = btn.dataset.nome;
+    const preco = btn.dataset.preco;
+    const estoque = parseInt(btn.dataset.estoque) || 0;
+    const obs = prompt('Digite uma observação (ex: gravar nome, cor):', '');
+    adicionarProdutoCarrinho(nome, preco, estoque, obs || '');
 };

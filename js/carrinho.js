@@ -2,14 +2,28 @@ import { extrairValorNumerico, mostrarToast, validarCliente, gerarNumeroFatura }
 import { db, CONFIG } from './config.js';
 import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { adicionarPontos } from './fidelidade.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
 let modalCliente, modalPagamento;
-let inputNome, inputTelefone, inputNif, inputMorada;
+let inputNome, inputTelefone, inputNif, inputMorada, selectBairro, inputObservacao;
 let btnSalvarCliente, btnFecharModal;
 let cupomAplicado = null;
 let dadosVendaTemp = {};
+let freteSelecionado = 0;
+let bairros = [
+    { nome: 'Luanda Centro', taxa: 1000 },
+    { nome: 'Ingombota', taxa: 1000 },
+    { nome: 'Maianga', taxa: 1200 },
+    { nome: 'Rangel', taxa: 1500 },
+    { nome: 'Cazenga', taxa: 2000 },
+    { nome: 'Viana', taxa: 3500 },
+    { nome: 'Talatona', taxa: 4000 },
+    { nome: 'Kilamba', taxa: 4500 },
+    { nome: 'Benfica', taxa: 3000 },
+    { nome: 'Outro', taxa: 5000 }
+];
 
 export function initCarrinho() {
     listaProdutosHTML = document.getElementById('itensCarrinhoLoja');
@@ -23,6 +37,8 @@ export function initCarrinho() {
     inputTelefone = document.getElementById('inputTelefone');
     inputNif = document.getElementById('inputNif');
     inputMorada = document.getElementById('inputMorada');
+    selectBairro = document.getElementById('selectBairro');
+    inputObservacao = document.getElementById('inputObservacao');
     btnSalvarCliente = document.getElementById('btnSalvarCliente');
     btnFecharModal = document.getElementById('btnFecharModal');
 
@@ -60,6 +76,8 @@ export function initCarrinho() {
             const telefone = inputTelefone.value.trim();
             const nif = inputNif.value.trim();
             const morada = inputMorada.value.trim();
+            const bairro = selectBairro ? selectBairro.value : '';
+            const observacao = inputObservacao ? inputObservacao.value.trim() : '';
             const erros = validarCliente(nome, telefone, nif);
             if (erros.nome) document.getElementById('erroNome').textContent = erros.nome;
             else document.getElementById('erroNome').textContent = '';
@@ -68,9 +86,11 @@ export function initCarrinho() {
             if (erros.nif) document.getElementById('erroNif').textContent = erros.nif;
             else document.getElementById('erroNif').textContent = '';
             if (Object.keys(erros).length > 0) return;
+            if (!bairro) { alert('Selecione o bairro para calcular o frete.'); return; }
 
+            freteSelecionado = obterTaxaFrete(bairro);
             fecharModalCliente();
-            iniciarFluxoPagamento(nome, telefone, nif, morada);
+            iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observacao);
         });
     }
 
@@ -150,6 +170,7 @@ export function atualizarCarrinho() {
                 <div class="item-info-loja">
                     <h4>${item.nome}</h4>
                     <p>${item.preco}</p>
+                    ${item.observacao ? `<small style="color:#888;">📝 ${item.observacao}</small>` : ''}
                 </div>
                 <div class="item-controles">
                     <button data-index="${index}" data-mudanca="-1">−</button>
@@ -161,9 +182,14 @@ export function atualizarCarrinho() {
         });
     }
     if (cupomAplicado) totalGeral = totalGeral - (totalGeral * (cupomAplicado.desconto / 100));
-    if (totalHTML) totalHTML.textContent = totalGeral.toFixed(2);
+    if (totalHTML) totalHTML.textContent = (totalGeral + freteSelecionado).toFixed(2);
     atualizarBadge();
     salvarCarrinho();
+}
+
+function obterTaxaFrete(bairro) {
+    const b = bairros.find(b => b.nome === bairro);
+    return b ? b.taxa : 5000;
 }
 
 function atualizarBadge() {
@@ -181,12 +207,12 @@ window.alterarQtd = function(index, mudanca) {
     atualizarCarrinho();
 };
 
-export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel) {
+export function adicionarProdutoCarrinho(nome, preco, estoqueDisponivel, observacao = '') {
     if (estoqueDisponivel !== undefined && estoqueDisponivel <= 0) { mostrarToast('🚫 Produto esgotado!', 'info'); return; }
-    const existente = carrinho.find(i => i.nome === nome);
+    const existente = carrinho.find(i => i.nome === nome && i.observacao === observacao);
     let quantidadeAtual = existente ? existente.quantidade : 0;
     if (estoqueDisponivel !== undefined && quantidadeAtual >= estoqueDisponivel) { mostrarToast('🚫 Estoque esgotado!', 'info'); return; }
-    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1 }); }
+    if (existente) { existente.quantidade += 1; } else { carrinho.push({ nome, preco, quantidade: 1, observacao }); }
     atualizarCarrinho();
     mostrarToast('Produto adicionado!', 'sucesso');
 }
@@ -217,7 +243,13 @@ export async function aplicarCupom(codigoCupom) {
 function abrirModalCliente() {
     if (modalCliente) {
         modalCliente.style.display = 'flex';
-        inputNome.value = ''; inputTelefone.value = ''; inputNif.value = ''; inputMorada.value = '';
+        // Preencher dados salvos
+        const dadosSalvos = JSON.parse(localStorage.getItem('aurora_cliente_dados') || '{}');
+        inputNome.value = dadosSalvos.nome || '';
+        inputTelefone.value = dadosSalvos.telefone || '';
+        inputNif.value = dadosSalvos.nif || '';
+        inputMorada.value = dadosSalvos.morada || '';
+        if (selectBairro && dadosSalvos.bairro) selectBairro.value = dadosSalvos.bairro;
         document.getElementById('erroNome').textContent = '';
         document.getElementById('erroTelefone').textContent = '';
         document.getElementById('erroNif').textContent = '';
@@ -227,15 +259,17 @@ function abrirModalCliente() {
 function fecharModalCliente() { if (modalCliente) modalCliente.style.display = 'none'; }
 function fecharModalPagamento() { if (modalPagamento) modalPagamento.style.display = 'none'; }
 
-async function iniciarFluxoPagamento(nome, telefone, nif, morada) {
-    dadosVendaTemp = { nome, telefone, nif, morada };
-    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+async function iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observacao) {
+    dadosVendaTemp = { nome, telefone, nif, morada, bairro, observacao };
+    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
     let cupomSalvo = null;
     if (cupomAplicado) {
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
-    await salvarVendaNoHistorico(nome, telefone, nif, morada, cupomSalvo);
+    // Salvar dados do cliente para preenchimento futuro
+    localStorage.setItem('aurora_cliente_dados', JSON.stringify({ nome, telefone, nif, morada, bairro }));
+    await salvarVendaNoHistorico(nome, telefone, nif, morada, bairro, observacao, cupomSalvo);
     abrirModalPagamento(totalComDesconto, nome);
 }
 
@@ -263,18 +297,20 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
 }
 
 async function enviarPedidoWhatsApp() {
-    const { nome, telefone, nif, morada } = dadosVendaTemp;
-    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    const { nome, telefone, nif, morada, bairro, observacao } = dadosVendaTemp;
+    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
 
-    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, totalComDesconto);
+    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, bairro, totalComDesconto);
     limparCarrinho();
 
     let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
-    textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\n\n`;
-    const itens = dadosVendaTemp.itens || [];
-    itens.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco} Kz\n`; });
-    if (cupomAplicado) textoWhats += `\n💸 *Cupom aplicado:* ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
+    textoWhats += `Cliente: ${nome}\nTelefone: ${telefone}\nNIF: ${nif}\nMorada: ${morada}\nBairro: ${bairro}\n`;
+    if (observacao) textoWhats += `Obs: ${observacao}\n`;
+    textoWhats += `\n`;
+    carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco} Kz\n`; });
+    textoWhats += `\n🚚 Frete: ${freteSelecionado.toFixed(2)} Kz\n`;
+    if (cupomAplicado) textoWhats += `💸 Cupom: ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
     textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
     
     window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
@@ -282,14 +318,14 @@ async function enviarPedidoWhatsApp() {
     mostrarToast('Pedido finalizado! Fatura aberta para impressão.', 'sucesso');
 }
 
-function gerarFaturaHTML(itens, nome, telefone, nif, morada, total) {
+function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, total) {
     try {
         const numeroFatura = gerarNumeroFatura();
         let itensHTML = '';
         itens.forEach(item => {
             const valorLimpo = extrairValorNumerico(item.preco);
             const subtotal = valorLimpo * item.quantidade;
-            itensHTML += `<tr><td>${item.nome}</td><td>${item.quantidade}</td><td>${valorLimpo.toFixed(2)}</td><td>${subtotal.toFixed(2)}</td></tr>`;
+            itensHTML += `<tr><td>${item.nome}${item.observacao ? '<br><small>Obs: '+item.observacao+'</small>' : ''}</td><td>${item.quantidade}</td><td>${valorLimpo.toFixed(2)}</td><td>${subtotal.toFixed(2)}</td></tr>`;
         });
 
         const html = `<!DOCTYPE html>
@@ -320,7 +356,7 @@ function gerarFaturaHTML(itens, nome, telefone, nif, morada, total) {
 <p><strong>Cliente:</strong> ${nome}</p>
 <p><strong>Telefone:</strong> ${telefone}</p>
 <p><strong>NIF:</strong> ${nif}</p>
-<p><strong>Morada:</strong> ${morada}</p>
+<p><strong>Morada:</strong> ${morada} - ${bairro}</p>
 </div>
 <table>
 <thead><tr><th>Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
@@ -344,21 +380,20 @@ function gerarFaturaHTML(itens, nome, telefone, nif, morada, total) {
 
 function limparCarrinho() {
     carrinho = []; cupomAplicado = null; sessionStorage.removeItem('cupom_atual');
+    freteSelecionado = 0;
     atualizarCarrinho(); fecharCarrinho();
 }
 
-// ✅ FUNÇÃO CORRIGIDA: gera código de rastreio manualmente e inclui no documento
-async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, cupomSalvo) {
+async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, bairro, observacao, cupomSalvo) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
-    let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
     if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco) }));
+    const itensVenda = carrinho.map(item => ({ nome: item.nome, quantidade: item.quantidade, preco: extrairValorNumerico(item.preco), observacao: item.observacao || '' }));
 
-    // ✅ GERAR CÓDIGO DE RASTREIO AQUI (para não depender do updateDoc)
     const codigoRastreio = 'AURORA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const novaVenda = {
@@ -371,6 +406,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         telefoneCliente: telefoneCliente,
         nifCliente: nifCliente,
         moradaCliente: moradaCliente,
+        bairro: bairro,
+        observacao: observacao,
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
         descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
         status: 'confirmado',
@@ -378,7 +415,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         criadoEm: new Date()
     };
 
-    // Garante autenticação anônima
     const auth = getAuth();
     let user = auth.currentUser;
     if (!user) {
@@ -399,14 +435,14 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
 
     try {
         const docRef = await addDoc(collection(db, 'vendas'), novaVenda);
-        // O código já está no documento, não precisa de updateDoc
-
         dadosVendaTemp.codigoRastreio = codigoRastreio;
         dadosVendaTemp.itens = itensVenda;
         dadosVendaTemp.valorTotal = valorTotalPedido;
         
-        // ✅ TENTA ATUALIZAR O ESTOQUE, MAS NÃO BLOQUEIA O PEDIDO SE FALHAR
         await atualizarEstoque(itensVenda);
+
+        // ✅ ADICIONAR PONTOS DE FIDELIDADE
+        await adicionarPontos(valorTotalPedido);
 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
     } catch (e) {
@@ -420,7 +456,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA: atualiza estoque com try/catch e não interrompe o fluxo
 async function atualizarEstoque(itensVenda) {
     try {
         const produtosSnap = await getDocs(collection(db, 'produtos'));
@@ -441,6 +476,5 @@ async function atualizarEstoque(itensVenda) {
         }
     } catch (e) {
         console.warn('Não foi possível atualizar o estoque automaticamente:', e);
-        // Não bloqueia o pedido
     }
 }

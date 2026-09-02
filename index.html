@@ -44,6 +44,8 @@
                     <small>Olá, faça seu login</small>
                     Conta
                 </button>
+                <!-- ✅ BADGE DE PONTOS -->
+                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
                 <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
                     🛒 <span id="badgeContador">0</span>
                 </button>
@@ -210,7 +212,7 @@
         </div>
     </main>
 
-    <!-- NOVA SEÇÃO DE CATEGORIAS (substitui o antigo Balanço) -->
+    <!-- NOVA SEÇÃO DE CATEGORIAS -->
     <section class="secao-categorias" id="secao-categorias">
         <h2>📂 Categorias</h2>
         <div class="grade-categorias">
@@ -365,7 +367,7 @@
         </div>
     </aside>
 
-    <!-- MODAL DO CLIENTE -->
+    <!-- MODAL DO CLIENTE (com bairro e observação) -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
             <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
@@ -385,6 +387,27 @@
                 <button type="button" id="btnGPS" style="background:var(--cor-ouro); border:none; padding:8px 14px; border-radius:40px; font-weight:600; cursor:pointer;">📍 GPS</button>
             </div>
             <small style="display:block; margin-top:4px; color:#888; font-size:12px;">Clique em GPS para preencher automaticamente sua localização.</small>
+
+            <!-- ✅ SELETOR DE BAIRRO -->
+            <label for="selectBairro" style="margin-top:14px;">Bairro *</label>
+            <select id="selectBairro" style="width:100%; padding:10px; border-radius:12px; margin-top:4px;">
+                <option value="">Selecione...</option>
+                <option value="Luanda Centro">Luanda Centro (1.000 Kz)</option>
+                <option value="Ingombota">Ingombota (1.000 Kz)</option>
+                <option value="Maianga">Maianga (1.200 Kz)</option>
+                <option value="Rangel">Rangel (1.500 Kz)</option>
+                <option value="Cazenga">Cazenga (2.000 Kz)</option>
+                <option value="Viana">Viana (3.500 Kz)</option>
+                <option value="Talatona">Talatona (4.000 Kz)</option>
+                <option value="Kilamba">Kilamba (4.500 Kz)</option>
+                <option value="Benfica">Benfica (3.000 Kz)</option>
+                <option value="Outro">Outro (5.000 Kz)</option>
+            </select>
+
+            <!-- ✅ OBSERVAÇÃO -->
+            <label for="inputObservacao" style="margin-top:10px;">Observação (opcional)</label>
+            <textarea id="inputObservacao" style="width:100%; padding:10px; border-radius:12px; margin-top:4px;" placeholder="Ex: gravar nome, cor, etc."></textarea>
+
             <button id="btnSalvarCliente" class="btn-modal">✅ Gerar Fatura e Pagar</button>
         </div>
     </div>
@@ -413,6 +436,45 @@
                 <button id="btnFecharPagamento" style="background:transparent; color:#999; border:none; cursor:pointer; font-size:13px;">Cancelar pedido</button>
             </div>
             <small style="display:block; margin-top:10px; color:#999; font-size:11px;">O pedido só será processado após a confirmação do pagamento via WhatsApp.</small>
+        </div>
+    </div>
+
+    <!-- ✅ MODAL DE LOGIN (novo) -->
+    <div id="modalLogin" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
+            <button id="btnFecharLogin" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#999;">&times;</button>
+            <h2 style="color:var(--cor-esmeralda); margin-bottom:16px; text-align:center;">🔐 Minha Conta</h2>
+            
+            <div id="formLogin" style="display:block;">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" placeholder="seu@email.com" style="width:100%; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <label for="loginSenha">Senha:</label>
+                <input type="password" id="loginSenha" placeholder="Sua senha" style="width:100%; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <p id="erroLoginMsg" style="color:#E74C3C; display:none; font-size:13px; margin-bottom:10px;"></p>
+                <button id="btnLoginSubmit" style="width:100%; background:var(--cor-esmeralda); color:#fff; padding:12px; border:none; border-radius:40px; font-weight:700; cursor:pointer;">Entrar</button>
+                <p style="text-align:center; margin:10px 0;">ou</p>
+                <button id="btnMostrarRegistro" style="width:100%; background:var(--cor-ouro); color:#000; padding:12px; border:none; border-radius:40px; font-weight:700; cursor:pointer;">Criar Conta</button>
+            </div>
+
+            <div id="formRegistro" style="display:none;">
+                <label for="registroNome">Nome Completo:</label>
+                <input type="text" id="registroNome" placeholder="Seu nome" style="width:100%; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <label for="registroEmail">Email:</label>
+                <input type="email" id="registroEmail" placeholder="seu@email.com" style="width:100%; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <label for="registroSenha">Senha:</label>
+                <input type="password" id="registroSenha" placeholder="Mínimo 6 caracteres" style="width:100%; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <p id="erroRegistroMsg" style="color:#E74C3C; display:none; font-size:13px; margin-bottom:10px;"></p>
+                <button id="btnRegistrarSubmit" style="width:100%; background:var(--cor-esmeralda); color:#fff; padding:12px; border:none; border-radius:40px; font-weight:700; cursor:pointer;">Registrar</button>
+                <p style="text-align:center; margin:10px 0;">ou</p>
+                <button id="btnMostrarLogin" style="width:100%; background:var(--cor-ouro); color:#000; padding:12px; border:none; border-radius:40px; font-weight:700; cursor:pointer;">Já tenho Conta</button>
+            </div>
+
+            <div id="painelConta" style="display:none;">
+                <p><strong>Nome:</strong> <span id="contaNome"></span></p>
+                <p><strong>Email:</strong> <span id="contaEmail"></span></p>
+                <p><strong>Pontos:</strong> <span id="contaPontos">0</span> pts</p>
+                <button id="btnLogout" style="width:100%; background:#E74C3C; color:#fff; padding:10px; border:none; border-radius:40px; font-weight:700; cursor:pointer; margin-top:20px;">Sair</button>
+            </div>
         </div>
     </div>
 
@@ -472,11 +534,20 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
     </footer>
 
+    <!-- ✅ CHAT FLUTUANTE MELHORADO -->
+    <div class="chat-flutuante" id="chatFlutuante">
+        <button id="chatBtn" class="whatsapp-float">💬 Fale Connosco</button>
+        <div id="chatMenu" style="display:none; position:fixed; bottom:80px; right:20px; background:#fff; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.2); padding:16px; width:280px; z-index:9999;">
+            <h4 style="margin-bottom:10px; color:#005A4C;">Atendimento Rápido</h4>
+            <a href="https://wa.me/244933677628?text=Olá!%20Quero%20fazer%20um%20pedido" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">🛒 Fazer Pedido</a>
+            <a href="https://wa.me/244933677628?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20meu%20pedido" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">📦 Rastrear Pedido</a>
+            <a href="https://wa.me/244933677628?text=Olá!%20Tenho%20uma%20dúvida" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; text-decoration:none;">💬 Dúvidas Gerais</a>
+        </div>
+    </div>
+
     <script type="module" src="js/app.js?v=3"></script>
-    
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
-        💬 Fale connosco
-    </a>
+    <script type="module" src="js/carrinho.js?v=3"></script>
+    <script type="module" src="js/fidelidade.js?v=3"></script>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -500,6 +571,14 @@
     </div>
 
     <script>
+        // Chat flutuante
+        const chatBtn = document.getElementById('chatBtn');
+        const chatMenu = document.getElementById('chatMenu');
+        chatBtn.addEventListener('click', () => {
+            chatMenu.style.display = chatMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Instalação PWA
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
         const banner = document.getElementById('pwa-install-banner');
         if (!isStandalone) banner.style.display = 'block';

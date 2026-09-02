@@ -62,12 +62,23 @@ body {
 }
 .busca-container button:hover { background: var(--cor-ouro-escuro); color: #FFF; }
 
-.header-icones { display: flex; gap: 20px; }
+.header-icones { display: flex; gap: 20px; align-items: center; }
 .btn-entrar { background: transparent; border: 2px solid var(--cor-ouro); color: #FFF; font-weight: 600; cursor: pointer; font-size: 14px; padding: 6px 18px; border-radius: 40px; transition: 0.2s; }
 .btn-entrar:hover { background: var(--cor-ouro); color: #000; }
 .carrinho-icone { background: none; border: none; color: #FFF; font-size: 24px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; }
 .carrinho-icone #badgeContador { background: #E74C3C; color: #FFF; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: 700; }
-#carrinhoTotalItens { font-size: 12px; color: var(--cor-ouro); }
+#badgePontos {
+    background: var(--cor-ouro);
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+#badgePontos:hover { background: var(--cor-ouro-escuro); color: #FFF; }
 
 /* ============================================================
    MENU PRINCIPAL - ESTRUTURA ATUALIZADA COM DROPDOWN 2 COLUNAS
@@ -164,9 +175,7 @@ body {
 .selo-frete { display: block; margin-top: 4px; font-size: 13px; background: var(--cor-esmeralda-claro); color: var(--cor-esmeralda); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
 .selo-frete strong { color: var(--cor-ouro); }
 
-/* ============================================================
-   SELOS DE ENTREGA (HOJE / AMANHÃ)
-   ============================================================ */
+/* SELOS DE ENTREGA (HOJE / AMANHÃ) */
 .selo-entrega {
     display: block;
     margin-top: 6px;
@@ -214,11 +223,172 @@ body {
 #modalCliente .btn-fechar-modal:hover { color: var(--cor-esmeralda); transform: rotate(90deg); }
 #modalCliente h2 { font-size: 22px; font-weight: 700; color: var(--cor-esmeralda); text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--cor-ouro-claro); padding-bottom: 12px; }
 #modalCliente label { display: block; font-weight: 600; font-size: 13px; color: var(--cor-texto); margin-top: 14px; margin-bottom: 4px; }
-#modalCliente input { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 14px; transition: 0.2s; background: #FFF; }
-#modalCliente input:focus { border-color: var(--cor-ouro); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); outline: none; }
+#modalCliente input, #modalCliente select, #modalCliente textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 12px; font-size: 14px; transition: 0.2s; background: #FFF; }
+#modalCliente input:focus, #modalCliente select:focus, #modalCliente textarea:focus { border-color: var(--cor-ouro); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); outline: none; }
 .erro-validacao { color: #E74C3C; font-size: 12px; display: block; margin-top: 2px; }
 #modalCliente .btn-modal { width: 100%; background: linear-gradient(145deg, var(--cor-ouro), var(--cor-ouro-escuro)); color: #FFF; border: none; padding: 14px; border-radius: 40px; font-size: 16px; font-weight: 700; margin-top: 22px; cursor: pointer; transition: 0.2s; }
 #modalCliente .btn-modal:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3); }
+
+/* ============================================================
+   MODAL DE LOGIN - NOVO
+   ============================================================ */
+#modalLogin {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+#modalLogin > div {
+    background: #ffffff;
+    max-width: 400px;
+    width: 100%;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+    animation: fadeInUp 0.4s ease;
+}
+#modalLogin h2 {
+    color: var(--cor-esmeralda);
+    margin-bottom: 16px;
+    text-align: center;
+}
+#modalLogin label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--cor-texto);
+}
+#modalLogin input {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    transition: 0.2s;
+}
+#modalLogin input:focus {
+    border-color: var(--cor-ouro);
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+    outline: none;
+}
+#modalLogin button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 40px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+#btnLoginSubmit, #btnRegistrarSubmit {
+    background: var(--cor-esmeralda);
+    color: #fff;
+}
+#btnLoginSubmit:hover, #btnRegistrarSubmit:hover {
+    background: var(--cor-esmeralda-escuro);
+}
+#btnMostrarRegistro, #btnMostrarLogin {
+    background: var(--cor-ouro);
+    color: #000;
+}
+#btnMostrarRegistro:hover, #btnMostrarLogin:hover {
+    background: var(--cor-ouro-escuro);
+    color: #fff;
+}
+#btnLogout {
+    background: #E74C3C;
+    color: #fff;
+    margin-top: 20px;
+}
+#btnLogout:hover {
+    background: #c0392b;
+}
+#btnFecharLogin {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none !important;
+    border: none !important;
+    font-size: 28px;
+    cursor: pointer;
+    color: #999;
+    width: auto !important;
+    padding: 0 !important;
+}
+#btnFecharLogin:hover { color: var(--cor-esmeralda); }
+.erro-login {
+    color: #E74C3C;
+    display: none;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* ============================================================
+   CHAT FLUTUANTE - NOVO
+   ============================================================ */
+.chat-flutuante {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+.whatsapp-float {
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #fff;
+}
+.whatsapp-float:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
+}
+#chatMenu {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    padding: 16px;
+    width: 280px;
+    z-index: 9999;
+}
+#chatMenu h4 {
+    margin-bottom: 10px;
+    color: #005A4C;
+}
+#chatMenu a {
+    display: block;
+    padding: 8px;
+    background: #25D366;
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 8px;
+    text-decoration: none;
+}
+#chatMenu a:hover {
+    background: #1ebd58;
+}
 
 .container-detalhe { max-width: 1480px; margin: 20px auto; padding: 0 24px; }
 .breadcrumb { font-size: 12px; color: var(--cor-texto-claro); margin-bottom: 12px; }
@@ -327,6 +497,9 @@ body {
     transform: scale(1.02); 
 }
 
+/* ============================================================
+   ADMIN
+   ============================================================ */
 .admin-container { max-width: 1200px; margin: 40px auto; }
 .admin-container h1 { font-size: 28px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--cor-esmeralda); }
 .painel-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -534,150 +707,7 @@ body {
     }
 }
 
-/* ========== BOTÃO WHATSAPP FLUTUANTE ========== */
-.whatsapp-float {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #25D366;
-    color: #fff;
-    border-radius: 50px;
-    padding: 12px 24px;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 9999;
-    text-decoration: none;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 2px solid #fff;
-}
-.whatsapp-float:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
-}
-
-.video-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-    border-radius: var(--raio-borda);
-    box-shadow: var(--sombra-card);
-    margin: 16px 0;
-    background: #000;
-}
-.video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.pagina-blog {
-    background-color: #FDF8F4;
-    padding: 30px 24px;
-    border-radius: 24px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.04);
-}
-.pagina-blog h1 {
-    font-family: 'Inter', sans-serif;
-    font-size: 2.8rem;
-    color: #1A2A3A;
-    text-align: center;
-    margin-bottom: 30px;
-    position: relative;
-}
-.pagina-blog h1::after {
-    content: '';
-    display: block;
-    width: 80px;
-    height: 3px;
-    background: var(--cor-ouro);
-    margin: 10px auto 0;
-}
-#blogGrid .produto-card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid transparent;
-    padding: 0;
-}
-#blogGrid .produto-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 16px 40px rgba(26, 42, 58, 0.12);
-    border-color: var(--cor-ouro);
-}
-#blogGrid .produto-imagem {
-    height: 220px;
-    overflow: hidden;
-    background: #f0f0f0;
-    padding: 0;
-    border-radius: 20px 20px 0 0;
-}
-#blogGrid .produto-imagem img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-#blogGrid .produto-card:hover .produto-imagem img {
-    transform: scale(1.05);
-}
-#blogGrid .produto-info {
-    padding: 20px 20px 24px;
-}
-#blogGrid .categoria-tag {
-    font-size: 11px;
-    text-transform: uppercase;
-    color: var(--cor-ouro);
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-#blogGrid .produto-info h3 {
-    font-size: 18px;
-    margin: 8px 0 6px;
-    color: #1A2A3A;
-    line-height: 1.4;
-}
-#blogGrid .produto-info p {
-    font-size: 14px;
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 10px;
-}
-#blogGrid .produto-info span:last-child {
-    font-weight: 700;
-    color: var(--cor-esmeralda);
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-#blogGrid .produto-info span:last-child:hover {
-    color: var(--cor-ouro);
-}
-@media (max-width: 768px) {
-    #blogGrid {
-        grid-template-columns: 1fr !important;
-    }
-    .pagina-blog h1 {
-        font-size: 2rem;
-    }
-}
-
-/* ============================================================
-   NOVAS CORES ESCURAS PARA ADMIN E BLOG (MODO NOTURNO)
-   ============================================================ */
-
+/* ========== NOVAS CORES ESCURAS PARA ADMIN E BLOG (MODO NOTURNO) ========== */
 .admin-page {
     background: #0d0d0d;
     color: #e0e0e0;
@@ -877,7 +907,7 @@ body {
 }
 
 /* ============================================================
-   ✅ REGRAS CORRETAS PARA GRÁFICOS (SEM CORTAR TABELAS)
+   REGRAS CORRETAS PARA GRÁFICOS (SEM CORTAR TABELAS)
    ============================================================ */
 #graficoVendas,
 #graficoProdutos,
