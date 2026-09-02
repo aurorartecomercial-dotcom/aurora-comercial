@@ -1,8 +1,30 @@
 export async function onRequestPost({ request, env }) {
-    const { pedidoId, valor } = await request.json();
-    const referencia = `MCE-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    // Simulação: criar transação no gateway
-    await env.DB.prepare('UPDATE vendas SET referencia_pagamento = ?, status_pagamento = ? WHERE id = ?')
-        .bind(referencia, 'pendente', pedidoId).run();
-    return Response.json({ success: true, referencia });
+    try {
+        const { pedidoId, valor } = await request.json();
+
+        // Validação básica
+        if (!pedidoId || !valor) {
+            return Response.json({ success: false, error: "Dados incompletos" }, { status: 400 });
+        }
+        if (valor <= 0) {
+            return Response.json({ success: false, error: "Valor inválido" }, { status: 400 });
+        }
+
+        // Verifica se a venda existe
+        const venda = await env.DB.prepare("SELECT * FROM vendas WHERE id = ?").bind(pedidoId).first();
+        if (!venda) {
+            return Response.json({ success: false, error: "Pedido não encontrado" }, { status: 404 });
+        }
+
+        // Gera referência única
+        const referencia = `MCE-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+        // Atualiza a venda com a referência e status pendente
+        await env.DB.prepare('UPDATE vendas SET referencia_pagamento = ?, status_pagamento = ? WHERE id = ?')
+            .bind(referencia, 'pendente', pedidoId).run();
+
+        return Response.json({ success: true, referencia });
+    } catch (e) {
+        return Response.json({ success: false, error: e.message }, { status: 500 });
+    }
 }

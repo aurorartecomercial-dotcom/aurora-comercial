@@ -5,7 +5,7 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "aurora-db"
-database_id = "6f85eda-873f-4c8f-8c7b-35fcef4fa3e2"
+database_id = "6f854eda-873f-4c8f-bc9d-35fdebf483e1"
 
 [ai]
 binding = "AI"
