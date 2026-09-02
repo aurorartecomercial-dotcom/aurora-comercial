@@ -243,7 +243,6 @@ export async function aplicarCupom(codigoCupom) {
 function abrirModalCliente() {
     if (modalCliente) {
         modalCliente.style.display = 'flex';
-        // Preencher dados salvos
         const dadosSalvos = JSON.parse(localStorage.getItem('aurora_cliente_dados') || '{}');
         inputNome.value = dadosSalvos.nome || '';
         inputTelefone.value = dadosSalvos.telefone || '';
@@ -261,24 +260,37 @@ function fecharModalPagamento() { if (modalPagamento) modalPagamento.style.displ
 
 async function iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observacao) {
     dadosVendaTemp = { nome, telefone, nif, morada, bairro, observacao };
-    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
+    let totalProdutos = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    let totalComDesconto = totalProdutos;
     let cupomSalvo = null;
     if (cupomAplicado) {
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
-    // Salvar dados do cliente para preenchimento futuro
+    let totalFinal = totalComDesconto + freteSelecionado;
     localStorage.setItem('aurora_cliente_dados', JSON.stringify({ nome, telefone, nif, morada, bairro }));
-    await salvarVendaNoHistorico(nome, telefone, nif, morada, bairro, observacao, cupomSalvo);
-    abrirModalPagamento(totalComDesconto, nome);
+    await salvarVendaNoHistorico(nome, telefone, nif, morada, bairro, observacao, cupomSalvo, totalProdutos, totalComDesconto, totalFinal);
+    abrirModalPagamento(totalProdutos, totalComDesconto, freteSelecionado, totalFinal, nome);
 }
 
-function abrirModalPagamento(valorTotal, nomeCliente) {
+// ✅ MODAL DE PAGAMENTO ATUALIZADO PARA MOSTRAR DETALHES
+function abrirModalPagamento(totalProdutos, totalComDesconto, frete, totalFinal, nomeCliente) {
     if (!modalPagamento) return;
     const referencia = `PAY-${new Date().getFullYear()}-${Math.floor(Math.random()*1000000)}`;
-    document.getElementById('pagValor').textContent = valorTotal.toLocaleString('pt-AO') + ' Kz';
+    
+    // Atualizar campos do modal
+    document.getElementById('pagProdutos').textContent = totalProdutos.toLocaleString('pt-AO') + ' Kz';
+    if (totalComDesconto !== totalProdutos) {
+        document.getElementById('pagDesconto').textContent = '-' + (totalProdutos - totalComDesconto).toLocaleString('pt-AO') + ' Kz';
+        document.getElementById('linhaDesconto').style.display = 'block';
+    } else {
+        document.getElementById('linhaDesconto').style.display = 'none';
+    }
+    document.getElementById('pagFrete').textContent = frete.toLocaleString('pt-AO') + ' Kz';
+    document.getElementById('pagValor').textContent = totalFinal.toLocaleString('pt-AO') + ' Kz';
     document.getElementById('pagRef').textContent = referencia;
-    const qrText = `NIF:5000048151|REF:${referencia}|VAL:${valorTotal.toFixed(2)}`;
+    
+    const qrText = `NIF:5000048151|REF:${referencia}|VAL:${totalFinal.toFixed(2)}`;
     document.getElementById('pagQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrText)}`;
     modalPagamento.style.display = 'flex';
 
@@ -298,10 +310,12 @@ function abrirModalPagamento(valorTotal, nomeCliente) {
 
 async function enviarPedidoWhatsApp() {
     const { nome, telefone, nif, morada, bairro, observacao } = dadosVendaTemp;
-    let totalComDesconto = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
+    let totalProdutos = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
+    let totalComDesconto = totalProdutos;
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
+    let totalFinal = totalComDesconto + freteSelecionado;
 
-    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, bairro, totalComDesconto);
+    const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, bairro, totalProdutos, totalComDesconto, freteSelecionado, totalFinal);
     limparCarrinho();
 
     let textoWhats = `*AURORARTE COMERCIAL - NOVO PEDIDO*\n=============================\n\n`;
@@ -309,16 +323,18 @@ async function enviarPedidoWhatsApp() {
     if (observacao) textoWhats += `Obs: ${observacao}\n`;
     textoWhats += `\n`;
     carrinho.forEach(item => { textoWhats += `• *${item.nome}* (x${item.quantidade}) - ${item.preco} Kz\n`; });
-    textoWhats += `\n🚚 Frete: ${freteSelecionado.toFixed(2)} Kz\n`;
-    if (cupomAplicado) textoWhats += `💸 Cupom: ${cupomAplicado.codigo} (-${cupomAplicado.desconto}%)\n`;
-    textoWhats += `\n*Total:* KZ ${totalComDesconto.toFixed(2)}\n`;
+    textoWhats += `\n📦 Subtotal: ${totalProdutos.toLocaleString('pt-AO')} Kz\n`;
+    if (cupomAplicado) textoWhats += `💸 Cupom ${cupomAplicado.codigo}: -${(totalProdutos - totalComDesconto).toLocaleString('pt-AO')} Kz\n`;
+    textoWhats += `🚚 Frete (${bairro}): ${freteSelecionado.toLocaleString('pt-AO')} Kz\n`;
+    textoWhats += `✅ Total: ${totalFinal.toLocaleString('pt-AO')} Kz\n`;
     
     window.open(`https://api.whatsapp.com/send?phone=${CONFIG.NUMERO_WHATSAPP}&text=${encodeURIComponent(textoWhats)}`, '_blank');
 
     mostrarToast('Pedido finalizado! Fatura aberta para impressão.', 'sucesso');
 }
 
-function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, total) {
+// ✅ FATURA IMPRESSA ATUALIZADA COM DETALHAMENTO DO FRETE
+function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, totalProdutos, totalComDesconto, frete, totalFinal) {
     try {
         const numeroFatura = gerarNumeroFatura();
         let itensHTML = '';
@@ -343,6 +359,8 @@ function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, total) {
   .total { font-size: 20px; font-weight: bold; text-align: right; margin-top: 20px; }
   .dados { margin-top: 20px; }
   .dados p { margin: 5px 0; }
+  .resumo { margin-top: 15px; text-align: right; }
+  .resumo p { margin: 3px 0; }
   @media print { body { margin: 0; } }
 </style>
 </head>
@@ -362,7 +380,12 @@ function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, total) {
 <thead><tr><th>Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
 <tbody>${itensHTML}</tbody>
 </table>
-<p class="total">Total a Pagar: ${total.toFixed(2)} Kz</p>
+<div class="resumo">
+<p><strong>Subtotal dos produtos:</strong> ${totalProdutos.toFixed(2)} Kz</p>
+${totalComDesconto < totalProdutos ? `<p><strong>Desconto (cupom):</strong> -${(totalProdutos - totalComDesconto).toFixed(2)} Kz</p>` : ''}
+<p><strong>Frete (${bairro}):</strong> ${frete.toFixed(2)} Kz</p>
+<p class="total">Total a Pagar: ${totalFinal.toFixed(2)} Kz</p>
+</div>
 <script>window.print();</script>
 </body>
 </html>`;
@@ -384,10 +407,9 @@ function limparCarrinho() {
     atualizarCarrinho(); fecharCarrinho();
 }
 
-async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, bairro, observacao, cupomSalvo) {
+async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, moradaCliente, bairro, observacao, cupomSalvo, totalProdutos, totalComDesconto, totalFinal) {
     let produtosResumo = carrinho.map(item => `${item.nome} (x${item.quantidade})`).join(', ');
-    let valorTotalPedido = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0) + freteSelecionado;
-    if (cupomSalvo) valorTotalPedido = valorTotalPedido - (valorTotalPedido * (cupomSalvo.desconto / 100));
+    let valorTotalPedido = totalFinal;
     let totalItensPedido = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
     const agora = new Date();
     const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -410,6 +432,9 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         observacao: observacao,
         cupomAplicado: cupomSalvo ? cupomSalvo.codigo : null,
         descontoPercentual: cupomSalvo ? cupomSalvo.desconto : 0,
+        subtotal: totalProdutos,
+        valorDesconto: totalProdutos - totalComDesconto,
+        frete: freteSelecionado,
         status: 'confirmado',
         itens: itensVenda,
         criadoEm: new Date()
@@ -441,7 +466,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         
         await atualizarEstoque(itensVenda);
 
-        // ✅ ADICIONAR PONTOS DE FIDELIDADE
+        // Adicionar pontos de fidelidade (com base no total final)
         await adicionarPontos(valorTotalPedido);
 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);

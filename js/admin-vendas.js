@@ -3,9 +3,6 @@ import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.g
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { extrairValorNumerico } from './utils.js';
 
-// ============================================================
-// GUARDA: impede execução se a página não for o admin de vendas
-// ============================================================
 if (!document.getElementById('loginVendas') || !document.getElementById('conteudoVendas')) {
     console.warn('admin-vendas.js carregado em página incorreta. Abortando execução.');
     throw new Error('Página incorreta para admin-vendas.js');
@@ -19,35 +16,27 @@ function chartDisponivel() {
     return typeof Chart !== 'undefined';
 }
 
-// ✅ FUNÇÃO CRÍTICA: Converter datas no formato DD/MM/YYYY HH:mm para Date válido
 function parseDataHora(dataStr) {
     if (!dataStr) return null;
-    
-    // Formato esperado: "27/08/2026 12:59" ou "27/08/2026"
     const regex = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/;
     const match = dataStr.match(regex);
-    
     if (match) {
         const dia = parseInt(match[1]);
-        const mes = parseInt(match[2]) - 1; // JS meses: 0-11
+        const mes = parseInt(match[2]) - 1;
         const ano = parseInt(match[3]);
         const hora = match[4] ? parseInt(match[4]) : 0;
         const minuto = match[5] ? parseInt(match[5]) : 0;
         return new Date(ano, mes, dia, hora, minuto);
     }
-    
-    // Fallback: tentar formato ISO ou outros
     const data = new Date(dataStr);
     return isNaN(data.getTime()) ? null : data;
 }
 
-// ✅ Função segura para definir texto
 function setText(id, valor) {
     const el = document.getElementById(id);
     if (el) el.textContent = valor;
 }
 
-// ✅ Destruir gráfico antigo
 function destruirGrafico(nome) {
     if (graficos[nome]) {
         graficos[nome].destroy();
@@ -63,10 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const senhaInput = document.getElementById('senhaVendas');
     const erroLogin = document.getElementById('erroLoginVendas');
 
-    if (!loginDiv || !conteudoDiv || !btnLogin || !emailInput || !senhaInput || !erroLogin) {
-        console.error('Elementos de login não encontrados.');
-        return;
-    }
+    if (!loginDiv || !conteudoDiv || !btnLogin || !emailInput || !senhaInput || !erroLogin) return;
 
     btnLogin.addEventListener('click', async () => {
         try {
@@ -82,15 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     senhaInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') btnLogin.click(); });
 
-    // Configurar abas
     document.querySelectorAll('.aba-btn').forEach(btn => {
         btn.addEventListener('click', () => trocarAba(btn.dataset.aba));
     });
 
-    // Configurar botões de exportação
     configurarExportacoes();
 
-    // Filtros
     document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
     document.getElementById('btnLimparDia')?.addEventListener('click', () => {
         document.getElementById('inputDiaDiario').value = '';
@@ -134,7 +117,6 @@ async function carregarDados() {
         preencherSelects();
         renderizarDashboard();
         
-        // Atualizar data no cabeçalho
         const dataAtualEl = document.getElementById('dataAtual');
         if (dataAtualEl) {
             const hoje = new Date();
@@ -147,7 +129,6 @@ async function carregarDados() {
 }
 
 function preencherSelects() {
-    // ✅ Usar parseDataHora para extrair anos corretamente
     const anos = [...new Set(todasVendas.map(v => {
         const data = parseDataHora(v.dataHora);
         return data ? data.getFullYear() : null;
@@ -156,17 +137,13 @@ function preencherSelects() {
     const selectAno = document.getElementById('selectAnoFiltro');
     if (selectAno) {
         selectAno.innerHTML = '<option value="">Todos os anos</option>';
-        anos.forEach(ano => {
-            selectAno.innerHTML += `<option value="${ano}">${ano}</option>`;
-        });
+        anos.forEach(ano => selectAno.innerHTML += `<option value="${ano}">${ano}</option>`);
     }
 
     const selectSemana = document.getElementById('selectSemanaFiltro');
     if (selectSemana) {
         selectSemana.innerHTML = '<option value="">Todas as semanas</option>';
-        for (let i = 1; i <= 5; i++) {
-            selectSemana.innerHTML += `<option value="${i}">Semana ${i}</option>`;
-        }
+        for (let i = 1; i <= 5; i++) selectSemana.innerHTML += `<option value="${i}">Semana ${i}</option>`;
     }
 }
 
@@ -192,7 +169,6 @@ function calcularCustoDaVenda(venda) {
         venda.itens.forEach(item => {
             const prod = catalogo.find(p => p.nome === item.nome);
             if (prod) {
-                // ✅ Se o custo for menor que 10% do preço, usa 60% como fallback
                 const precoItem = item.preco || extrairValorNumerico(prod.preco);
                 const custoProduto = extrairValorNumerico(prod.custo);
                 if (custoProduto > 0 && custoProduto < precoItem * 0.1) {
@@ -201,7 +177,6 @@ function calcularCustoDaVenda(venda) {
                     custo += custoProduto * item.quantidade;
                 }
             } else {
-                // Fallback: 60% do preço
                 custo += (item.preco || 0) * item.quantidade * 0.6;
             }
         });
@@ -223,7 +198,6 @@ function calcularMargemVenda(venda) {
     return receita > 0 ? (lucro / receita) * 100 : 0;
 }
 
-// ============ DASHBOARD ============
 function renderizarDashboard() {
     const vendas = todasVendas;
     const faturamentoBruto = vendas.reduce((acc, v) => acc + (v.valorTotal || 0), 0);
@@ -231,8 +205,8 @@ function renderizarDashboard() {
     const lucroBruto = faturamentoBruto - custoTotal;
     const margemLucro = faturamentoBruto > 0 ? (lucroBruto / faturamentoBruto) * 100 : 0;
     const pedidos = vendas.length;
-    const itens = vendas.reduce((acc, v) => acc + (v.totalItens || 0), 0);
     const pendentes = vendas.filter(v => v.status !== 'entregue').length;
+    const totalFrete = vendas.reduce((acc, v) => acc + (v.frete || 0), 0);
 
     setText('kpiFaturamentoBruto', faturamentoBruto.toLocaleString('pt-AO') + ' Kz');
     setText('kpiCustoTotal', custoTotal.toLocaleString('pt-AO') + ' Kz');
@@ -240,8 +214,8 @@ function renderizarDashboard() {
     setText('kpiMargemLucro', margemLucro.toFixed(1) + '%');
     setText('kpiPedidos', pedidos);
     setText('kpiPendentes', pendentes);
+    setText('kpiTotalFrete', totalFrete.toLocaleString('pt-AO') + ' Kz');
 
-    // ✅ Cálculo do faturamento de hoje e da semana (corrigido com parseDataHora)
     const hoje = new Date();
     const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
     
@@ -255,9 +229,8 @@ function renderizarDashboard() {
     setText('kpiFaturamentoHoje', faturamentoHoje.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPedidosHoje', vendasHoje.length);
 
-    // Semana atual (segunda a domingo)
     const inicioSemana = new Date(hoje);
-    const diaSemana = hoje.getDay(); // 0=domingo, 1=segunda...
+    const diaSemana = hoje.getDay();
     inicioSemana.setDate(hoje.getDate() - diaSemana);
     inicioSemana.setHours(0, 0, 0, 0);
     
@@ -300,7 +273,6 @@ function renderizarResumoDiario(vendas) {
     const datas = Object.keys(resumo).sort((a,b)=>b.localeCompare(a));
     datas.forEach(dataStr => {
         const info = resumo[dataStr];
-        // ✅ Converte para DD/MM/YYYY
         const [ano, mes, dia] = dataStr.split('-');
         const dataFormatada = `${dia}/${mes}/${ano}`;
         const margem = info.faturamento > 0 ? (info.lucro / info.faturamento) * 100 : 0;
@@ -317,7 +289,6 @@ function renderizarResumoDiario(vendas) {
     });
 }
 
-// ============ GRÁFICOS NOVOS ============
 function renderizarGraficoRoscaCategorias(vendas) {
     const porCategoria = {};
     vendas.forEach(v => {
@@ -518,7 +489,6 @@ function renderizarGraficoSaldo(vendas) {
     }
 }
 
-// ============ OUTROS GRÁFICOS (mantidos) ============
 function renderizarGraficoVendas(vendas) {
     const vendasPorDia = {};
     vendas.forEach(v => {
@@ -755,7 +725,6 @@ function renderizarGraficoTopLucro() {
     }
 }
 
-// ============ OUTRAS ABAS ============
 function renderizarDiario() {
     const diaSelecionado = document.getElementById('inputDiaDiario').value;
     let vendas = todasVendas;
@@ -987,7 +956,6 @@ function renderizarProdutos() {
         const margem = receita > 0 ? (lucro / receita) * 100 : 0;
         const estoque = prod.estoque || 0;
         const estoqueBaixo = estoque <= 5 ? 'background:#ffe0e0;' : '';
-        // ✅ Truncar ID para exibição (primeiros 8 caracteres)
         const idCurto = prod.id ? prod.id.substring(0, 8) : 'N/A';
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1068,7 +1036,10 @@ function renderizarPedidos() {
             <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
             <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
             <td style="padding:8px; font-size:11px;">${v.moradaCliente || 'N/A'}</td>
+            <td style="padding:8px;">${v.bairro || 'N/A'}</td>
             <td style="padding:8px; font-size:11px;">${v.produtosResumo || 'N/A'}</td>
+            <td style="padding:8px; text-align:right;">${(v.subtotal || (v.valorTotal - (v.frete||0))).toLocaleString('pt-AO')} Kz</td>
+            <td style="padding:8px; text-align:right; color:#007185;">${(v.frete || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; ${bg}">
                 <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; ${isPendente?'background:#E74C3C; color:#FFF;':status==='enviado'?'background:#3498db; color:#FFF;':'background:#27ae60; color:#FFF;'}">
@@ -1085,7 +1056,6 @@ function renderizarPedidos() {
     });
 }
 
-// ============ EXPORTAÇÕES ============
 function configurarExportacoes() {
     const botoes = ['Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'];
     botoes.forEach(tipo => {
@@ -1155,6 +1125,24 @@ function exportarPDF(tipo) {
             const idCurto = prod.id ? prod.id.substring(0, 8) : 'N/A';
             dados.push([idCurto, prod.nome, info.qtd, info.receita.toLocaleString('pt-AO')+' Kz', info.custo.toLocaleString('pt-AO')+' Kz', lucro.toLocaleString('pt-AO')+' Kz', margem.toFixed(1)+'%']);
         });
+    } else if (tipo === 'pedidos') {
+        head = [['Data', 'Cliente', 'Bairro', 'Subtotal', 'Frete', 'Total', 'Status']];
+        const vendasOrdenadas = [...todasVendas].sort((a,b) => {
+            const da = parseDataHora(a.dataHora);
+            const db = parseDataHora(b.dataHora);
+            return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+        vendasOrdenadas.forEach(v => {
+            dados.push([
+                v.dataHora,
+                v.nomeCliente,
+                v.bairro || 'N/A',
+                (v.subtotal || (v.valorTotal - (v.frete||0))).toLocaleString('pt-AO') + ' Kz',
+                (v.frete || 0).toLocaleString('pt-AO') + ' Kz',
+                (v.valorTotal || 0).toLocaleString('pt-AO') + ' Kz',
+                v.status || 'confirmado'
+            ]);
+        });
     } else if (tipo === 'contabilidade') {
         doc.text(`Receita Total: ${document.getElementById('contReceita')?.textContent || '0'}`, 14, 32);
         doc.text(`Custo Total: ${document.getElementById('contCusto')?.textContent || '0'}`, 14, 38);
@@ -1209,6 +1197,24 @@ function exportarExcel(tipo) {
             const [ano, mes, dia] = d.split('-');
             dados.push([`${dia}/${mes}/${ano}`, info.total, info.faturamento, info.custo, info.lucro, margem.toFixed(1)+'%']);
         });
+    } else if (tipo === 'pedidos') {
+        headers = ['Data', 'Cliente', 'Bairro', 'Subtotal', 'Frete', 'Total', 'Status'];
+        const vendasOrdenadas = [...todasVendas].sort((a,b) => {
+            const da = parseDataHora(a.dataHora);
+            const db = parseDataHora(b.dataHora);
+            return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+        vendasOrdenadas.forEach(v => {
+            dados.push([
+                v.dataHora,
+                v.nomeCliente,
+                v.bairro || 'N/A',
+                v.subtotal || (v.valorTotal - (v.frete||0)),
+                v.frete || 0,
+                v.valorTotal || 0,
+                v.status || 'confirmado'
+            ]);
+        });
     } else if (tipo === 'produtos') {
         headers = ['ID', 'Produto', 'Qtd', 'Receita', 'Custo', 'Lucro', 'Margem'];
         const vendasPorProduto = {};
@@ -1239,7 +1245,6 @@ function exportarExcel(tipo) {
     XLSX.writeFile(wb, `Relatorio_${tipo}.xlsx`);
 }
 
-// ============ AÇÕES GLOBAIS ============
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
@@ -1292,13 +1297,18 @@ window.imprimirFatura = async function(codigoRastreio) {
 <p><strong>Cliente:</strong> ${venda.nomeCliente || ''}</p>
 <p><strong>Telefone:</strong> ${venda.telefoneCliente || ''}</p>
 <p><strong>NIF:</strong> ${venda.nifCliente || ''}</p>
-<p><strong>Morada:</strong> ${venda.moradaCliente || ''}</p>
+<p><strong>Morada:</strong> ${venda.moradaCliente || ''} - ${venda.bairro || ''}</p>
 </div>
 <table>
 <thead><tr><th>Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
 <tbody>${(venda.itens||[]).map(item=>`<tr><td>${item.nome}</td><td>${item.quantidade}</td><td>${item.preco||0}</td><td>${(item.preco||0)*(item.quantidade||1)}</td></tr>`).join('') || venda.produtosResumo || ''}</tbody>
 </table>
+<div class="resumo" style="text-align:right; margin-top:15px;">
+${venda.subtotal ? `<p><strong>Subtotal:</strong> ${venda.subtotal.toFixed(2)} Kz</p>` : ''}
+${venda.valorDesconto ? `<p><strong>Desconto:</strong> -${venda.valorDesconto.toFixed(2)} Kz</p>` : ''}
+${venda.frete ? `<p><strong>Frete (${venda.bairro}):</strong> ${venda.frete.toFixed(2)} Kz</p>` : ''}
 <p class="total">Total a Pagar: ${(venda.valorTotal || 0).toFixed(2)} Kz</p>
+</div>
 <script>window.print();</script>
 </body>
 </html>`;

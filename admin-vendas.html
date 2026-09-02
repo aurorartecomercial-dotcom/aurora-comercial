@@ -115,6 +115,11 @@
                         <p style="font-size:12px; opacity:0.9; margin:0;">⚠️ Pendentes</p>
                         <h3 style="font-size:26px; margin:8px 0 0;" id="kpiPendentes">0</h3>
                     </div>
+                    <!-- ✅ NOVO CARD: Total de Frete -->
+                    <div style="background:#007185; color:#fff; padding:20px; border-radius:12px; text-align:center;">
+                        <p style="font-size:12px; opacity:0.9; margin:0;">🚚 Total de Frete</p>
+                        <h3 style="font-size:26px; margin:8px 0 0;" id="kpiTotalFrete">0 Kz</h3>
+                    </div>
                 </div>
 
                 <!-- KPIs de Hoje e Semana -->
@@ -182,7 +187,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ LINHA 4: Faturamento Diário + Produtos Mais Vendidos (CORRIGIDO) -->
+                <!-- LINHA 4: Faturamento Diário + Produtos Mais Vendidos -->
                 <div class="grid-2" style="margin-bottom:10px;">
                     <div style="background:#f8f9fa; padding:20px; border-radius:12px; border:1px solid #e0e0e0;">
                         <h3 style="color:var(--cor-esmeralda); margin-bottom:15px;">📊 Faturamento Diário</h3>
@@ -325,7 +330,7 @@
                 </div>
             </div>
 
-            <!-- PEDIDOS -->
+            <!-- PEDIDOS (ATUALIZADO) -->
             <div id="aba-pedidos" class="aba-conteudo">
                 <div class="exportar-botoes">
                     <button id="btnExportarPDFPedidos" class="btn-admin" style="background:#25D366;">📄 Exportar PDF</button>
@@ -344,7 +349,22 @@
                 </div>
                 <div class="tabela-scroll">
                     <table id="tabelaPedidos" style="width:100%; border-collapse:collapse; font-size:13px;">
-                        <thead><tr style="background:var(--cor-ouro); color:#000;"><th>Data/Hora</th><th>Cliente</th><th>Telefone</th><th>NIF</th><th>Morada</th><th>Produtos</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+                        <thead>
+                            <tr style="background:var(--cor-ouro); color:#000;">
+                                <th>Data/Hora</th>
+                                <th>Cliente</th>
+                                <th>Telefone</th>
+                                <th>NIF</th>
+                                <th>Morada</th>
+                                <th>Bairro</th>
+                                <th>Produtos</th>
+                                <th>Subtotal</th>
+                                <th>Frete</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
                         <tbody id="corpoTabelaPedidos"></tbody>
                     </table>
                 </div>
