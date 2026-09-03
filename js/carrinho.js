@@ -109,15 +109,33 @@ export function initCarrinho() {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
 
-    // ✅ CORREÇÃO: delegação de eventos mais robusta
+    // ✅ DELEGAÇÃO DE EVENTOS CORRIGIDA (para +, - e REMOVER)
     if (listaProdutosHTML) {
         listaProdutosHTML.addEventListener('click', (e) => {
+            // Botão de remover (🗑️)
+            const btnRemover = e.target.closest('button[data-remover]');
+            if (btnRemover) {
+                e.preventDefault();
+                e.stopPropagation();
+                const index = parseInt(btnRemover.dataset.remover, 10);
+                if (!isNaN(index) && carrinho[index]) {
+                    carrinho.splice(index, 1);
+                    atualizarCarrinho();
+                    mostrarToast('Produto removido.', 'info');
+                }
+                return;
+            }
+
+            // Botões de aumentar/diminuir
             const btn = e.target.closest('button[data-index][data-mudanca]');
-            if (!btn) return;
-            const index = parseInt(btn.dataset.index, 10);
-            const mudanca = parseInt(btn.dataset.mudanca, 10);
-            if (!isNaN(index) && !isNaN(mudanca)) {
-                alterarQtd(index, mudanca);
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const index = parseInt(btn.dataset.index, 10);
+                const mudanca = parseInt(btn.dataset.mudanca, 10);
+                if (!isNaN(index) && !isNaN(mudanca)) {
+                    alterarQtd(index, mudanca);
+                }
             }
         });
     }
@@ -167,7 +185,7 @@ export function atualizarCarrinho() {
             totalGeral += valorLimpo * item.quantidade;
             const li = document.createElement('li');
             li.className = 'item-carrinho-loja';
-            // ✅ CORREÇÃO: adicionado type="button" aos botões
+            // ✅ Adicionado botão de remover (🗑️) e type="button" nos controles
             li.innerHTML = `
                 <div class="item-info-loja">
                     <h4>${item.nome}</h4>
@@ -178,6 +196,7 @@ export function atualizarCarrinho() {
                     <button type="button" data-index="${index}" data-mudanca="-1">−</button>
                     <span>${item.quantidade}</span>
                     <button type="button" data-index="${index}" data-mudanca="1">+</button>
+                    <button type="button" data-remover="${index}" title="Remover" style="background:none; border:none; font-size:18px; cursor:pointer; margin-left:4px;">🗑️</button>
                 </div>
             `;
             listaProdutosHTML.appendChild(li);
