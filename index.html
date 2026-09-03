@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=5" />
+    <link rel="stylesheet" href="style.css?v=6" />
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
@@ -67,6 +67,7 @@
                     Conta
                 </button>
                 <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
+                <button id="badgeFavoritos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; display:none;">❤️ <span id="badgeFavoritosCount">0</span></button>
                 <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
                     🛒 <span id="badgeContador">0</span>
                 </button>
@@ -85,6 +86,7 @@
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html">Início</a></li>
+                <li><a href="perfil.html">👤 Minha Conta</a></li>
                 <li><a href="sobre.html">Contactos</a></li>
                 <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
                 <li><a href="blog.html">📰 Media</a></li>
@@ -572,18 +574,69 @@
         </div>
     </div>
 
-    <script type="module" src="js/app.js?v=5"></script>
-    <script type="module" src="js/carrinho.js?v=5"></script>
-    <script type="module" src="js/fidelidade.js?v=5"></script>
+    <!-- SCRIPTS PRINCIPAIS -->
+    <script type="module" src="js/app.js?v=6"></script>
+    <script type="module" src="js/carrinho.js?v=6"></script>
+    <script type="module" src="js/fidelidade.js?v=6"></script>
+    <script type="module" src="js/favoritos.js?v=6"></script>
 
+    <!-- SERVICE WORKER -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker registrado com sucesso!'))
-                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
+                .then(() => console.log('Service Worker principal registrado!'))
+                .catch(err => console.log('Erro ao registrar SW principal:', err));
         }
     </script>
 
+    <!-- 🔔 FIREBASE CLOUD MESSAGING (NOTIFICAÇÕES PUSH) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhXoAdNf7eAT0GqrpNSHDN1x_Hd5JvzH4",
+            authDomain: "aurora-comerciall.firebaseapp.com",
+            projectId: "aurora-comerciall",
+            storageBucket: "aurora-comerciall.firebasestorage.app",
+            messagingSenderId: "998765354073",
+            appId: "1:998765354073:web:ea2c6934e8e9d4cad3a548",
+            measurementId: "G-FLB61EN4Q9"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+        
+        // Solicitar permissão do utilizador
+        Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+                console.log('Permissão de notificações concedida!');
+                getToken(messaging, { 
+                    vapidKey: 'BPhemu1uhFY4adZfQX-a8evSWHRIdkI4IntLdZPdpbl3dFXTVuOR1tQuQqB2G-97FnYrgvxyRiWBpXUHHkzcKrc' 
+                }).then((currentToken) => {
+                    if (currentToken) {
+                        console.log('Token FCM:', currentToken);
+                        localStorage.setItem('fcm_token', currentToken);
+                    } else {
+                        console.log('Não foi possível obter o token.');
+                    }
+                });
+            } else {
+                console.log('Permissão de notificações negada.');
+            }
+        });
+        
+        // Receber mensagens enquanto o site está aberto
+        onMessage(messaging, (payload) => {
+            console.log('Mensagem recebida em primeiro plano:', payload);
+            const notification = new Notification(payload.notification.title, {
+                body: payload.notification.body,
+                icon: 'logo auro.png'
+            });
+        });
+    </script>
+
+    <!-- INSTALAÇÃO PWA -->
     <div id="ios-guide-modal" style="display:none; position:fixed; inset:0; background:rgba(0,90,76,0.7); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:fadeInUp 0.4s ease;">
             <h3 style="color:var(--cor-esmeralda); margin-bottom:10px;">📱 Instalar no iPhone</h3>
@@ -597,6 +650,7 @@
         </div>
     </div>
 
+    <!-- SCRIPTS PWA -->
     <script>
         const chatBtn = document.getElementById('chatBtn');
         const chatMenu = document.getElementById('chatMenu');

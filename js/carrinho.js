@@ -3,6 +3,7 @@ import { db, CONFIG } from './config.js';
 import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { adicionarPontos } from './fidelidade.js';
+import { gerarReferenciaMulticaixa } from './multicaixa.js'; // ✅ Importação do Multicaixa
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -185,7 +186,6 @@ export function atualizarCarrinho() {
             totalGeral += valorLimpo * item.quantidade;
             const li = document.createElement('li');
             li.className = 'item-carrinho-loja';
-            // ✅ Botões com type="button" e botão de remover (🗑️)
             li.innerHTML = `
                 <div class="item-info-loja">
                     <h4>${item.nome}</h4>
@@ -290,6 +290,17 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observ
     }
     let totalFinal = totalComDesconto + freteSelecionado;
     localStorage.setItem('aurora_cliente_dados', JSON.stringify({ nome, telefone, nif, morada, bairro }));
+
+    // ✅ Tenta gerar referência Multicaixa automática
+    try {
+        const refMulticaixa = await gerarReferenciaMulticaixa(totalFinal, gerarNumeroFatura(), 'Pedido Aurora');
+        if (refMulticaixa.referencia) {
+            document.getElementById('pagRef').textContent = refMulticaixa.referencia;
+        }
+    } catch (e) {
+        console.warn('Multicaixa não configurado, usando modo manual.');
+    }
+
     await salvarVendaNoHistorico(nome, telefone, nif, morada, bairro, observacao, cupomSalvo, totalProdutos, totalComDesconto, totalFinal);
     abrirModalPagamento(totalProdutos, totalComDesconto, freteSelecionado, totalFinal, nome);
 }
@@ -455,7 +466,8 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         frete: freteSelecionado,
         status: 'confirmado',
         itens: itensVenda,
-        criadoEm: new Date()
+        criadoEm: new Date(),
+        uidCliente: getAuth().currentUser?.uid || null // ✅ Adicionamos UID para associar ao utilizador
     };
 
     const auth = getAuth();
@@ -464,6 +476,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         try {
             const cred = await signInAnonymously(auth);
             user = cred.user;
+            novaVenda.uidCliente = user.uid; // Atualiza UID após autenticação anónima
         } catch (e) {
             console.error('Erro autenticação anónima:', e);
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];

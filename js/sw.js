@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v8';
+const CACHE_NAME = 'aurora-cache-v9'; // ⬆️ Versão aumentada para forçar atualização
 const urlsToCache = [
     '/',
     '/index.html',
@@ -6,6 +6,7 @@ const urlsToCache = [
     '/blog.html',
     '/categoria.html',
     '/rastreio.html',
+    '/perfil.html',
     '/style.css',
     '/logo auro.png',
     '/manifest.json',
@@ -22,7 +23,12 @@ const urlsToCache = [
     '/js/categoria.js',
     '/js/admin.js',
     '/js/admin-vendas.js',
-    '/js/fidelidade.js'
+    '/js/fidelidade.js',
+    '/js/favoritos.js',
+    '/js/chatbot.js',
+    '/js/multicaixa.js',
+    '/js/perfil.js',
+    '/firebase-messaging-sw.js'  // ✅ Adicionado para o Push
 ];
 
 self.addEventListener('install', event => {
