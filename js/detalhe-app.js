@@ -60,7 +60,7 @@ function mostrarErro(mensagem) {
     `;
 }
 
-// ✅ Função de renderização SEM `await` (síncrona)
+// ✅ Função de renderização SEM `await` (síncrona) com layout de 2 colunas
 function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
@@ -92,13 +92,14 @@ function renderizarDetalhes(prod) {
         `;
     }
 
-    // ✅ Define um placeholder para a avaliação
+    // ✅ Estrutura em 2 colunas (Imagem | Informações)
     container.innerHTML = `
-        <div class="detalhes-grid">
+        <div class="detalhes-layout">
             <div class="detalhes-imagem-principal">
                 <img id="detalhesImg" src="${imagemPrincipal}" alt="${prod.nome}" 
                      onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
                 <div class="detalhes-miniaturas" id="miniaturas">${miniaturasHtml}</div>
+                ${videoHtml}
             </div>
             <div class="detalhes-info">
                 <span class="categoria-tag">${prod.tag || prod.categoria}</span>
@@ -112,12 +113,11 @@ function renderizarDetalhes(prod) {
                 ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
                 <div class="descricao">${prod.descricao || 'Descrição não disponível.'}</div>
                 
-                ${videoHtml}
-
                 <div class="avaliacao" id="avaliacaoContainer">
                     <span>⭐ Carregando avaliações...</span>
                 </div>
-                <button class="btn-comprar-grande" id="btnComprarDetalhe">🛒 Adicionar à Sacola</button>
+                <button class="btn-comprar-grande" id="btnComprarDetalhe">🛒 Comprar Agora</button>
+                <button class="btn-partilhar-detalhe" id="btnPartilharDetalhe">📤 Partilhar</button>
             </div>
         </div>
     `;
@@ -136,6 +136,14 @@ function renderizarDetalhes(prod) {
     // ✅ Botão de comprar
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
         adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
+    });
+
+    // ✅ Botão de partilhar
+    document.getElementById('btnPartilharDetalhe').addEventListener('click', function() {
+        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+        const link = `${baseUrl}/detalhe.html?id=${prod.id}`;
+        const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${prod.nome}*\n💰 Preço: ${prod.preco}\n🔗 Confira aqui: ${link}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
     });
 }
 

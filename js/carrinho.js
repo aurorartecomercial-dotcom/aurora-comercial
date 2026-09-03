@@ -121,7 +121,7 @@ export function initCarrinho() {
                 if (!isNaN(index) && carrinho[index]) {
                     carrinho.splice(index, 1);
                     atualizarCarrinho();
-                    mostrarToast('Produto removido.', 'info');
+                    mostrarToast('Produto removido da sacola.', 'info');
                 }
                 return;
             }
@@ -185,18 +185,18 @@ export function atualizarCarrinho() {
             totalGeral += valorLimpo * item.quantidade;
             const li = document.createElement('li');
             li.className = 'item-carrinho-loja';
-            // ✅ Adicionado botão de remover (🗑️) e type="button" nos controles
+            // ✅ Botões com type="button" e botão de remover (🗑️)
             li.innerHTML = `
                 <div class="item-info-loja">
                     <h4>${item.nome}</h4>
                     <p>${item.preco}</p>
                     ${item.observacao ? `<small style="color:#888;">📝 ${item.observacao}</small>` : ''}
                 </div>
-                <div class="item-controles">
-                    <button type="button" data-index="${index}" data-mudanca="-1">−</button>
-                    <span>${item.quantidade}</span>
-                    <button type="button" data-index="${index}" data-mudanca="1">+</button>
-                    <button type="button" data-remover="${index}" title="Remover" style="background:none; border:none; font-size:18px; cursor:pointer; margin-left:4px;">🗑️</button>
+                <div class="item-controles" style="display:flex; align-items:center; gap:4px; background:#f0f0f0; padding:4px 8px; border-radius:20px;">
+                    <button type="button" data-index="${index}" data-mudanca="-1" style="background:none; border:none; font-size:16px; cursor:pointer; padding:4px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%;">−</button>
+                    <span style="font-weight:600; min-width:20px; text-align:center;">${item.quantidade}</span>
+                    <button type="button" data-index="${index}" data-mudanca="1" style="background:none; border:none; font-size:16px; cursor:pointer; padding:4px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%;">+</button>
+                    <button type="button" data-remover="${index}" title="Remover do carrinho" style="background:none; border:none; font-size:18px; cursor:pointer; padding:4px; margin-left:4px; color:#E74C3C;">🗑️</button>
                 </div>
             `;
             listaProdutosHTML.appendChild(li);
