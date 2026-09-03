@@ -109,14 +109,15 @@ export function initCarrinho() {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
 
+    // ✅ CORREÇÃO: delegação de eventos mais robusta
     if (listaProdutosHTML) {
         listaProdutosHTML.addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
+            const btn = e.target.closest('button[data-index][data-mudanca]');
             if (!btn) return;
-            const index = btn.dataset.index;
-            const mudanca = btn.dataset.mudanca;
-            if (index !== undefined && mudanca) {
-                alterarQtd(parseInt(index), parseInt(mudanca));
+            const index = parseInt(btn.dataset.index, 10);
+            const mudanca = parseInt(btn.dataset.mudanca, 10);
+            if (!isNaN(index) && !isNaN(mudanca)) {
+                alterarQtd(index, mudanca);
             }
         });
     }
@@ -166,6 +167,7 @@ export function atualizarCarrinho() {
             totalGeral += valorLimpo * item.quantidade;
             const li = document.createElement('li');
             li.className = 'item-carrinho-loja';
+            // ✅ CORREÇÃO: adicionado type="button" aos botões
             li.innerHTML = `
                 <div class="item-info-loja">
                     <h4>${item.nome}</h4>
@@ -173,9 +175,9 @@ export function atualizarCarrinho() {
                     ${item.observacao ? `<small style="color:#888;">📝 ${item.observacao}</small>` : ''}
                 </div>
                 <div class="item-controles">
-                    <button data-index="${index}" data-mudanca="-1">−</button>
+                    <button type="button" data-index="${index}" data-mudanca="-1">−</button>
                     <span>${item.quantidade}</span>
-                    <button data-index="${index}" data-mudanca="1">+</button>
+                    <button type="button" data-index="${index}" data-mudanca="1">+</button>
                 </div>
             `;
             listaProdutosHTML.appendChild(li);
@@ -273,12 +275,10 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observ
     abrirModalPagamento(totalProdutos, totalComDesconto, freteSelecionado, totalFinal, nome);
 }
 
-// ✅ MODAL DE PAGAMENTO ATUALIZADO PARA MOSTRAR DETALHES
 function abrirModalPagamento(totalProdutos, totalComDesconto, frete, totalFinal, nomeCliente) {
     if (!modalPagamento) return;
     const referencia = `PAY-${new Date().getFullYear()}-${Math.floor(Math.random()*1000000)}`;
     
-    // Atualizar campos do modal
     document.getElementById('pagProdutos').textContent = totalProdutos.toLocaleString('pt-AO') + ' Kz';
     if (totalComDesconto !== totalProdutos) {
         document.getElementById('pagDesconto').textContent = '-' + (totalProdutos - totalComDesconto).toLocaleString('pt-AO') + ' Kz';
@@ -333,7 +333,6 @@ async function enviarPedidoWhatsApp() {
     mostrarToast('Pedido finalizado! Fatura aberta para impressão.', 'sucesso');
 }
 
-// ✅ FATURA IMPRESSA ATUALIZADA COM DETALHAMENTO DO FRETE
 function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, totalProdutos, totalComDesconto, frete, totalFinal) {
     try {
         const numeroFatura = gerarNumeroFatura();
@@ -466,7 +465,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         
         await atualizarEstoque(itensVenda);
 
-        // Adicionar pontos de fidelidade (com base no total final)
         await adicionarPontos(valorTotalPedido);
 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
