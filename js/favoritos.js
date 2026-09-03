@@ -1,5 +1,5 @@
 // ============================================================
-// LISTA DE DESEJOS - AURORA COMERCIAL
+// LISTA DE DESEJOS - AURORA COMERCIAL (VERSÃO MELHORADA)
 // ============================================================
 
 let favoritos = [];
@@ -7,7 +7,7 @@ let favoritos = [];
 export function initFavoritos() {
     carregarFavoritos();
 
-    // Delegar cliques em botões de favorito (funciona para elementos carregados dinamicamente)
+    // Delegar cliques em botões de favorito
     document.addEventListener('click', (e) => {
         const btnFav = e.target.closest('.btn-favorito');
         if (btnFav) {
@@ -18,7 +18,7 @@ export function initFavoritos() {
         }
     });
 
-    // Atualizar badge de favoritos na inicialização
+    // Atualizar badge na inicialização
     atualizarBadgeFavoritos();
 }
 
@@ -59,11 +59,35 @@ export function verificarFavorito(produtoId) {
     return favoritos.includes(produtoId);
 }
 
+// ✅ FUNÇÃO MELHORADA QUE CRIA O BADGE SE NÃO EXISTIR
 function atualizarBadgeFavoritos() {
-    const badge = document.getElementById('badgeFavoritos');
-    const count = document.getElementById('badgeFavoritosCount');
-    if (badge && count) {
-        count.textContent = favoritos.length;
+    let badge = document.getElementById('badgeFavoritos');
+    let count = document.getElementById('badgeFavoritosCount');
+
+    // Se o badge não existir, criar dinamicamente e inserir no header
+    if (!badge) {
+        const headerIcones = document.querySelector('.header-icones');
+        if (headerIcones) {
+            badge = document.createElement('button');
+            badge.id = 'badgeFavoritos';
+            badge.style.cssText = 'background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; display:none;';
+            badge.innerHTML = '❤️ <span id="badgeFavoritosCount">0</span>';
+            // Inserir antes do botão do carrinho
+            const carrinhoBtn = document.getElementById('abrirCarrinhoFlutuante');
+            if (carrinhoBtn && carrinhoBtn.parentNode) {
+                carrinhoBtn.parentNode.insertBefore(badge, carrinhoBtn);
+            } else {
+                headerIcones.appendChild(badge);
+            }
+        }
+    }
+
+    // Atualizar contagem
+    if (badge) {
+        const countSpan = badge.querySelector('#badgeFavoritosCount') || count;
+        if (countSpan) {
+            countSpan.textContent = favoritos.length;
+        }
         badge.style.display = favoritos.length > 0 ? 'inline-flex' : 'none';
     }
 }
