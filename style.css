@@ -8,7 +8,7 @@
     --cor-fundo: #F5F5F5;
     --cor-fundo-card: #FFFFFF;
     --cor-texto: #2C2C2C;
-    --cor-preco: #1a1a1a; /* Preço agora em preto */
+    --cor-preco: #1a1a1a;
     --cor-texto-claro: #6B5B4B;
     --cor-borda: #D4AF37;
     --sombra-card: 0 2px 8px rgba(0, 90, 76, 0.08);
@@ -82,7 +82,7 @@ body {
 #badgePontos:hover { background: var(--cor-ouro-escuro); color: #FFF; }
 
 /* ============================================================
-   MENU PRINCIPAL (Mantido)
+   MENU PRINCIPAL
    ============================================================ */
 .menu-categorias { background: var(--cor-esmeralda-escuro); border-top: 1px solid var(--cor-ouro); padding: 0 24px; max-width: 1480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; position: relative; }
 .menu-categorias ul { display: flex; list-style: none; gap: 0; flex-wrap: wrap; }
@@ -217,7 +217,7 @@ body {
 .produto-info { padding-top: 10px; flex: 1; display: flex; flex-direction: column; }
 .categoria-tag { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 .produto-info h3 { font-size: 15px; font-weight: 600; margin: 4px 0; line-height: 1.3; color: #333; }
-.preco { font-size: 24px; font-weight: 700; color: var(--cor-preco); margin: 6px 0; } /* Preço em preto */
+.preco { font-size: 24px; font-weight: 700; color: var(--cor-preco); margin: 6px 0; }
 .preco .desconto { background: #E74C3C; color: #FFF; font-size: 12px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
 .parcelas { font-size: 13px; color: #777; }
 .selo-frete { display: block; margin-top: 4px; font-size: 13px; background: #e6f6e6; color: #1a7f37; padding: 2px 8px; border-radius: 4px; font-weight: 600; width: fit-content; }
