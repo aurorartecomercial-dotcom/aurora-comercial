@@ -4,29 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Política de Privacidade - Aurora Comercial</title>
-   
     <meta name="description" content="Política de privacidade da Aurora Comercial. Saiba como protegemos os seus dados." />
     <meta name="keywords" content="aurora, comercial, angola, privacidade" />
     <meta property="og:title" content="Política de Privacidade - Aurora Comercial" />
     <meta property="og:description" content="Política de privacidade da Aurora Comercial." />
     <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
     <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/politica.html" />
-    <link rel="icon" type="image/png" href="logo auro.png" />
     <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="manifest" href="manifest.json" />
 </head>
 <body>
     <header class="header-principal" role="banner">
         <div class="header-top">
-            <div class="logo"><img src="logo auro.png" alt="Logo" /><span>Aurora<br /><span>Comercial</span></span></div>
+            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
+                <img src="logo auro.png" alt="Logo Aurora Comercial" />
+                <span>Aurora<br /><span>Comercial</span></span>
+            </a>
+            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
+                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
+                <button type="submit" aria-label="Pesquisar">🔍</button>
+            </form>
             <div class="header-icones">
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button>
+                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
+                    <small>Olá, faça seu login</small>
+                    Conta
+                </button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
+                    🛒 <span id="badgeContador">0</span>
+                </button>
             </div>
         </div>
-        <!-- NOVO MENU -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -97,6 +109,34 @@
         <a href="index.html" style="color:var(--cor-esmeralda); font-weight:600;">← Voltar à loja</a>
     </div>
 
-    <footer class="rodape-profissional"><div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div></footer>
+    <footer class="rodape-profissional">
+        <div class="rodape-grid">
+            <div class="rodape-coluna">
+                <h3>Aurora Comercial</h3>
+                <p>Marketplace angolano com curadoria premium.</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Contacto</h4>
+                <p>📞 +244 933 677 628</p>
+                <p>✉️ contacto@aurorarte.ao</p>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Institucional</h4>
+                <ul>
+                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
+                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
+                    <li><a href="blog.html">📖 Blog</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
+    </footer>
+
+    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+
+    <script type="module" src="js/app.js?v=4"></script>
+    <script type="module" src="js/carrinho.js?v=4"></script>
+    <script type="module" src="js/fidelidade.js?v=4"></script>
+    <script type="module" src="js/menu.js?v=4"></script>
 </body>
 </html>
