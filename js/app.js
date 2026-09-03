@@ -3,6 +3,7 @@ import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } 
 import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
 import { initFidelidade } from './fidelidade.js';
+import { initFavoritos } from './favoritos.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -16,13 +17,13 @@ let minAvaliacao = 0;
 let dataFiltro = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ Inicializa o carrinho
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
     initFidelidade();
+    initFavoritos();
     initDarkMode();
     initBuscaAutocomplete();
 
@@ -32,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregando.textContent = '⏳ Carregando produtos...';
     }
 
-    // ✅ 1. Tenta carregar do cache local primeiro (instantâneo)
     let catalogoCarregado = false;
     const cachedStr = localStorage.getItem('aurora_catalogo_cache');
     if (cachedStr) {
@@ -42,10 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 catalogo = cache.data;
                 catalogoCarregado = true;
             }
-        } catch (e) { console.warn('Cache inválido:', e); }
+        } catch (e) {}
     }
 
-    // ✅ 2. Se não tem cache, busca do Firebase
     if (!catalogoCarregado) {
         try {
             catalogo = await carregarCatalogo();
@@ -55,16 +54,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ✅ 3. Renderiza os produtos
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // Se veio do cache, atualiza em segundo plano
     if (catalogoCarregado) {
         atualizarCatalogoDoFirebase();
     }
 
-    // ✅ 4. Configuração dos filtros
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -74,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300));
     }
 
-    // ✅ 5. Preço mínimo e máximo
     const precoMinInput = document.getElementById('precoMin');
     const precoMaxInput = document.getElementById('precoMax');
     const precoMinLabel = document.getElementById('precoMinLabel');
@@ -97,7 +92,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 6. Ordenação
     const ordenarSelect = document.getElementById('ordenar');
     if (ordenarSelect) {
         ordenarSelect.addEventListener('change', (e) => {
@@ -107,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 7. Filtro de avaliação mínima
     const minAvaliacaoSelect = document.getElementById('minAvaliacao');
     if (minAvaliacaoSelect) {
         minAvaliacaoSelect.addEventListener('change', (e) => {
@@ -117,7 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 8. Filtro de data (novidades)
     const dataSelect = document.getElementById('ordenarData');
     if (dataSelect) {
         dataSelect.addEventListener('change', (e) => {
@@ -127,7 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 9. Botão "Carregar mais"
     const carregarMaisBtn = document.getElementById('carregarMais');
     if (carregarMaisBtn) {
         carregarMaisBtn.addEventListener('click', () => {
@@ -139,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await aplicarFiltros();
 });
 
-// ✅ DELEGAÇÃO GLOBAL DE EVENTOS
 document.addEventListener('click', function(e) {
     const btnAdd = e.target.closest('.btn-add-carrinho-card');
     if (btnAdd) {
@@ -169,7 +159,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ✅ FUNÇÕES AUXILIARES
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
@@ -215,7 +204,6 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
-// ✅ DARK MODE
 export function initDarkMode() {
     const btnModoEscuro = document.getElementById('btnModoEscuro');
     if (!btnModoEscuro) return;
@@ -234,7 +222,6 @@ export function initDarkMode() {
     });
 }
 
-// ✅ BUSCA COM AUTOCOMPLETE
 export function initBuscaAutocomplete() {
     const campoBusca = document.getElementById('campoBusca');
     if (!campoBusca) return;
@@ -327,7 +314,6 @@ async function mostrarSugestoes(termo, container) {
     }
 }
 
-// ✅ FUNÇÕES GLOBAIS
 window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
