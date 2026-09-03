@@ -9,14 +9,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
-    <!-- Estilo do Mapa (Leaflet) -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=5" />
     <link rel="manifest" href="manifest.json" />
 
-    <!-- Estilos exclusivos para o novo rastreio -->
     <style>
         body.rastreio-page { background: #f0f2f5; }
         .rastreio-container {
@@ -78,10 +77,12 @@
                 <button type="submit" aria-label="Pesquisar">🔍</button>
             </form>
             <div class="header-icones">
+                <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
                 <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
                     <small>Olá, faça seu login</small>
                     Conta
                 </button>
+                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
                 <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
                     🛒 <span id="badgeContador">0</span>
                 </button>
@@ -211,9 +212,9 @@
     <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
 
     <script type="module" src="js/rastreio.js"></script>
-    <script type="module" src="js/app.js?v=4"></script>
-    <script type="module" src="js/carrinho.js?v=4"></script>
-    <script type="module" src="js/fidelidade.js?v=4"></script>
-    <script type="module" src="js/menu.js?v=4"></script>
+    <script type="module" src="js/app.js?v=5"></script>
+    <script type="module" src="js/carrinho.js?v=5"></script>
+    <script type="module" src="js/fidelidade.js?v=5"></script>
+    <script type="module" src="js/menu.js?v=5"></script>
 </body>
 </html>

@@ -14,10 +14,31 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=5" />
     <link rel="icon" type="image/png" href="logo auro.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo auro.png" />
+    
+    <!-- Rich Snippets para Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Aurora Comercial",
+      "url": "https://aurorartecomercial-dotcom.github.io/aurora-comercial/",
+      "logo": "https://aurorartecomercial-dotcom.github.io/aurora-comercial/logo%20auro.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+244-933-677-628",
+        "contactType": "customer service"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Luanda",
+        "addressCountry": "AO"
+      }
+    }
+    </script>
 </head>
 <body>
 
@@ -40,6 +61,7 @@
                 <button type="submit" aria-label="Pesquisar">🔍</button>
             </form>
             <div class="header-icones">
+                <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
                 <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
                     <small>Olá, faça seu login</small>
                     Conta
@@ -181,7 +203,7 @@
             <div class="grade-produtos" id="maisCompradosGrid"></div>
         </section>
 
-        <!-- VITRINE -->
+        <!-- VITRINE COM FILTROS AVANÇADOS -->
         <div class="vitrine-container">
             <aside class="filtros-sidebar">
                 <h3>Filtrar por</h3>
@@ -191,6 +213,15 @@
                     <label for="precoMax" style="margin-top:10px;">Preço máximo: <span id="precoMaxLabel">500000</span> Kz</label>
                     <input type="range" id="precoMax" min="0" max="500000" value="500000" step="1000" />
                 </div>
+                <div class="filtro-avaliacao">
+                    <label for="minAvaliacao">Avaliação mínima:</label>
+                    <select id="minAvaliacao">
+                        <option value="0">Todas</option>
+                        <option value="4">⭐ 4 ou mais</option>
+                        <option value="4.5">⭐ 4.5 ou mais</option>
+                        <option value="5">⭐ 5 estrelas</option>
+                    </select>
+                </div>
                 <div class="filtro-ordem" style="margin-top:16px;">
                     <label for="ordenar">Ordenar por:</label>
                     <select id="ordenar">
@@ -198,6 +229,14 @@
                         <option value="preco-asc">Menor preço</option>
                         <option value="preco-desc">Maior preço</option>
                         <option value="nome">Nome A-Z</option>
+                    </select>
+                </div>
+                <div class="filtro-data" style="margin-top:12px;">
+                    <label for="ordenarData">Novidades:</label>
+                    <select id="ordenarData">
+                        <option value="">Todos</option>
+                        <option value="30d">Últimos 30 dias</option>
+                        <option value="90d">Últimos 90 dias</option>
                     </select>
                 </div>
             </aside>
@@ -211,7 +250,7 @@
         </div>
     </main>
 
-    <!-- ✅ NOVA SEÇÃO DE CATEGORIAS (CORRIGIDA) -->
+    <!-- ✅ NOVA SEÇÃO DE CATEGORIAS -->
     <section class="secao-categorias" id="secao-categorias">
         <h2>📂 Categorias</h2>
         <div class="grade-categorias">
@@ -366,7 +405,7 @@
         </div>
     </aside>
 
-    <!-- MODAL DO CLIENTE (com bairro e observação) -->
+    <!-- MODAL DO CLIENTE -->
     <div id="modalCliente" role="dialog" aria-label="Dados do cliente">
         <div>
             <button id="btnFecharModal" class="btn-fechar-modal" aria-label="Fechar">&times;</button>
@@ -409,7 +448,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE PAGAMENTO MULTICAIXA (ATUALIZADO) -->
+    <!-- MODAL DE PAGAMENTO MULTICAIXA -->
     <div id="modalPagamento" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; max-width:450px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center; position:relative;">
             <h2 style="color:var(--cor-esmeralda); margin-bottom:8px;">💳 Pagamento Multicaixa</h2>
@@ -439,7 +478,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN (com Google) -->
+    <!-- MODAL DE LOGIN -->
     <div id="modalLogin" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; max-width:400px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative;">
             <button id="btnFecharLogin" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#999;">&times;</button>
@@ -522,7 +561,7 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
     </footer>
 
-    <!-- ✅ CHAT FLUTUANTE MELHORADO -->
+    <!-- ✅ CHAT FLUTUANTE -->
     <div class="chat-flutuante" id="chatFlutuante">
         <button id="chatBtn" class="whatsapp-float">💬 Fale Connosco</button>
         <div id="chatMenu" style="display:none; position:fixed; bottom:80px; right:20px; background:#fff; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.2); padding:16px; width:280px; z-index:9999;">
@@ -533,9 +572,9 @@
         </div>
     </div>
 
-    <script type="module" src="js/app.js?v=4"></script>
-    <script type="module" src="js/carrinho.js?v=4"></script>
-    <script type="module" src="js/fidelidade.js?v=4"></script>
+    <script type="module" src="js/app.js?v=5"></script>
+    <script type="module" src="js/carrinho.js?v=5"></script>
+    <script type="module" src="js/fidelidade.js?v=5"></script>
 
     <script>
         if ('serviceWorker' in navigator) {

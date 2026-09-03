@@ -9,12 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=5" />
     <link rel="manifest" href="manifest.json" />
 </head>
 <body>
-
-    <!-- HEADER -->
     <header class="header-principal" role="banner">
         <div class="header-top">
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
@@ -26,17 +24,17 @@
                 <button type="submit" aria-label="Pesquisar">🔍</button>
             </form>
             <div class="header-icones">
+                <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
                 <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
                     <small>Olá, faça seu login</small>
                     Conta
                 </button>
+                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
                 <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
                     🛒 <span id="badgeContador">0</span>
                 </button>
             </div>
         </div>
-
-        <!-- MENU -->
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
@@ -95,7 +93,6 @@
         </nav>
     </header>
 
-    <!-- CONTEÚDO 404 -->
     <div style="max-width:1480px; margin: 20px auto; padding: 0 24px; text-align:center; min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:24px; padding:40px; box-shadow:var(--sombra-card); max-width:600px; width:100%;">
             <h1 style="color:var(--cor-esmeralda); font-size:80px; margin-bottom:0;">404</h1>
@@ -118,12 +115,6 @@
         </div>
     </div>
 
-    <!-- WHATSAPP FLUTUANTE -->
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">
-        💬 Fale connosco
-    </a>
-
-    <!-- RODAPÉ -->
     <footer class="rodape-profissional">
         <div class="rodape-grid">
             <div class="rodape-coluna">
@@ -147,17 +138,11 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
     </footer>
 
-    <!-- SCRIPTS -->
-    <script type="module" src="js/app.js?v=4"></script>
-    <script type="module" src="js/carrinho.js?v=4"></script>
+    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
 
-    <!-- SERVICE WORKER -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker registrado com sucesso!'))
-                .catch(err => console.log('Erro ao registrar o Service Worker:', err));
-        }
-    </script>
+    <script type="module" src="js/app.js?v=5"></script>
+    <script type="module" src="js/carrinho.js?v=5"></script>
+    <script type="module" src="js/fidelidade.js?v=5"></script>
+    <script type="module" src="js/menu.js?v=5"></script>
 </body>
 </html>

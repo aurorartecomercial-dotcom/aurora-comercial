@@ -12,15 +12,19 @@ let termoBusca = '';
 let precoMin = 0;
 let precoMax = Infinity;
 let ordenacao = 'ordem';
+let minAvaliacao = 0;
+let dataFiltro = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ Inicializa o carrinho (verifica se elementos existem)
+    // ✅ Inicializa o carrinho
     if (!window.__carrinhoInicializado) {
         initCarrinho();
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
-    initFidelidade(); // 🔐 Inicializa sistema de login/pontos
+    initFidelidade();
+    initDarkMode();
+    initBuscaAutocomplete();
 
     const carregando = document.getElementById('carregandoProdutos');
     if (carregando) {
@@ -55,12 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderizarTudo();
     if (carregando) carregando.style.display = 'none';
 
-    // Se veio do cache, atualiza em segundo plano com os dados do Firebase
+    // Se veio do cache, atualiza em segundo plano
     if (catalogoCarregado) {
         atualizarCatalogoDoFirebase();
     }
 
-    // ✅ 4. Configuração dos filtros (sempre executada!)
+    // ✅ 4. Configuração dos filtros
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
         buscaInput.addEventListener('input', debounce(() => {
@@ -103,7 +107,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ✅ 7. Botão "Carregar mais"
+    // ✅ 7. Filtro de avaliação mínima
+    const minAvaliacaoSelect = document.getElementById('minAvaliacao');
+    if (minAvaliacaoSelect) {
+        minAvaliacaoSelect.addEventListener('change', (e) => {
+            minAvaliacao = parseFloat(e.target.value) || 0;
+            paginaAtual = 1;
+            aplicarFiltros();
+        });
+    }
+
+    // ✅ 8. Filtro de data (novidades)
+    const dataSelect = document.getElementById('ordenarData');
+    if (dataSelect) {
+        dataSelect.addEventListener('change', (e) => {
+            dataFiltro = e.target.value;
+            paginaAtual = 1;
+            aplicarFiltros();
+        });
+    }
+
+    // ✅ 9. Botão "Carregar mais"
     const carregarMaisBtn = document.getElementById('carregarMais');
     if (carregarMaisBtn) {
         carregarMaisBtn.addEventListener('click', () => {
@@ -115,9 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await aplicarFiltros();
 });
 
-// ✅ DELEGAÇÃO GLOBAL DE EVENTOS (funciona para qualquer card, mesmo carregado depois)
+// ✅ DELEGAÇÃO GLOBAL DE EVENTOS
 document.addEventListener('click', function(e) {
-    // Botão Adicionar ao Carrinho
     const btnAdd = e.target.closest('.btn-add-carrinho-card');
     if (btnAdd) {
         e.preventDefault();
@@ -129,13 +152,11 @@ document.addEventListener('click', function(e) {
         if (precoNum > 0) {
             adicionarProdutoCarrinho(nome, preco, estoque);
         } else {
-            console.warn('Preço inválido, não foi possível adicionar.');
             mostrarToast('Erro ao adicionar produto.', 'info');
         }
         return;
     }
 
-    // Botão Partilhar
     const btnShare = e.target.closest('.btn-share');
     if (btnShare) {
         e.preventDefault();
@@ -148,7 +169,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ✅ Funções auxiliares
+// ✅ FUNÇÕES AUXILIARES
 function renderizarTudo() {
     renderizarMaisComprados();
     aplicarFiltros();
@@ -157,7 +178,6 @@ function renderizarTudo() {
 async function atualizarCatalogoDoFirebase() {
     try {
         catalogo = await carregarCatalogo();
-        // Após atualizar o catálogo, re-renderiza a lista para refletir os dados mais recentes
         renderizarTudo();
     } catch (e) {
         console.warn('Erro ao atualizar do Firebase:', e);
@@ -166,7 +186,7 @@ async function atualizarCatalogoDoFirebase() {
 
 async function aplicarFiltros(resetPagina = true) {
     if (resetPagina) paginaAtual = 1;
-    const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao);
+    const filtrados = filtrarEOrdenar(catalogo, categoriaAtiva, termoBusca, precoMin, precoMax, ordenacao, minAvaliacao, dataFiltro);
     const container = document.getElementById('gradeProdutos');
     if (!container) return;
     if (paginaAtual === 1) container.innerHTML = '';
@@ -195,7 +215,119 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
-// ✅ Função de redirecionamento por categoria (para links do rodapé)
+// ✅ DARK MODE
+export function initDarkMode() {
+    const btnModoEscuro = document.getElementById('btnModoEscuro');
+    if (!btnModoEscuro) return;
+    const modoSalvo = localStorage.getItem('aurora_modo_escuro');
+    if (modoSalvo === 'ativo') {
+        document.body.classList.add('modo-escuro');
+        btnModoEscuro.innerHTML = '☀️';
+        btnModoEscuro.title = 'Modo Claro';
+    }
+    btnModoEscuro.addEventListener('click', () => {
+        document.body.classList.toggle('modo-escuro');
+        const escuro = document.body.classList.contains('modo-escuro');
+        localStorage.setItem('aurora_modo_escuro', escuro ? 'ativo' : 'inativo');
+        btnModoEscuro.innerHTML = escuro ? '☀️' : '🌙';
+        btnModoEscuro.title = escuro ? 'Modo Claro' : 'Modo Escuro';
+    });
+}
+
+// ✅ BUSCA COM AUTOCOMPLETE
+export function initBuscaAutocomplete() {
+    const campoBusca = document.getElementById('campoBusca');
+    if (!campoBusca) return;
+
+    const containerSugestoes = document.createElement('div');
+    containerSugestoes.id = 'sugestoesBusca';
+    campoBusca.parentElement.style.position = 'relative';
+    campoBusca.parentElement.appendChild(containerSugestoes);
+
+    campoBusca.addEventListener('focus', () => {
+        if (campoBusca.value.trim().length >= 2) {
+            mostrarSugestoes(campoBusca.value.trim(), containerSugestoes);
+        }
+    });
+
+    campoBusca.addEventListener('input', debounce(() => {
+        const termo = campoBusca.value.trim();
+        if (termo.length >= 2) {
+            mostrarSugestoes(termo, containerSugestoes);
+        } else {
+            containerSugestoes.style.display = 'none';
+        }
+    }, 300));
+
+    campoBusca.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') containerSugestoes.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.busca-container')) {
+            containerSugestoes.style.display = 'none';
+        }
+    });
+}
+
+async function mostrarSugestoes(termo, container) {
+    try {
+        const catalogo = await carregarCatalogo();
+        const resultados = catalogo.filter(prod => 
+            prod.nome.toLowerCase().includes(termo.toLowerCase()) ||
+            prod.categoria.toLowerCase().includes(termo.toLowerCase()) ||
+            (prod.tag || '').toLowerCase().includes(termo.toLowerCase())
+        ).slice(0, 8);
+
+        const categorias = [...new Set(catalogo
+            .filter(prod => prod.categoria.toLowerCase().includes(termo.toLowerCase()))
+            .map(prod => prod.categoria)
+        )].slice(0, 3);
+
+        if (resultados.length === 0 && categorias.length === 0) {
+            container.innerHTML = '<div style="padding:12px; color:#999; text-align:center;">Nenhum resultado encontrado</div>';
+            container.style.display = 'block';
+            return;
+        }
+
+        let html = '';
+        if (categorias.length > 0) {
+            html += '<div style="padding:8px 12px; font-size:11px; text-transform:uppercase; color:#888; background:#f5f5f5; font-weight:700;">Categorias</div>';
+            categorias.forEach(cat => {
+                html += `
+                    <a href="categoria.html?cat=${cat}" style="display:block; padding:10px 12px; text-decoration:none; color:var(--cor-esmeralda); border-bottom:1px solid #f0f0f0; font-weight:600; font-size:14px;">
+                        📂 ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </a>
+                `;
+            });
+        }
+
+        if (resultados.length > 0) {
+            html += '<div style="padding:8px 12px; font-size:11px; text-transform:uppercase; color:#888; background:#f5f5f5; font-weight:700;">Produtos</div>';
+            resultados.forEach(prod => {
+                const preco = prod.preco || '';
+                const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : '';
+                html += `
+                    <a href="detalhe.html?id=${prod.id}" style="display:flex; align-items:center; gap:10px; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #f0f0f0; transition:0.2s;">
+                        <img src="${imgSrc}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#f0f0f0;" onerror="this.style.display='none';" />
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prod.nome}</div>
+                            <div style="font-size:12px; color:var(--cor-esmeralda); font-weight:700;">${preco}</div>
+                        </div>
+                    </a>
+                `;
+            });
+        }
+
+        container.innerHTML = html;
+        container.style.display = 'block';
+    } catch (e) {
+        console.error('Erro na busca:', e);
+        container.style.display = 'none';
+    }
+}
+
+// ✅ FUNÇÕES GLOBAIS
 window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
@@ -228,13 +360,4 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
-};
-
-// ✅ NOVO: Função global para adicionar com observação (chamada pelo botão do card)
-window.adicionarComObservacao = function(btn) {
-    const nome = btn.dataset.nome;
-    const preco = btn.dataset.preco;
-    const estoque = parseInt(btn.dataset.estoque) || 0;
-    const obs = prompt('Digite uma observação (ex: gravar nome, cor):', '');
-    adicionarProdutoCarrinho(nome, preco, estoque, obs || '');
 };

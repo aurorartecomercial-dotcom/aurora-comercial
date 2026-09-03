@@ -5,4 +5,17 @@
   <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/sobre.html</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/politica.html</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/detalhe.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/rastreio.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=eletronicos</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=consolas</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=beleza</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=cozinha</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=colunas</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=ferramentas</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=casa</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=feminino</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=masculino</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=calcados</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=joias</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://aurorartecomercial-dotcom.github.io/aurora-comercial/categoria.html?cat=automoveis</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
 </urlset>
