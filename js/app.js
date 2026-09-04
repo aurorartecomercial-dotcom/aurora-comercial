@@ -5,6 +5,7 @@ import { debounce, mostrarToast } from './utils.js';
 import { initFidelidade } from './fidelidade.js';
 import { initFavoritos } from './favoritos.js';
 import { initRecomendacoes, initAfiliados, initI18n, initChatbot } from './fase3.js';
+import { exportarBackupCompleto } from './fase4.js'; // ✅ Fase 4
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -67,6 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Chamar recomendações após o catálogo estar pronto
     initRecomendacoes();
+
+    // ✅ Fase 4: Expor função de backup globalmente (para uso no admin)
+    window.exportarBackup = exportarBackupCompleto;
 
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {

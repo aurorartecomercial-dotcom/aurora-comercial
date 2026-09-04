@@ -2,6 +2,7 @@ import { auth, db } from './config.js';
 import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { extrairValorNumerico } from './utils.js';
+import { exportarBackupCompleto } from './fase4.js'; // ✅ Fase 4
 
 if (!document.getElementById('loginVendas') || !document.getElementById('conteudoVendas')) {
     console.warn('admin-vendas.js carregado em página incorreta. Abortando execução.');
@@ -73,6 +74,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     configurarExportacoes();
+
+    // ✅ Fase 4: Botão de backup
+    const btnBackup = document.getElementById('btnBackupCompleto');
+    if (btnBackup) {
+        btnBackup.addEventListener('click', async () => {
+            try {
+                await exportarBackupCompleto();
+                alert('Backup exportado com sucesso!');
+            } catch (e) {
+                alert('Erro ao exportar backup: ' + e.message);
+            }
+        });
+    }
 
     document.getElementById('btnFiltrarDia')?.addEventListener('click', () => renderizarDiario());
     document.getElementById('btnLimparDia')?.addEventListener('click', () => {

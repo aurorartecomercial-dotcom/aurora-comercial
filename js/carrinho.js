@@ -4,7 +4,9 @@ import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } fro
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { adicionarPontos } from './fidelidade.js';
 import { gerarReferenciaMulticaixa } from './multicaixa.js';
-import { aplicarDescontoAfiliado } from './fase3.js'; // ✅ Importação da Fase 3
+import { aplicarDescontoAfiliado } from './fase3.js';
+// ✅ Importações da Fase 4
+import { calcularFrete, calcularPesoTotal, enviarEmailConfirmacao } from './fase4.js';
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -90,6 +92,7 @@ export function initCarrinho() {
             if (Object.keys(erros).length > 0) return;
             if (!bairro) { alert('Selecione o bairro para calcular o frete.'); return; }
 
+            // ✅ Fase 4: Cálculo de frete com peso
             freteSelecionado = obterTaxaFrete(bairro);
             fecharModalCliente();
             iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observacao);
@@ -207,8 +210,10 @@ export function atualizarCarrinho() {
 }
 
 function obterTaxaFrete(bairro) {
-    const b = bairros.find(b => b.nome === bairro);
-    return b ? b.taxa : 5000;
+    // ✅ Fase 4: Usar cálculo com peso
+    const peso = calcularPesoTotal(carrinho);
+    const frete = calcularFrete(bairro, peso);
+    return frete.valor;
 }
 
 function atualizarBadge() {
@@ -327,6 +332,16 @@ function abrirModalPagamento(totalProdutos, totalComDesconto, frete, totalFinal,
     const qrText = `NIF:5000048151|REF:${referencia}|VAL:${totalFinal.toFixed(2)}`;
     document.getElementById('pagQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrText)}`;
     modalPagamento.style.display = 'flex';
+
+    // ✅ Fase 4: Botão para pagamento com cartão
+    const btnCartao = document.createElement('button');
+    btnCartao.textContent = '💳 Pagar com Cartão';
+    btnCartao.style.cssText = 'background:#635bff; color:#fff; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer; margin-top:10px; width:100%;';
+    btnCartao.onclick = () => {
+        alert('Pagamento com cartão será disponibilizado em breve. Use Multicaixa por enquanto.');
+        // Aqui poderia redirecionar para checkout do Stripe
+    };
+    modalPagamento.querySelector('div').appendChild(btnCartao);
 
     document.getElementById('btnCopiarRef').onclick = () => {
         navigator.clipboard.writeText(referencia);
@@ -506,6 +521,15 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         await atualizarEstoque(itensVenda);
 
         await adicionarPontos(valorTotalPedido);
+
+        // ✅ Fase 4: Enviar email de confirmação
+        await enviarEmailConfirmacao({
+            email: dadosVendaTemp.emailCliente || 'cliente@email.com',
+            codigo: codigoRastreio,
+            nome: nomeCliente,
+            total: valorTotalPedido,
+            produtos: produtosResumo
+        });
 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
     } catch (e) {
