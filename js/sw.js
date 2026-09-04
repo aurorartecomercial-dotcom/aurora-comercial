@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v9'; // ⬆️ Versão aumentada para forçar atualização
+const CACHE_NAME = 'aurora-cache-v10'; // ⬆️ Versão aumentada
 const urlsToCache = [
     '/',
     '/index.html',
@@ -28,7 +28,8 @@ const urlsToCache = [
     '/js/chatbot.js',
     '/js/multicaixa.js',
     '/js/perfil.js',
-    '/firebase-messaging-sw.js'  // ✅ Adicionado para o Push
+    '/js/fase3.js', // ✅ Adicionado para a Fase 3
+    '/firebase-messaging-sw.js'
 ];
 
 self.addEventListener('install', event => {
@@ -56,7 +57,6 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // JS: network-first
     if (event.request.url.endsWith('.js')) {
         event.respondWith(
             fetch(event.request)
@@ -68,7 +68,6 @@ self.addEventListener('fetch', event => {
                 .catch(() => caches.match(event.request).then(cached => cached || caches.match('/index.html')))
         );
     } 
-    // Imagens (incluindo WebP): cache-first
     else if (event.request.url.endsWith('.jpg') || event.request.url.endsWith('.png') || event.request.url.endsWith('.webp') || event.request.url.endsWith('.jpeg') || event.request.url.includes('i.ibb.co')) {
         event.respondWith(
             caches.match(event.request)
@@ -79,7 +78,6 @@ self.addEventListener('fetch', event => {
                 }).catch(() => caches.match('/logo auro.png')))
         );
     }
-    // Outros: cache-first
     else {
         event.respondWith(
             caches.match(event.request)

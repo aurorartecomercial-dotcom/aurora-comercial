@@ -2,9 +2,9 @@ import { db, CONFIG } from './config.js';
 import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { extrairValorNumerico, IMAGEM_FALLBACK } from './utils.js';
 import { obterAvaliacao } from './avaliacoes.js';
-import { verificarFavorito } from './favoritos.js'; // ✅ Importação da Lista de Desejos
+import { verificarFavorito } from './favoritos.js';
+import { obterLinkAfiliado } from './fase3.js'; // ✅ Importação da Fase 3
 
-// Cache em memória para buscas rápidas
 let cacheMemoria = null;
 let catalogoPromise = null;
 
@@ -13,7 +13,6 @@ export async function carregarCatalogo() {
     if (catalogoPromise) return catalogoPromise;
 
     catalogoPromise = new Promise(async (resolve) => {
-        // 1. LocalStorage (instantâneo)
         try {
             const cachedStr = localStorage.getItem(CONFIG.CACHE_KEY);
             if (cachedStr) {
@@ -27,7 +26,6 @@ export async function carregarCatalogo() {
             }
         } catch (e) {}
 
-        // 2. Firebase
         try {
             const snapshot = await getDocs(collection(db, 'produtos'));
             const produtos = snapshot.docs.map(doc => doc.data());
@@ -50,9 +48,7 @@ async function atualizarDoFirebase() {
         const produtos = snapshot.docs.map(doc => doc.data());
         cacheMemoria = produtos;
         localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data: produtos, timestamp: Date.now() }));
-    } catch (e) {
-        console.warn('Falha ao atualizar do Firebase:', e);
-    }
+    } catch (e) {}
 }
 
 export function criarCardProduto(prod) {
@@ -62,15 +58,14 @@ export function criarCardProduto(prod) {
     card.style.textDecoration = 'none';
     card.style.color = 'inherit';
 
-    // ✅ Verifica se o produto está nos favoritos
     const ehFavorito = verificarFavorito(prod.id);
 
-    // Converter para WebP se possível
     let imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : IMAGEM_FALLBACK;
     const imgWebPSrc = imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp');
 
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-    const shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
+    let shareLink = `${baseUrl}/detalhe.html?id=${prod.id}`;
+    shareLink = obterLinkAfiliado(shareLink); // ✅ Aplicar link de afiliado
 
     let html = `
         <div class="produto-imagem">
@@ -100,7 +95,6 @@ export function criarCardProduto(prod) {
 
     if (prod.parcelas) { html += `<p class="parcelas">${prod.parcelas}</p>`; }
 
-    // ✅ Selos de entrega
     if (prod.freteGratis) {
         if (prod.prazoEntrega === 'hoje') {
             html += `<span class="selo-entrega hoje">Chegará grátis hoje</span>`;
@@ -135,7 +129,6 @@ export function criarCardProduto(prod) {
     html += `</div>`;
     card.innerHTML = html;
 
-    // Carregar avaliação em segundo plano
     obterAvaliacao(prod.id).then(avaliacao => {
         const avaliacaoDiv = card.querySelector('.avaliacao-card');
         if (avaliacaoDiv && avaliacao.media > 0) {
@@ -153,7 +146,6 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao,
         const precoNum = extrairValorNumerico(prod.preco);
         const matchPreco = precoNum >= min && precoNum <= max;
         
-        // Filtro de data (novidades)
         let matchData = true;
         if (dataFiltro) {
             const dias = parseInt(dataFiltro.replace('d', ''));
@@ -167,10 +159,9 @@ export function filtrarEOrdenar(produtos, categoria, busca, min, max, ordenacao,
         return matchCategoria && matchBusca && matchPreco && matchData;
     });
 
-    // Filtro de avaliação mínima (aplicado após a filtragem)
     if (minAvaliacao > 0) {
         filtrados = filtrados.filter(prod => {
-            return true; // Temporariamente aceitamos todos, mas seria bom filtrar
+            return true;
         });
     }
 
