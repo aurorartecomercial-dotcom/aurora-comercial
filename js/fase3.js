@@ -139,20 +139,26 @@ function aplicarTraducoes() {
     document.title = idiomaAtual === 'pt' ? 'Aurora Comercial' : 'Aurora Store';
 }
 
-// --- 4. CHATBOT AVANÇADO ---
+// --- 4. CHATBOT AVANÇADO (CORRIGIDO) ---
 const NUMERO_WHATSAPP = CONFIG.NUMERO_WHATSAPP || '244933677628';
 
 export function initChatbot() {
     const chatBtn = document.getElementById('chatBtn');
     const chatMenu = document.getElementById('chatMenu');
+    
     if (chatBtn && chatMenu) {
-        chatBtn.addEventListener('click', (e) => {
+        // Remover event listeners anteriores (evita duplicação)
+        const novoBtn = chatBtn.cloneNode(true);
+        chatBtn.parentNode.replaceChild(novoBtn, chatBtn);
+        
+        novoBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             chatMenu.style.display = chatMenu.style.display === 'none' ? 'block' : 'none';
         });
     }
 
+    // Botões de opções rápidas
     const botoes = document.querySelectorAll('[data-chat-opcao]');
     botoes.forEach(btn => {
         btn.addEventListener('click', (e) => {
