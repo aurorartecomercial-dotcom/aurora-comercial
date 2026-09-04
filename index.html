@@ -62,7 +62,6 @@
             </form>
             <div class="header-icones">
                 <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
-                <button id="btnIdioma" class="btn-idioma" aria-label="Mudar idioma" title="Change language" style="background:transparent; border:2px solid var(--cor-ouro); color:var(--cor-ouro); padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; font-size:12px;">PT | EN</button>
                 <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
                     <small>Olá, faça seu login</small>
                     Conta
@@ -86,11 +85,11 @@
                 </svg>
             </button>
             <ul id="menuCategorias">
-                <li><a href="index.html" data-i18n="home">Início</a></li>
+                <li><a href="index.html">Início</a></li>
                 <li><a href="perfil.html">👤 Minha Conta</a></li>
-                <li><a href="sobre.html" data-i18n="contact">Contactos</a></li>
+                <li><a href="sobre.html">Contactos</a></li>
                 <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
-                <li><a href="blog.html" data-i18n="blog">📰 Media</a></li>
+                <li><a href="blog.html">📰 Media</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle">📂 Categorias ▾</a>
                     <ul class="submenu">
@@ -130,7 +129,7 @@
                 </li>
                 <li><a href="sobre.html">↩️ Retornos</a></li>
                 <li><a href="sobre.html">🏷️ Vender</a></li>
-                <li><a href="rastreio.html" data-i18n="track">📦 Rastrear Pedido</a></li>
+                <li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
             </ul>
         </nav>
     </header>
@@ -200,7 +199,7 @@
         <!-- MAIS COMPRADOS -->
         <section class="secao-mais-comprados" style="max-width:1480px; margin:30px auto 0; padding:0 24px;">
             <div class="secao-titulo">
-                <h2 style="color:#333;" data-i18n="more_sold">⭐ Mais Comprados da Semana</h2>
+                <h2 style="color:#333;">⭐ Mais Comprados da Semana</h2>
                 <a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a>
             </div>
             <div class="grade-produtos" id="maisCompradosGrid"></div>
@@ -388,9 +387,6 @@
         </div>
     </section>
 
-    <!-- ✅ CONTAINER DE RECOMENDAÇÕES (Fase 3) -->
-    <div id="recomendacoesProdutos"></div>
-
     <!-- CARRINHO LATERAL -->
     <aside class="carrinho-sidebar" id="carrinhoSidebar" role="dialog" aria-label="Sacola de compras">
         <div class="carrinho-header">
@@ -567,17 +563,14 @@
         <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
     </footer>
 
-    <!-- ✅ CHAT FLUTUANTE AVANÇADO (Fase 3) -->
+    <!-- ✅ CHAT FLUTUANTE -->
     <div class="chat-flutuante" id="chatFlutuante">
         <button id="chatBtn" class="whatsapp-float">💬 Fale Connosco</button>
-        <div id="chatMenu" style="display:none; position:fixed; bottom:80px; right:20px; background:#fff; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.2); padding:16px; width:300px; z-index:9999;">
+        <div id="chatMenu" style="display:none; position:fixed; bottom:80px; right:20px; background:#fff; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.2); padding:16px; width:280px; z-index:9999;">
             <h4 style="margin-bottom:10px; color:#005A4C;">Atendimento Rápido</h4>
-            <a href="#" data-chat-opcao="pedido" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">🛒 Fazer Pedido</a>
-            <a href="#" data-chat-opcao="rastrear" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">📦 Rastrear Pedido</a>
-            <a href="#" data-chat-opcao="pagamento" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">💳 Pagamento</a>
-            <a href="#" data-chat-opcao="devolucao" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">↩️ Devolução</a>
-            <a href="#" data-chat-opcao="vender" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">🏷️ Vender</a>
-            <a href="#" data-chat-opcao="duvida" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; text-decoration:none;">💬 Dúvidas Gerais</a>
+            <a href="https://wa.me/244933677628?text=Olá!%20Quero%20fazer%20um%20pedido" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">🛒 Fazer Pedido</a>
+            <a href="https://wa.me/244933677628?text=Olá!%20Preciso%20de%20ajuda%20com%20o%20meu%20pedido" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; margin-bottom:8px; text-decoration:none;">📦 Rastrear Pedido</a>
+            <a href="https://wa.me/244933677628?text=Olá!%20Tenho%20uma%20dúvida" target="_blank" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; text-decoration:none;">💬 Dúvidas Gerais</a>
         </div>
     </div>
 
@@ -586,7 +579,6 @@
     <script type="module" src="js/carrinho.js?v=6"></script>
     <script type="module" src="js/fidelidade.js?v=6"></script>
     <script type="module" src="js/favoritos.js?v=6"></script>
-    <script type="module" src="js/fase3.js?v=6"></script>
 
     <!-- SERVICE WORKER -->
     <script>
@@ -597,7 +589,7 @@
         }
     </script>
 
-    <!-- 🔔 FIREBASE CLOUD MESSAGING -->
+    <!-- 🔔 FIREBASE CLOUD MESSAGING (NOTIFICAÇÕES PUSH) -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
         import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
@@ -615,6 +607,7 @@
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
         
+        // Solicitar permissão do utilizador
         Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
                 console.log('Permissão de notificações concedida!');
@@ -633,6 +626,7 @@
             }
         });
         
+        // Receber mensagens enquanto o site está aberto
         onMessage(messaging, (payload) => {
             console.log('Mensagem recebida em primeiro plano:', payload);
             const notification = new Notification(payload.notification.title, {

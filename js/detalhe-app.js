@@ -3,7 +3,6 @@ import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
-import { registrarVista } from './fase3.js'; // ✅ Importação da Fase 3
 
 document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
@@ -26,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {}
     }
 
+    // ✅ 2. Se não tem cache, busca do Firebase, mas agora com tempo limite
     if (catalogo.length === 0) {
         catalogo = await carregarCatalogo();
     }
@@ -42,12 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // ✅ 3. Renderiza o produto IMEDIATAMENTE (sem esperar avaliação)
     renderizarDetalhes(prod);
     atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
-    
-    // ✅ Registar vista para recomendações (Fase 3)
-    registrarVista(prod);
-    
+
+    // ✅ 4. Carrega a avaliação em segundo plano e atualiza o DOM
     carregarAvaliacaoAsync(prod.id);
 });
 
@@ -61,6 +60,7 @@ function mostrarErro(mensagem) {
     `;
 }
 
+// ✅ Função de renderização SEM `await` (síncrona) com layout de 2 colunas
 function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
 
@@ -72,6 +72,7 @@ function renderizarDetalhes(prod) {
     }
     if (prodName) prodName.textContent = prod.nome;
 
+    // ✅ VERIFICAÇÃO PARA EVITAR UNDEFINED
     const imagemPrincipal = (prod.imagens && prod.imagens.length > 0) ? prod.imagens[0] : IMAGEM_FALLBACK;
     const miniaturasImagens = (prod.imagens && prod.imagens.length > 0) ? prod.imagens : [IMAGEM_FALLBACK];
 
@@ -91,7 +92,7 @@ function renderizarDetalhes(prod) {
         `;
     }
 
-    // Estrutura em 2 colunas (Imagem | Informações)
+    // ✅ Estrutura em 2 colunas (Imagem | Informações)
     container.innerHTML = `
         <div class="detalhes-layout">
             <div class="detalhes-imagem-principal">
@@ -121,6 +122,7 @@ function renderizarDetalhes(prod) {
         </div>
     `;
 
+    // ✅ Configura miniaturas
     const miniaturas = document.querySelectorAll('#miniaturas img');
     const imgPrincipal = document.getElementById('detalhesImg');
     miniaturas.forEach(img => {
@@ -131,10 +133,12 @@ function renderizarDetalhes(prod) {
         });
     });
 
+    // ✅ Botão de comprar
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
         adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
     });
 
+    // ✅ Botão de partilhar
     document.getElementById('btnPartilharDetalhe').addEventListener('click', function() {
         const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
         const link = `${baseUrl}/detalhe.html?id=${prod.id}`;
@@ -143,6 +147,7 @@ function renderizarDetalhes(prod) {
     });
 }
 
+// ✅ Carrega avaliação sem bloquear a renderização
 async function carregarAvaliacaoAsync(prodId) {
     try {
         const avaliacao = await obterAvaliacao(prodId);
