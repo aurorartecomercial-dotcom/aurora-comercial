@@ -4,6 +4,7 @@ import { initMobileMenu } from './menu.js';
 import { debounce, mostrarToast } from './utils.js';
 import { initFidelidade } from './fidelidade.js';
 import { initFavoritos } from './favoritos.js';
+import { initRecomendacoes, initAfiliados, initI18n, initChatbot } from './fase3.js';
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -24,6 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
     initFidelidade();
     initFavoritos();
+    initRecomendacoes();
+    initAfiliados();
+    initI18n();
+    initChatbot();
     initDarkMode();
     initBuscaAutocomplete();
 

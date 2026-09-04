@@ -1,0 +1,177 @@
+// ============================================================
+// FASE 3 - EXPERIÊNCIA PREMIUM (RECOMENDAÇÕES, AFILIADOS, I18N, CHAT)
+// ============================================================
+
+// --- 1. RECOMENDAÇÕES ---
+export function initRecomendacoes() {
+    const containerRecomendacoes = document.getElementById('recomendacoesProdutos');
+    if (!containerRecomendacoes) return;
+
+    const historico = JSON.parse(localStorage.getItem('aurora_historico_vistos') || '[]');
+    if (historico.length === 0) return;
+
+    import('./catalogo.js').then(({ carregarCatalogo, criarCardProduto }) => {
+        carregarCatalogo().then(catalogo => {
+            const recomendados = obterRecomendacoes(catalogo, historico);
+            if (recomendados.length === 0) return;
+
+            containerRecomendacoes.innerHTML = `
+                <section class="secao-recomendacoes" style="max-width:1480px; margin:30px auto; padding:0 24px;">
+                    <h2 style="color:#333; font-size:1.8rem; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">💡 Recomendado para si</h2>
+                    <div class="grade-produtos" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;"></div>
+                </section>
+            `;
+
+            const grid = containerRecomendacoes.querySelector('.grade-produtos');
+            recomendados.forEach(prod => {
+                const card = criarCardProduto(prod);
+                grid.appendChild(card);
+            });
+        });
+    });
+}
+
+function obterRecomendacoes(catalogo, historico) {
+    const vistos = historico.map(item => item.id);
+    const categoriasVistas = historico.map(item => item.categoria);
+    const recomendados = catalogo.filter(prod => 
+        !vistos.includes(prod.id) && categoriasVistas.includes(prod.categoria)
+    );
+    if (recomendados.length === 0) {
+        return catalogo.filter(prod => !vistos.includes(prod.id)).slice(0, 4);
+    }
+    return recomendados.slice(0, 8);
+}
+
+export function registrarVista(produto) {
+    const historico = JSON.parse(localStorage.getItem('aurora_historico_vistos') || '[]');
+    const filtrado = historico.filter(item => item.id !== produto.id);
+    filtrado.unshift({ id: produto.id, categoria: produto.categoria });
+    localStorage.setItem('aurora_historico_vistos', JSON.stringify(filtrado.slice(0, 10)));
+}
+
+// --- 2. AFILIADOS ---
+let codigoAfiliado = '';
+
+export function initAfiliados() {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+        localStorage.setItem('aurora_ref_afiliado', ref);
+    }
+
+    const uid = localStorage.getItem('aurora_uid_cliente');
+    if (uid) {
+        codigoAfiliado = uid.substring(0, 8).toUpperCase();
+    } else {
+        codigoAfiliado = 'AURORA' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+    localStorage.setItem('aurora_codigo_afiliado', codigoAfiliado);
+}
+
+export function obterLinkAfiliado(linkProduto) {
+    const codigo = localStorage.getItem('aurora_codigo_afiliado') || 'AURORA0000';
+    return linkProduto.includes('?') ? `${linkProduto}&ref=${codigo}` : `${linkProduto}?ref=${codigo}`;
+}
+
+export function aplicarDescontoAfiliado() {
+    const ref = localStorage.getItem('aurora_ref_afiliado');
+    return ref ? { codigo: ref, desconto: 5 } : null;
+}
+
+// --- 3. MULTILÍNGUA ---
+let idiomaAtual = localStorage.getItem('aurora_idioma') || 'pt';
+
+const traducoes = {
+    pt: {
+        'search': 'Buscar produtos...',
+        'cart': 'Carrinho',
+        'login': 'Entrar',
+        'home': 'Início',
+        'contact': 'Contactos',
+        'blog': 'Blog',
+        'track': 'Rastrear Pedido',
+        'more_sold': 'Mais Comprados',
+        'recommended': 'Recomendado para si',
+        'add_to_cart': 'Adicionar',
+        'share': 'Partilhar',
+    },
+    en: {
+        'search': 'Search products...',
+        'cart': 'Cart',
+        'login': 'Login',
+        'home': 'Home',
+        'contact': 'Contact',
+        'blog': 'Blog',
+        'track': 'Track Order',
+        'more_sold': 'Best Sellers',
+        'recommended': 'Recommended for you',
+        'add_to_cart': 'Add',
+        'share': 'Share',
+    }
+};
+
+export function initI18n() {
+    const btnIdioma = document.getElementById('btnIdioma');
+    if (btnIdioma) {
+        btnIdioma.addEventListener('click', () => {
+            idiomaAtual = idiomaAtual === 'pt' ? 'en' : 'pt';
+            localStorage.setItem('aurora_idioma', idiomaAtual);
+            aplicarTraducoes();
+        });
+    }
+    aplicarTraducoes();
+}
+
+function aplicarTraducoes() {
+    const t = traducoes[idiomaAtual];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const chave = el.dataset.i18n;
+        if (t[chave]) el.textContent = t[chave];
+    });
+    const busca = document.getElementById('campoBusca');
+    if (busca) busca.placeholder = t.search;
+    document.title = idiomaAtual === 'pt' ? 'Aurora Comercial' : 'Aurora Store';
+}
+
+export function t(chave) {
+    return traducoes[idiomaAtual][chave] || chave;
+}
+
+// --- 4. CHATBOT AVANÇADO ---
+const NUMERO_WHATSAPP = '244933677628';
+
+export function initChatbot() {
+    const chatBtn = document.getElementById('chatBtn');
+    const chatMenu = document.getElementById('chatMenu');
+    if (chatBtn && chatMenu) {
+        chatBtn.addEventListener('click', () => {
+            chatMenu.style.display = chatMenu.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+    const botoes = document.querySelectorAll('[data-chat-opcao]');
+    botoes.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const opcao = btn.dataset.chatOpcao;
+            const mensagem = obterMensagem(opcao);
+            abrirWhatsApp(mensagem);
+        });
+    });
+}
+
+function obterMensagem(opcao) {
+    const mensagens = {
+        'pedido': 'Olá! Quero fazer um pedido na Aurora Comercial. Pode me ajudar?',
+        'rastrear': 'Olá! Preciso de ajuda para rastrear o meu pedido. O código é: ',
+        'duvida': 'Olá! Tenho uma dúvida sobre um produto. Pode me ajudar?',
+        'pagamento': 'Olá! Como posso pagar o meu pedido?',
+        'devolucao': 'Olá! Preciso de ajuda com uma devolução. Pode me orientar?',
+        'vender': 'Olá! Quero vender os meus produtos na Aurora Comercial. Como funciona?'
+    };
+    return mensagens[opcao] || 'Olá! Posso ajudar?';
+}
+
+function abrirWhatsApp(mensagem) {
+    const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+}

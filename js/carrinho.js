@@ -3,7 +3,8 @@ import { db, CONFIG } from './config.js';
 import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { adicionarPontos } from './fidelidade.js';
-import { gerarReferenciaMulticaixa } from './multicaixa.js'; // ✅ Importação do Multicaixa
+import { gerarReferenciaMulticaixa } from './multicaixa.js';
+import { aplicarDescontoAfiliado } from './afiliados.js'; // ✅ Importação da Fase 3
 
 let carrinho = [];
 let listaProdutosHTML, totalHTML, badgeContador, sidebar, overlay;
@@ -110,10 +111,8 @@ export function initCarrinho() {
         document.getElementById('toast-notificacao').style.top = '-100px';
     });
 
-    // ✅ DELEGAÇÃO DE EVENTOS CORRIGIDA (para +, - e REMOVER)
     if (listaProdutosHTML) {
         listaProdutosHTML.addEventListener('click', (e) => {
-            // Botão de remover (🗑️)
             const btnRemover = e.target.closest('button[data-remover]');
             if (btnRemover) {
                 e.preventDefault();
@@ -127,7 +126,6 @@ export function initCarrinho() {
                 return;
             }
 
-            // Botões de aumentar/diminuir
             const btn = e.target.closest('button[data-index][data-mudanca]');
             if (btn) {
                 e.preventDefault();
@@ -288,10 +286,14 @@ async function iniciarFluxoPagamento(nome, telefone, nif, morada, bairro, observ
         totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
         cupomSalvo = { ...cupomAplicado };
     }
+    // ✅ Aplicar desconto de afiliado (Fase 3)
+    const afiliado = aplicarDescontoAfiliado();
+    if (afiliado) {
+        totalComDesconto = totalComDesconto - (totalComDesconto * (afiliado.desconto / 100));
+    }
     let totalFinal = totalComDesconto + freteSelecionado;
     localStorage.setItem('aurora_cliente_dados', JSON.stringify({ nome, telefone, nif, morada, bairro }));
 
-    // ✅ Tenta gerar referência Multicaixa automática
     try {
         const refMulticaixa = await gerarReferenciaMulticaixa(totalFinal, gerarNumeroFatura(), 'Pedido Aurora');
         if (refMulticaixa.referencia) {
@@ -343,6 +345,8 @@ async function enviarPedidoWhatsApp() {
     let totalProdutos = carrinho.reduce((acc, item) => acc + extrairValorNumerico(item.preco) * item.quantidade, 0);
     let totalComDesconto = totalProdutos;
     if (cupomAplicado) totalComDesconto = totalComDesconto - (totalComDesconto * (cupomAplicado.desconto / 100));
+    const afiliado = aplicarDescontoAfiliado();
+    if (afiliado) totalComDesconto = totalComDesconto - (totalComDesconto * (afiliado.desconto / 100));
     let totalFinal = totalComDesconto + freteSelecionado;
 
     const sucessoFatura = gerarFaturaHTML(carrinho, nome, telefone, nif, morada, bairro, totalProdutos, totalComDesconto, freteSelecionado, totalFinal);
@@ -411,7 +415,7 @@ function gerarFaturaHTML(itens, nome, telefone, nif, morada, bairro, totalProdut
 </table>
 <div class="resumo">
 <p><strong>Subtotal dos produtos:</strong> ${totalProdutos.toFixed(2)} Kz</p>
-${totalComDesconto < totalProdutos ? `<p><strong>Desconto (cupom):</strong> -${(totalProdutos - totalComDesconto).toFixed(2)} Kz</p>` : ''}
+${totalComDesconto < totalProdutos ? `<p><strong>Desconto:</strong> -${(totalProdutos - totalComDesconto).toFixed(2)} Kz</p>` : ''}
 <p><strong>Frete (${bairro}):</strong> ${frete.toFixed(2)} Kz</p>
 <p class="total">Total a Pagar: ${totalFinal.toFixed(2)} Kz</p>
 </div>
@@ -467,7 +471,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         status: 'confirmado',
         itens: itensVenda,
         criadoEm: new Date(),
-        uidCliente: getAuth().currentUser?.uid || null // ✅ Adicionamos UID para associar ao utilizador
+        uidCliente: getAuth().currentUser?.uid || null
     };
 
     const auth = getAuth();
@@ -476,7 +480,7 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         try {
             const cred = await signInAnonymously(auth);
             user = cred.user;
-            novaVenda.uidCliente = user.uid; // Atualiza UID após autenticação anónima
+            novaVenda.uidCliente = user.uid;
         } catch (e) {
             console.error('Erro autenticação anónima:', e);
             const historicoLocal = JSON.parse(localStorage.getItem('aurora_historico_vendas')) || [];
@@ -496,7 +500,6 @@ async function salvarVendaNoHistorico(nomeCliente, telefoneCliente, nifCliente, 
         dadosVendaTemp.valorTotal = valorTotalPedido;
         
         await atualizarEstoque(itensVenda);
-
         await adicionarPontos(valorTotalPedido);
 
         alert(`✅ Pedido registrado!\nCódigo de rastreio: ${codigoRastreio}`);
