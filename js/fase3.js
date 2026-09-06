@@ -4,7 +4,7 @@
 import { CONFIG } from './config.js';
 import { mostrarToast } from './utils.js';
 
-// --- 1. RECOMENDAÇÕES DE PRODUTOS ---
+// --- 1. RECOMENDAÇÕES DE PRODUTOS (CORRIGIDO PARA CARROSSEL HORIZONTAL) ---
 export async function initRecomendacoes() {
     const container = document.getElementById('recomendacoesProdutos');
     if (!container) return;
@@ -18,16 +18,22 @@ export async function initRecomendacoes() {
         const recomendados = obterRecomendacoes(catalogo, historico);
         if (recomendados.length === 0) return;
 
+        // ✅ ALTERAÇÃO: Container em Flex Horizontal com Scroll
         container.innerHTML = `
             <section class="secao-recomendacoes" style="max-width:1480px; margin:30px auto; padding:0 24px;">
                 <h2 style="color:#333; font-size:1.8rem; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">💡 Recomendado para si</h2>
-                <div class="grade-produtos" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;"></div>
+                <div class="grade-produtos" style="display:flex; overflow-x:auto; gap:16px; padding-bottom:10px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; grid-template-columns:none;"></div>
             </section>
         `;
 
         const grid = container.querySelector('.grade-produtos');
         recomendados.forEach(prod => {
             const card = criarCardProduto(prod);
+            // ✅ Estilo para o card não encolher e ficar alinhado
+            card.style.minWidth = '200px';
+            card.style.maxWidth = '220px';
+            card.style.flexShrink = '0';
+            card.style.scrollSnapAlign = 'start';
             grid.appendChild(card);
         });
     } catch (e) {
