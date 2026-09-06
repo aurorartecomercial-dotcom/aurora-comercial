@@ -473,3 +473,73 @@ body.modo-escuro .info-card { background: #1e1e1e; border-left-color: var(--cor-
     flex-shrink: 0;
     scroll-snap-align: start;
 }
+
+/* ============================================================
+   MOBILE FRIENDLY - GRADE DE PRODUTOS (2 COLUNAS COMPACTAS)
+   ============================================================ */
+@media (max-width: 768px) {
+    /* A grade vira 2 colunas com menos espaço */
+    .grade-produtos {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
+        padding: 0 8px;
+    }
+
+    /* Card mais compacto */
+    .produto-card {
+        padding: 6px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+    }
+
+    /* Imagem menor (mais produto visível na tela) */
+    .produto-imagem {
+        height: 130px;  /* Antes era 200px */
+    }
+    .produto-imagem img {
+        max-height: 130px;
+    }
+
+    /* Texto menor e mais denso */
+    .produto-info h3 {
+        font-size: 12px;
+        line-height: 1.2;
+        margin: 2px 0;
+    }
+    .preco {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 2px 0;
+    }
+
+    /* Esconder elementos que ocupam espaço (parcelas, selos, etc.) */
+    .parcelas,
+    .selo-frete,
+    .selo-entrega {
+        display: none !important;
+    }
+
+    /* Botão de adicionar vira um ícone pequeno no canto da imagem */
+    .btn-add-carrinho-card {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        bottom: 6px;
+        right: 6px;
+    }
+
+    /* Mostrar apenas o essencial: imagem, preço e botão */
+    .produto-info {
+        padding-top: 4px;
+        text-align: center;
+    }
+
+    /* Categoria (tag) menos visível */
+    .categoria-tag {
+        font-size: 9px;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
