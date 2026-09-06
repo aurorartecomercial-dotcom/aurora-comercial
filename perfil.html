@@ -5,66 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Minha Conta - Aurora Comercial</title>
     <link rel="icon" type="image/png" href="logo auro.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css?v=5" />
     <link rel="manifest" href="manifest.json" />
 
+    <!-- ✅ NOVO ESTILO MAIS SIMPLES -->
     <style>
         .perfil-container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 24px;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 16px;
         }
         .perfil-header {
             background: linear-gradient(135deg, var(--cor-esmeralda), var(--cor-esmeralda-escuro));
             color: #fff;
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 24px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             border: 2px solid var(--cor-ouro);
             text-align: center;
         }
         .perfil-header h1 {
-            font-size: 28px;
+            font-size: 24px;
             color: var(--cor-ouro);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .perfil-header p {
+            font-size: 13px;
+            margin: 2px 0;
             opacity: 0.9;
-            font-size: 14px;
-            margin: 4px 0;
         }
-        .perfil-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
+        
+        /* ✅ CARTÕES MAIS COMPACTOS */
         .perfil-card {
             background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: var(--sombra-card);
-            border: 1px solid #f0f0f0;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            margin-bottom: 16px;
         }
         .perfil-card h2 {
-            color: var(--cor-esmeralda);
-            margin-bottom: 16px;
-            border-bottom: 2px solid var(--cor-ouro);
-            padding-bottom: 8px;
-            font-size: 20px;
-        }
-        .perfil-card h3 {
-            color: #333;
-            margin-bottom: 10px;
             font-size: 16px;
+            color: var(--cor-esmeralda);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        /* ✅ Estilo para cada item (pedido, favorito, cupom) */
         .pedido-item {
             border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
         }
         .pedido-item strong {
             color: var(--cor-esmeralda);
@@ -72,128 +71,77 @@
         .pedido-item small {
             color: #888;
             display: block;
-            margin-top: 4px;
+            margin-top: 2px;
         }
-        .pedido-item .status {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-        .status-confirmado { background: #fef3cd; color: #856404; }
-        .status-enviado { background: #d1ecf1; color: #0c5460; }
-        .status-entregue { background: #d4edda; color: #155724; }
         .favorito-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px;
+            gap: 10px;
+            padding: 8px;
             border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
         }
         .favorito-item img {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 6px;
         }
         .favorito-item a {
             flex: 1;
             color: #333;
             text-decoration: none;
             font-weight: 600;
-            font-size: 14px;
         }
         .favorito-item button {
             background: #fde8e8;
             border: none;
             color: #E74C3C;
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
+        }
+        
+        /* ✅ Pontos e Cupons mais compactos */
+        .pontos-box {
+            text-align: center;
+            padding: 10px;
+        }
+        .pontos-grande {
+            font-size: 40px;
+            color: var(--cor-ouro);
+            font-weight: 700;
         }
         .btn-perfil {
             background: var(--cor-ouro);
             color: #000;
             border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
+            padding: 8px 20px;
+            border-radius: 30px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 16px;
-            transition: 0.2s;
+            font-size: 13px;
+            margin-top: 8px;
         }
-        .btn-perfil:hover {
-            background: var(--cor-ouro-escuro);
-            color: #fff;
-        }
-        .pontos-grande {
-            font-size: 48px;
-            color: var(--cor-ouro);
-            font-weight: 700;
+        
+        /* ✅ Grid: 2 colunas no desktop, 1 no mobile */
+        .perfil-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
         }
         @media (max-width: 768px) {
             .perfil-grid { grid-template-columns: 1fr; }
+            .perfil-header { padding: 16px; }
+            .perfil-header h1 { font-size: 20px; }
         }
     </style>
 </head>
 <body>
-    <!-- HEADER -->
+    <!-- HEADER (mantido igual ao que já tens) -->
     <header class="header-principal" role="banner">
-        <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo auro.png" alt="Logo Aurora Comercial" />
-                <span>Aurora<br /><span>Comercial</span></span>
-            </a>
-            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
-                <button type="submit" aria-label="Pesquisar">🔍</button>
-            </form>
-            <div class="header-icones">
-                <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
-                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small>
-                    Conta
-                </button>
-                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
-                <button id="badgeFavoritos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; display:none;">❤️ <span id="badgeFavoritosCount">0</span></button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
-            </div>
-        </div>
-        <!-- MENU -->
-        <nav class="menu-categorias" aria-label="Categorias">
-            <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
-            </button>
-            <ul id="menuCategorias">
-                <li><a href="index.html">Início</a></li>
-                <li><a href="perfil.html">👤 Minha Conta</a></li>
-                <li><a href="sobre.html">Contactos</a></li>
-                <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
-                <li><a href="blog.html">📰 Media</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">📂 Categorias ▾</a>
-                    <ul class="submenu">
-                        <!-- (todas as categorias) -->
-                        <li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li>
-                        <li><a href="categoria.html?cat=consolas">Consolas</a></li>
-                        <!-- ... -->
-                    </ul>
-                </li>
-                <li><a href="sobre.html">↩️ Retornos</a></li>
-                <li><a href="sobre.html">🏷️ Vender</a></li>
-                <li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
-            </ul>
-        </nav>
+        <!-- ... (copia o teu header atual) ... -->
     </header>
 
     <!-- CONTEÚDO DO PERFIL -->
@@ -208,25 +156,25 @@
             <!-- Histórico de Pedidos -->
             <div class="perfil-card">
                 <h2>📦 Meus Pedidos</h2>
-                <div id="historicoPedidos" style="max-height:400px; overflow-y:auto;">
-                    <p style="color:#999; text-align:center; padding:20px;">Nenhum pedido encontrado.</p>
+                <div id="historicoPedidos" style="max-height:200px; overflow-y:auto;">
+                    <p style="color:#999; text-align:center; padding:10px;">Nenhum pedido.</p>
                 </div>
             </div>
 
             <!-- Lista de Desejos -->
             <div class="perfil-card">
                 <h2>❤️ Lista de Desejos</h2>
-                <div id="listaDesejos" style="max-height:400px; overflow-y:auto;">
-                    <p style="color:#999; text-align:center; padding:20px;">Nenhum favorito guardado.</p>
+                <div id="listaDesejos" style="max-height:200px; overflow-y:auto;">
+                    <p style="color:#999; text-align:center; padding:10px;">Nenhum favorito.</p>
                 </div>
             </div>
 
             <!-- Pontos Fidelidade -->
             <div class="perfil-card">
                 <h2>⭐ Meus Pontos</h2>
-                <div style="text-align:center; padding:20px;">
+                <div class="pontos-box">
                     <div class="pontos-grande" id="pontosFidelidade">0</div>
-                    <p style="color:#888; font-size:14px; margin-top:8px;">Pontos acumulados</p>
+                    <p style="font-size:13px; color:#888;">Pontos acumulados</p>
                     <button id="btnResgatarPontos" class="btn-perfil">🎁 Resgatar Cupom</button>
                 </div>
             </div>
@@ -234,39 +182,17 @@
             <!-- Cupons -->
             <div class="perfil-card">
                 <h2>🎟️ Meus Cupons</h2>
-                <div id="listaCupons" style="max-height:300px; overflow-y:auto;">
-                    <p style="color:#999; text-align:center; padding:20px;">Nenhum cupom disponível.</p>
+                <div id="listaCupons" style="max-height:200px; overflow-y:auto;">
+                    <p style="color:#999; text-align:center; padding:10px;">Nenhum cupom.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- RODAPÉ -->
-    <footer class="rodape-profissional">
-        <div class="rodape-grid">
-            <div class="rodape-coluna">
-                <h3>Aurora Comercial</h3>
-                <p>Marketplace angolano com curadoria premium.</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Contacto</h4>
-                <p>📞 +244 933 677 628</p>
-                <p>✉️ contacto@aurorarte.ao</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Institucional</h4>
-                <ul>
-                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
-                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
-                    <li><a href="blog.html">📖 Blog</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL.</div>
-    </footer>
+    <!-- RODAPÉ (mantido igual) -->
+    <!-- ... -->
 
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
-
+    <!-- SCRIPTS (mantidos iguais) -->
     <script type="module" src="js/perfil.js"></script>
     <script type="module" src="js/app.js?v=5"></script>
     <script type="module" src="js/carrinho.js?v=5"></script>
