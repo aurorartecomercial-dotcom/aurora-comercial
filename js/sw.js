@@ -26,7 +26,6 @@ const urlsToCache = [
     '/js/fidelidade.js',
     '/js/favoritos.js',
     '/js/chatbot.js',
-    '/js/multicaixa.js',
     '/js/perfil.js',
     '/js/fase3.js', // ✅ Adicionado para a Fase 3
     '/firebase-messaging-sw.js'

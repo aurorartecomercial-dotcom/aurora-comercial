@@ -1,11 +1,10 @@
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
-import { debounce, extrairValorNumerico, mostrarToast } from './utils.js';
+import { debounce, extrairValorNumerico, mostrarToast, escapeHTML, urlSegura, IMAGEM_FALLBACK } from './utils.js';
 import { initFidelidade } from './fidelidade.js';
 import { initFavoritos } from './favoritos.js';
 import { initRecomendacoes, initAfiliados, initI18n, initChatbot } from './fase3.js';
-import { exportarBackupCompleto } from './fase4.js'; // ✅ Fase 4
 
 let catalogo = [];
 let paginaAtual = 1;
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initRecomendacoes();
 
     // ✅ Fase 4: Expor função de backup globalmente (para uso no admin)
-    window.exportarBackup = exportarBackupCompleto;
 
     const buscaInput = document.getElementById('campoBusca');
     if (buscaInput) {
@@ -290,8 +288,8 @@ async function mostrarSugestoes(termo, container) {
             html += '<div style="padding:8px 12px; font-size:11px; text-transform:uppercase; color:#888; background:#f5f5f5; font-weight:700;">Categorias</div>';
             categorias.forEach(cat => {
                 html += `
-                    <a href="categoria.html?cat=${cat}" style="display:block; padding:10px 12px; text-decoration:none; color:var(--cor-esmeralda); border-bottom:1px solid #f0f0f0; font-weight:600; font-size:14px;">
-                        📂 ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    <a href="categoria.html?cat=${encodeURIComponent(cat)}" style="display:block; padding:10px 12px; text-decoration:none; color:var(--cor-esmeralda); border-bottom:1px solid #f0f0f0; font-weight:600; font-size:14px;">
+                        📂 ${escapeHTML(cat.charAt(0).toUpperCase() + cat.slice(1))}
                     </a>
                 `;
             });
@@ -303,11 +301,11 @@ async function mostrarSugestoes(termo, container) {
                 const preco = prod.preco || '';
                 const imgSrc = prod.imagens && prod.imagens[0] ? prod.imagens[0] : '';
                 html += `
-                    <a href="detalhe.html?id=${prod.id}" style="display:flex; align-items:center; gap:10px; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #f0f0f0; transition:0.2s;">
-                        <img src="${imgSrc}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#f0f0f0;" onerror="this.style.display='none';" />
+                    <a href="detalhe.html?id=${encodeURIComponent(prod.id)}" style="display:flex; align-items:center; gap:10px; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #f0f0f0; transition:0.2s;">
+                        <img src="${escapeHTML(urlSegura(imgSrc, IMAGEM_FALLBACK))}" alt="" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#f0f0f0;" onerror="this.style.display='none';" />
                         <div style="flex:1; min-width:0;">
-                            <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${prod.nome}</div>
-                            <div style="font-size:12px; color:var(--cor-esmeralda); font-weight:700;">${preco}</div>
+                            <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(prod.nome)}</div>
+                            <div style="font-size:12px; color:var(--cor-esmeralda); font-weight:700;">${escapeHTML(preco)}</div>
                         </div>
                     </a>
                 `;

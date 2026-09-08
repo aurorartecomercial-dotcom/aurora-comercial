@@ -1,7 +1,7 @@
 import { auth, db } from './config.js';
 import { collection, getDocs, query, where, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { mostrarToast } from './utils.js';
+import { mostrarToast, escapeHTML, urlSegura, IMAGEM_FALLBACK } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
@@ -32,21 +32,37 @@ async function carregarPedidos(uid) {
         }
         container.innerHTML = '';
         // Ordenar por data decrescente (se tiver campo criadoEm)
+        const paraMillis = (valor) => {
+            if (valor?.toMillis) return valor.toMillis();
+            const data = valor ? new Date(valor) : null;
+            return data && !Number.isNaN(data.getTime()) ? data.getTime() : 0;
+        };
         const pedidos = snapshot.docs.map(doc => doc.data()).sort((a, b) => {
-            return (b.criadoEm || 0) - (a.criadoEm || 0);
+            return paraMillis(b.criadoEm) - paraMillis(a.criadoEm);
         });
         pedidos.forEach(venda => {
-            const statusClass = venda.status === 'entregue' ? 'status-entregue' : venda.status === 'enviado' ? 'status-enviado' : 'status-confirmado';
-            const statusText = venda.status === 'entregue' ? '🟢 Entregue' : venda.status === 'enviado' ? '🔵 Enviado' : '🟡 Confirmado';
+            const statusInfo = {
+                aguardando_pagamento: ['status-pendente', '⏳ Aguardando pagamento'],
+                pago: ['status-confirmado', '🟢 Pagamento confirmado'],
+                em_preparacao: ['status-confirmado', '📦 Em preparação'],
+                enviado: ['status-enviado', '🔵 Enviado'],
+                entregue: ['status-entregue', '🟢 Entregue'],
+                cancelado: ['status-cancelado', '❌ Cancelado']
+            }[venda.status] || ['status-confirmado', '🟡 Estado atualizado'];
 
             const pedido = document.createElement('div');
             pedido.className = 'pedido-item';
-            pedido.innerHTML = `
-                <strong>${venda.codigoRastreio || 'Sem código'}</strong>
-                <small>${venda.dataHora || 'Data não disponível'} | ${venda.produtosResumo || ''}</small>
-                <small style="color:#25D366; font-weight:700;">${(venda.valorTotal || 0).toLocaleString('pt-AO')} Kz</small>
-                <span class="status ${statusClass}">${statusText}</span>
-            `;
+            const codigo = document.createElement('strong');
+            codigo.textContent = venda.codigoRastreio || 'Sem código';
+            const detalhe = document.createElement('small');
+            detalhe.textContent = `${venda.dataHora || 'Data não disponível'} | ${venda.produtosResumo || ''}`;
+            const total = document.createElement('small');
+            total.style.cssText = 'color:#25D366; font-weight:700;';
+            total.textContent = `${Number(venda.valorTotal || 0).toLocaleString('pt-AO')} Kz`;
+            const status = document.createElement('span');
+            status.className = `status ${statusInfo[0]}`;
+            status.textContent = statusInfo[1];
+            pedido.append(codigo, detalhe, total, status);
             container.appendChild(pedido);
         });
     } catch (e) {
@@ -72,11 +88,18 @@ async function carregarFavoritos() {
                 const prod = docSnap.data();
                 const item = document.createElement('div');
                 item.className = 'favorito-item';
-                item.innerHTML = `
-                    <img src="${prod.imagens[0]}" alt="${prod.nome}" onerror="this.src='https://via.placeholder.com/50'">
-                    <a href="detalhe.html?id=${prod.id}">${prod.nome}</a>
-                    <button onclick="removerFavorito('${prod.id}')">🗑️</button>
-                `;
+                const img = document.createElement('img');
+                img.src = urlSegura(prod.imagens?.[0], IMAGEM_FALLBACK);
+                img.alt = String(prod.nome || 'Produto');
+                img.addEventListener('error', () => { img.src = IMAGEM_FALLBACK; }, { once: true });
+                const link = document.createElement('a');
+                link.href = `detalhe.html?id=${encodeURIComponent(prod.id || id)}`;
+                link.textContent = String(prod.nome || 'Produto');
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = '🗑️';
+                button.addEventListener('click', () => window.removerFavorito(prod.id || id));
+                item.append(img, link, button);
                 container.appendChild(item);
             }
         } catch (e) {
@@ -121,11 +144,15 @@ async function carregarCupons(uid) {
             const cupom = doc.data();
             const item = document.createElement('div');
             item.className = 'pedido-item';
-            item.innerHTML = `
-                <strong style="color:var(--cor-ouro-escuro);">🎟️ ${cupom.codigo}</strong>
-                <small>${cupom.percentual}% de desconto</small>
-                <small style="color:var(--cor-esmeralda); font-weight:700;">Até ${cupom.validade || 'nunca'}</small>
-            `;
+            const codigo = document.createElement('strong');
+            codigo.style.color = 'var(--cor-ouro-escuro)';
+            codigo.textContent = `🎟️ ${cupom.codigo || ''}`;
+            const desconto = document.createElement('small');
+            desconto.textContent = `${Number(cupom.percentual || 0)}% de desconto`;
+            const validade = document.createElement('small');
+            validade.style.cssText = 'color:var(--cor-esmeralda); font-weight:700;';
+            validade.textContent = `Até ${cupom.validade || 'nunca'}`;
+            item.append(codigo, desconto, validade);
             container.appendChild(item);
         });
     } catch (e) {

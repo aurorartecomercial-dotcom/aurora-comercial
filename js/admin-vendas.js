@@ -2,7 +2,7 @@ import { auth, db, functions } from './config.js';
 import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getIdTokenResult, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
-import { extrairValorNumerico } from './utils.js';
+import { extrairValorNumerico, escapeHTML } from './utils.js';
 import { exportarBackupCompleto } from './fase4.js'; // ✅ Fase 4
 
 if (!document.getElementById('loginVendas') || !document.getElementById('conteudoVendas')) {
@@ -791,8 +791,8 @@ function renderizarDiario() {
             const div = document.createElement('div');
             div.style.cssText = 'border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; background:#f9f9f9;';
             div.innerHTML = `
-                <strong>${v.dataHora}</strong> - ${v.nomeCliente}<br>
-                ${v.produtosResumo}<br>
+                <strong>${escapeHTML(v.dataHora || '')}</strong> - ${escapeHTML(v.nomeCliente || '')}<br>
+                ${escapeHTML(v.produtosResumo || '')}<br>
                 <span style="color:#25D366; font-weight:bold;">${(v.valorTotal||0).toLocaleString('pt-AO')} Kz</span> |
                 <span style="color:#005A4C;">Lucro: ${lucroVenda.toLocaleString('pt-AO')} Kz (${margemVenda.toFixed(1)}%)</span> |
                 <span style="color:${v.status==='entregue'?'#27ae60':'#E74C3C'};">${v.status==='entregue'?'✅ Entregue':'⚠️ Pendente'}</span>
@@ -980,7 +980,7 @@ function renderizarProdutos() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding:8px; font-weight:600;">${idCurto}</td>
-            <td style="padding:8px;">${prod.nome}</td>
+            <td style="padding:8px;">${escapeHTML(prod.nome || '')}</td>
             <td style="padding:8px; text-align:center;">${info.qtd}</td>
             <td style="padding:8px; text-align:right;">${receita.toLocaleString('pt-AO')}</td>
             <td style="padding:8px; text-align:right;">${custo.toLocaleString('pt-AO')}</td>
@@ -1015,8 +1015,8 @@ function renderizarContabilidade() {
         const lucroVenda = calcularLucroVenda(v);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="padding:8px;">${v.dataHora}</td>
-            <td style="padding:8px;">${v.nomeCliente}</td>
+            <td style="padding:8px;">${escapeHTML(v.dataHora || '')}</td>
+            <td style="padding:8px;">${escapeHTML(v.nomeCliente || '')}</td>
             <td style="padding:8px; font-size:11px;">${v.produtosResumo || ''}</td>
             <td style="padding:8px; text-align:right;">${(v.valorTotal||0).toLocaleString('pt-AO')}</td>
             <td style="padding:8px; text-align:right;">${calcularCustoDaVenda(v).toLocaleString('pt-AO')}</td>
@@ -1059,13 +1059,13 @@ function renderizarPedidos() {
         const bg = status === 'aguardando_pagamento' ? 'background:#fff3e0;' : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="padding:8px;">${v.dataHora || 'N/A'}</td>
-            <td style="padding:8px; font-weight:600;">${v.nomeCliente || 'N/A'}</td>
-            <td style="padding:8px;">${v.telefoneCliente || 'N/A'}</td>
-            <td style="padding:8px;">${v.nifCliente || 'N/A'}</td>
-            <td style="padding:8px; font-size:11px;">${v.moradaCliente || 'N/A'}</td>
-            <td style="padding:8px;">${v.bairro || 'N/A'}</td>
-            <td style="padding:8px; font-size:11px;">${v.produtosResumo || 'N/A'}</td>
+            <td style="padding:8px;">${escapeHTML(v.dataHora || 'N/A')}</td>
+            <td style="padding:8px; font-weight:600;">${escapeHTML(v.nomeCliente || 'N/A')}</td>
+            <td style="padding:8px;">${escapeHTML(v.telefoneCliente || 'N/A')}</td>
+            <td style="padding:8px;">${escapeHTML(v.nifCliente || 'N/A')}</td>
+            <td style="padding:8px; font-size:11px;">${escapeHTML(v.moradaCliente || 'N/A')}</td>
+            <td style="padding:8px;">${escapeHTML(v.bairro || 'N/A')}</td>
+            <td style="padding:8px; font-size:11px;">${escapeHTML(v.produtosResumo || 'N/A')}</td>
             <td style="padding:8px; text-align:right;">${(v.subtotal || (v.valorTotal - (v.frete||0))).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; text-align:right; color:#007185;">${(v.frete || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
@@ -1075,8 +1075,8 @@ function renderizarPedidos() {
                 </span>
             </td>
             <td style="padding:8px; display:flex; gap:4px; flex-wrap:wrap;">
-                ${estado.proximo ? `<button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', '${estado.proximo}')" style="background:${estado.cor}; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">${estado.acao}</button>` : ''}
-                <button onclick="window.imprimirFatura('${v.codigoRastreio || ''}')" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️</button>
+                ${estado.proximo ? `<button onclick="window.atualizarStatus(decodeURIComponent('${encodeURIComponent(v.codigoRastreio || '')}'), '${estado.proximo}')" style="background:${estado.cor}; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">${estado.acao}</button>` : ''}
+                <button onclick="window.imprimirFatura(decodeURIComponent('${encodeURIComponent(v.codigoRastreio || '')}'))" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️</button>
             </td>
         `;
         tbody.appendChild(tr);

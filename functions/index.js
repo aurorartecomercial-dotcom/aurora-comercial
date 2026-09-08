@@ -201,7 +201,6 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
       const cupom = cupomSnapshot.data();
       descontoCentavos = Math.round(subtotalCentavos * (Number(cupom.percentual) / 100));
       cupomAplicado = { codigo: codigoCupom, percentual: Number(cupom.percentual) };
-      transaction.update(cupomRef.ref, { usos: FieldValue.increment(1), atualizadoEm: agora });
     } else if (codigoCupom) {
       erro('failed-precondition', 'Cupom inválido.');
     }
@@ -229,7 +228,9 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
       valorTotal: moeda(totalCentavos),
       cupomAplicado,
       criadoEm: agora,
-      atualizadoEm: agora
+      atualizadoEm: agora,
+      dataHora: agora.toDate().toLocaleString('pt-AO', { timeZone: 'Africa/Luanda' }),
+      expiraEm: Timestamp.fromMillis(agora.toMillis() + 2 * 60 * 60 * 1000)
     };
 
     transaction.create(pedidoRef, venda);
@@ -296,6 +297,10 @@ exports.atualizarEstadoPedido = onCall({ region: 'us-central1' }, async (request
     }
 
     if (atual !== 'pago' && novoStatus === 'pago') {
+      const expiraEm = pedido.expiraEm?.toDate ? pedido.expiraEm.toDate() : null;
+      if (expiraEm && expiraEm.getTime() < Date.now()) {
+        erro('failed-precondition', 'Este pedido expirou. Crie um novo pedido para continuar.');
+      }
       const refs = (pedido.itens || []).map((item) => db.collection('produtos').doc(item.produtoId));
       const produtos = await transaction.getAll(...refs);
       produtos.forEach((produtoSnapshot, index) => {
@@ -307,6 +312,17 @@ exports.atualizarEstadoPedido = onCall({ region: 'us-central1' }, async (request
         }
         transaction.update(produtoSnapshot.ref, { estoque: estoque - item.quantidade, atualizadoEm: Timestamp.now() });
       });
+
+      // O cupom só é consumido quando o pagamento é efetivamente confirmado.
+      if (pedido.cupomAplicado?.codigo) {
+        const cupomRef = await buscarCupom(pedido.cupomAplicado.codigo);
+        if (!cupomRef) erro('failed-precondition', 'O cupom do pedido não está mais disponível.');
+        const cupomSnapshot = await transaction.get(cupomRef.ref);
+        if (!cupomSnapshot.exists || !podeUsarCupom(cupomSnapshot.data(), pedido.uidCliente, Timestamp.now().toDate())) {
+          erro('failed-precondition', 'O cupom do pedido expirou ou atingiu o limite de uso.');
+        }
+        transaction.update(cupomRef.ref, { usos: FieldValue.increment(1), atualizadoEm: Timestamp.now() });
+      }
 
       const pontos = Math.floor(Number(pedido.valorTotal || 0) / 1000);
       if (pontos > 0 && pedido.uidCliente) {
@@ -321,6 +337,12 @@ exports.atualizarEstadoPedido = onCall({ region: 'us-central1' }, async (request
           })
         }, { merge: true });
       }
+    }
+
+    // Cancelamento após pagamento exigiria estorno e reposição de estoque.
+    // Para evitar inconsistências, o painel só pode cancelar pedidos ainda pendentes.
+    if (novoStatus === 'cancelado' && atual !== 'aguardando_pagamento') {
+      erro('failed-precondition', 'Um pedido pago/em preparação não pode ser cancelado por este fluxo. Faça o estorno e a reposição por um processo específico.');
     }
 
     const agora = Timestamp.now();

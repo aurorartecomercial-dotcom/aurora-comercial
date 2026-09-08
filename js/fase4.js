@@ -5,30 +5,10 @@ import { db, CONFIG } from './config.js';
 import { collection, getDocs, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { mostrarToast } from './utils.js';
 
-// --- 1. PAGAMENTO COM CARTÃO (Stripe) ---
-const STRIPE_PUBLIC_KEY = 'pk_test_...'; // Substituir pela tua chave
-
-export async function iniciarPagamentoCartao(valor, referencia, email) {
-    try {
-        const resposta = await fetch('https://api.stripe.com/v1/payment_intents', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': `Bearer ${STRIPE_PUBLIC_KEY}`
-            },
-            body: new URLSearchParams({
-                amount: Math.round(valor * 100),
-                currency: 'aoa',
-                description: `Pedido ${referencia}`,
-                receipt_email: email
-            })
-        });
-        const dados = await resposta.json();
-        return dados;
-    } catch (e) {
-        console.error('Erro no Stripe:', e);
-        throw e;
-    }
+// --- 1. PAGAMENTO COM CARTÃO ---
+// Pagamentos são processados exclusivamente por Cloud Functions.
+export async function iniciarPagamentoCartao() {
+    throw new Error('Use o fluxo de pagamento do checkout; credenciais de pagamento não ficam no navegador.');
 }
 
 // --- 2. TRANSPORTADORAS ---
