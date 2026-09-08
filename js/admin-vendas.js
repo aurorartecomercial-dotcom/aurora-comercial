@@ -115,8 +115,27 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarAnual();
     });
     document.getElementById('filtroGlobalPedidos')?.addEventListener('input', () => renderizarPedidos());
-    document.getElementById('filtroPedidoCliente')?.addEventListener('input', () => renderizarPedidos());
+    document.getElementById('filtroPedidoCliente')?.addEventListener('change', () => renderizarPedidos());
     document.getElementById('filtroStatus')?.addEventListener('change', () => renderizarPedidos());
+    document.getElementById('btnLimparFiltrosPedidos')?.addEventListener('click', () => {
+        const busca = document.getElementById('filtroGlobalPedidos');
+        const cliente = document.getElementById('filtroPedidoCliente');
+        const status = document.getElementById('filtroStatus');
+        if (busca) busca.value = '';
+        if (cliente) cliente.value = '';
+        if (status) status.value = 'todos';
+        document.querySelectorAll('.fluxo-chip').forEach((b) => b.classList.toggle('ativo', b.dataset.fluxo === 'todos'));
+        renderizarPedidos();
+    });
+    document.querySelectorAll('.fluxo-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const status = btn.dataset.fluxo || 'todos';
+            const select = document.getElementById('filtroStatus');
+            if (select) select.value = status;
+            document.querySelectorAll('.fluxo-chip').forEach((b) => b.classList.toggle('ativo', b === btn));
+            renderizarPedidos();
+        });
+    });
     document.getElementById('btnFiltrarPendentes')?.addEventListener('click', () => {
         document.getElementById('filtroStatus').value = 'aguardando_pagamento';
         renderizarPedidos();
@@ -1080,63 +1099,165 @@ function renderizarContabilidade() {
     renderizarGraficoTopLucro();
 }
 
-function renderizarPedidos() {
-    const clienteFiltro = document.getElementById('filtroPedidoCliente').value.trim().toLowerCase();
-    const globalFiltro = document.getElementById('filtroGlobalPedidos')?.value.trim().toLowerCase() || '';
-    const statusFiltro = document.getElementById('filtroStatus').value;
+function normalizarStatusPedido(status) {
+    return String(status || 'aguardando_pagamento').trim().toLowerCase();
+}
 
-    let vendas = todasVendas;
-    if (clienteFiltro) vendas = vendas.filter(v => (v.nomeCliente || '').toLowerCase().includes(clienteFiltro));
-    if (globalFiltro) {
-        vendas = vendas.filter(v => `${v.nomeCliente || ''} ${v.telefoneCliente || ''} ${v.codigoRastreio || ''} ${v.numeroFatura || ''}`.toLowerCase().includes(globalFiltro));
+const ESTADOS_PEDIDO_UI = {
+    aguardando_pagamento: { texto: 'Aguardando pagamento', icone: '🟠', cor: '#e67e22', proximo: 'pago', acao: 'Confirmar pagamento' },
+    pago: { texto: 'Pagamento confirmado', icone: '🟡', cor: '#c89b16', proximo: 'em_preparacao', acao: 'Enviar para preparação' },
+    em_preparacao: { texto: 'Em preparação', icone: '🔵', cor: '#3498db', proximo: 'enviado', acao: 'Marcar como enviado' },
+    enviado: { texto: 'Em entrega', icone: '🚚', cor: '#2878b8', proximo: 'entregue', acao: 'Marcar como entregue' },
+    entregue: { texto: 'Concluído', icone: '🟢', cor: '#27ae60' },
+    cancelado: { texto: 'Cancelado', icone: '❌', cor: '#e74c3c' }
+};
+
+function formatarMoedaPedido(valor) {
+    return `${Number(valor || 0).toLocaleString('pt-AO')} Kz`;
+}
+
+function textoProdutosPedido(venda) {
+    if (Array.isArray(venda.itens) && venda.itens.length) {
+        return venda.itens.slice(0, 3).map((item) => `${item.nome || 'Produto'} × ${item.quantidade || 1}`).join(' · ') + (venda.itens.length > 3 ? ` · +${venda.itens.length - 3}` : '');
     }
-    if (statusFiltro !== 'todos') vendas = vendas.filter(v => v.status === statusFiltro);
+    return venda.produtosResumo || 'Produtos não informados';
+}
 
-    const tbody = document.getElementById('corpoTabelaPedidos');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+function atualizarFiltroClientesPedidos() {
+    const select = document.getElementById('filtroPedidoCliente');
+    if (!select) return;
+    const atual = select.value;
+    const clientes = [...new Set(todasVendas.map(v => String(v.nomeCliente || '').trim()).filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b, 'pt'));
+    select.innerHTML = '<option value="">Todos os clientes</option>' + clientes.map(nome => `<option value="${escapeHTML(nome)}">${escapeHTML(nome)}</option>`).join('');
+    if (clientes.includes(atual)) select.value = atual;
+}
+
+function contarStatus(status) {
+    return todasVendas.filter(v => normalizarStatusPedido(v.status) === status).length;
+}
+
+function atualizarFluxoPedidos() {
+    const ids = {
+        fluxoTodos: todasVendas.length,
+        fluxoPagamento: contarStatus('aguardando_pagamento'),
+        fluxoPago: contarStatus('pago'),
+        fluxoPreparacao: contarStatus('em_preparacao'),
+        fluxoEnviado: contarStatus('enviado'),
+        fluxoEntregue: contarStatus('entregue')
+    };
+    Object.entries(ids).forEach(([id, value]) => setText(id, value));
+}
+
+function renderizarPedidos() {
+    atualizarFiltroClientesPedidos();
+    atualizarFluxoPedidos();
+
+    const clienteFiltro = document.getElementById('filtroPedidoCliente')?.value.trim().toLowerCase() || '';
+    const globalFiltro = document.getElementById('filtroGlobalPedidos')?.value.trim().toLowerCase() || '';
+    const statusFiltro = document.getElementById('filtroStatus')?.value || 'todos';
+
+    let vendas = [...todasVendas];
+    if (clienteFiltro) vendas = vendas.filter(v => String(v.nomeCliente || '').toLowerCase() === clienteFiltro);
+    if (globalFiltro) {
+        vendas = vendas.filter(v => {
+            const texto = [v.nomeCliente, v.telefoneCliente, v.codigoRastreio, v.numeroFatura, v.bairro, v.nifCliente, v.moradaCliente, v.produtosResumo]
+                .map(x => String(x || '')).join(' ').toLowerCase();
+            return texto.includes(globalFiltro);
+        });
+    }
+    if (statusFiltro !== 'todos') vendas = vendas.filter(v => normalizarStatusPedido(v.status) === statusFiltro);
+
     vendas.sort((a,b) => {
-        const da = parseDataHora(a.dataHora);
-        const db = parseDataHora(b.dataHora);
+        const da = parseDataHora(a.dataHora), db = parseDataHora(b.dataHora);
         return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
     });
-    vendas.forEach(v => {
-        const status = v.status || 'aguardando_pagamento';
-        const estados = {
-            aguardando_pagamento: { texto: '⏳ Aguardando pagamento', cor: '#E67E22', proximo: 'pago', acao: '✅ Confirmar pagamento' },
-            pago: { texto: '✅ Pago', cor: '#27ae60', proximo: 'em_preparacao', acao: '📦 Preparar' },
-            em_preparacao: { texto: '📦 Em preparação', cor: '#8E44AD', proximo: 'enviado', acao: '🚚 Enviar' },
-            enviado: { texto: '🔵 Enviado', cor: '#3498db', proximo: 'entregue', acao: '📦 Entregar' },
-            entregue: { texto: '🟢 Entregue', cor: '#27ae60' },
-            cancelado: { texto: '❌ Cancelado', cor: '#E74C3C' }
-        };
-        const estado = estados[status] || estados.aguardando_pagamento;
-        const bg = status === 'aguardando_pagamento' ? 'background:#fff3e0;' : '';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="padding:8px;">${escapeHTML(v.dataHora || 'N/A')}</td>
-            <td style="padding:8px; font-weight:600;">${escapeHTML(v.nomeCliente || 'N/A')}</td>
-            <td style="padding:8px;">${escapeHTML(v.telefoneCliente || 'N/A')}</td>
-            <td style="padding:8px;">${escapeHTML(v.nifCliente || 'N/A')}</td>
-            <td style="padding:8px; font-size:11px;">${escapeHTML(v.moradaCliente || 'N/A')}</td>
-            <td style="padding:8px;">${escapeHTML(v.bairro || 'N/A')}</td>
-            <td style="padding:8px; font-size:11px;">${escapeHTML(v.produtosResumo || 'N/A')}</td>
-            <td style="padding:8px; text-align:right;">${(v.subtotal || (v.valorTotal - (v.frete||0))).toLocaleString('pt-AO')} Kz</td>
-            <td style="padding:8px; text-align:right; color:#007185;">${(v.frete || 0).toLocaleString('pt-AO')} Kz</td>
-            <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
-            <td style="padding:8px; ${bg}">
-                <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; background:${estado.cor}; color:#FFF;">
-                    ${estado.texto}
-                </span>
-            </td>
-            <td style="padding:8px; display:flex; gap:4px; flex-wrap:wrap;">
-                ${estado.proximo ? `<button onclick="window.atualizarStatus(decodeURIComponent('${encodeURIComponent(v.codigoRastreio || '')}'), '${estado.proximo}')" style="background:${estado.cor}; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">${estado.acao}</button>` : ''}
-                <button onclick="window.imprimirFatura(decodeURIComponent('${encodeURIComponent(v.codigoRastreio || '')}'))" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️</button>
-            </td>
+
+    setText('pedidosVisiveis', vendas.length);
+    setText('pedidosAcaoAgora', vendas.filter(v => ['aguardando_pagamento','pago','em_preparacao','enviado'].includes(normalizarStatusPedido(v.status))).length);
+
+    const container = document.getElementById('painelPedidosCards');
+    const empty = document.getElementById('pedidosSemResultado');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!vendas.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    vendas.forEach(venda => {
+        const status = normalizarStatusPedido(venda.status);
+        const estado = ESTADOS_PEDIDO_UI[status] || ESTADOS_PEDIDO_UI.aguardando_pagamento;
+        const urgente = ['aguardando_pagamento','pago'].includes(status);
+        const rastreio = venda.codigoRastreio || '';
+        const subtotal = venda.subtotal ?? ((venda.valorTotal || 0) - (venda.frete || 0));
+        const card = document.createElement('article');
+        card.className = `pedido-card-pro${urgente ? ' urgente' : ''}`;
+        card.innerHTML = `
+            <div class="pedido-top-pro">
+                <div>
+                    <div class="pedido-ref-pro">${escapeHTML(venda.numeroFatura || rastreio || 'Pedido sem referência')}</div>
+                    <div class="pedido-cliente-pro">${escapeHTML(venda.nomeCliente || 'Cliente não identificado')}</div>
+                </div>
+                <div class="pedido-total-pro">${formatarMoedaPedido(venda.valorTotal)}</div>
+            </div>
+            <div class="pedido-meta-pro">
+                <span class="pedido-pill-pro">🕐 ${escapeHTML(venda.dataHora || 'Sem data')}</span>
+                <span class="pedido-pill-pro">📞 ${escapeHTML(venda.telefoneCliente || 'Sem telefone')}</span>
+                <span class="pedido-pill-pro">📍 ${escapeHTML(venda.bairro || 'Sem bairro')}</span>
+            </div>
+            <div class="pedido-status-pro" style="background:${estado.cor}12;border:1px solid ${estado.cor}33;">
+                <strong style="color:${estado.cor}">${estado.icone} ${estado.texto}</strong>
+                <span class="pedido-next-pro">${estado.proximo ? `Próximo: ${escapeHTML(estado.acao)}` : 'Fluxo concluído'}</span>
+            </div>
+            <div class="pedido-produtos-pro">🛍️ ${escapeHTML(textoProdutosPedido(venda))}<br><span>Subtotal ${formatarMoedaPedido(subtotal)} · Frete ${formatarMoedaPedido(venda.frete)}</span></div>
+            <div class="pedido-actions-pro">
+                ${estado.proximo ? `<button class="btn-principal-pedido" style="background:${estado.cor}" data-pedido-acao="status" data-codigo="${escapeHTML(rastreio)}" data-novo-status="${estado.proximo}">${escapeHTML(estado.acao)}</button>` : '<button class="btn-principal-pedido" style="background:#6b7774" disabled>Pedido concluído</button>'}
+                <button class="btn-detalhes-pedido" type="button" data-pedido-acao="detalhes" data-codigo="${escapeHTML(rastreio)}">Ver detalhes</button>
+            </div>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(card);
     });
 }
+
+function abrirDetalhesPedido(codigoRastreio) {
+    const venda = todasVendas.find(v => String(v.codigoRastreio || '') === String(codigoRastreio || ''));
+    if (!venda) return alert('Pedido não encontrado.');
+    const status = normalizarStatusPedido(venda.status);
+    const estado = ESTADOS_PEDIDO_UI[status] || ESTADOS_PEDIDO_UI.aguardando_pagamento;
+    const etapas = ['aguardando_pagamento','pago','em_preparacao','enviado','entregue'];
+    const pos = etapas.indexOf(status);
+    const itens = Array.isArray(venda.itens) ? venda.itens : [];
+    const backdrop = document.createElement('div');
+    backdrop.className = 'pedido-modal-backdrop';
+    backdrop.innerHTML = `<aside class="pedido-drawer-pro" role="dialog" aria-modal="true" aria-label="Detalhes do pedido">
+        <div class="pedido-drawer-head"><div><div class="pedido-ref-pro">${escapeHTML(venda.numeroFatura || venda.codigoRastreio || '')}</div><h2>${escapeHTML(venda.nomeCliente || 'Cliente')}</h2></div><button class="pedido-fechar" type="button" aria-label="Fechar">×</button></div>
+        <div class="pedido-status-pro" style="margin-top:15px;background:${estado.cor}12;border:1px solid ${estado.cor}33"><strong style="color:${estado.cor}">${estado.icone} ${estado.texto}</strong><span class="pedido-next-pro">${formatarMoedaPedido(venda.valorTotal)}</span></div>
+        <div class="pedido-timeline">${etapas.map((etapa,i)=>{const e=ESTADOS_PEDIDO_UI[etapa];const cls=i<pos?'done':(i===pos?'current':'');return `<div class="timeline-step ${cls}"><span class="timeline-dot"></span><span>${e.icone} ${e.texto}</span></div>`}).join('')}</div>
+        <div class="pedido-linha-detalhe"><small>Contacto</small><strong>${escapeHTML(venda.telefoneCliente || 'Não informado')}</strong></div>
+        <div class="pedido-linha-detalhe"><small>NIF</small><strong>${escapeHTML(venda.nifCliente || 'Não informado')}</strong></div>
+        <div class="pedido-linha-detalhe"><small>Entrega</small><strong>${escapeHTML(venda.moradaCliente || 'Não informado')} · ${escapeHTML(venda.bairro || '')}</strong></div>
+        <div class="pedido-linha-detalhe"><small>Produtos</small><strong>${escapeHTML(itens.length ? itens.map(i=>`${i.nome || 'Produto'} × ${i.quantidade || 1}`).join(' · ') : (venda.produtosResumo || 'Não informado'))}</strong></div>
+        <div class="pedido-linha-detalhe"><small>Valores</small><strong>Subtotal ${formatarMoedaPedido(venda.subtotal ?? ((venda.valorTotal||0)-(venda.frete||0)))} · Frete ${formatarMoedaPedido(venda.frete)} · Total ${formatarMoedaPedido(venda.valorTotal)}</strong></div>
+        <div class="pedido-drawer-actions">
+            ${estado.proximo ? `<button class="btn-principal-pedido" style="background:${estado.cor}" data-pedido-acao="status" data-codigo="${escapeHTML(venda.codigoRastreio || '')}" data-novo-status="${estado.proximo}">${escapeHTML(estado.acao)}</button>` : ''}
+            <button class="btn-detalhes-pedido" type="button" data-pedido-acao="imprimir" data-codigo="${escapeHTML(venda.codigoRastreio || '')}">🖨️ Imprimir fatura</button>
+        </div>
+    </aside>`;
+    backdrop.addEventListener('click', e => { if (e.target === backdrop || e.target.closest('.pedido-fechar')) backdrop.remove(); });
+    document.body.appendChild(backdrop);
+}
+
+document.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-pedido-acao]');
+    if (!btn) return;
+    const acao = btn.dataset.pedidoAcao;
+    const codigo = btn.dataset.codigo || '';
+    if (acao === 'detalhes') abrirDetalhesPedido(codigo);
+    if (acao === 'imprimir') window.imprimirFatura(codigo);
+    if (acao === 'status') window.atualizarStatus(codigo, btn.dataset.novoStatus || '');
+});
 
 function configurarExportacoes() {
     const botoes = ['Dashboard', 'Diario', 'Semanal', 'Mensal', 'Anual', 'Produtos', 'Contabilidade', 'Pedidos'];
@@ -1329,12 +1450,14 @@ function exportarExcel(tipo) {
 
 window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
-    if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
+    const estado = ESTADOS_PEDIDO_UI[novoStatus];
+    if(!estado) return alert('Próximo estado inválido.');
+    if(!confirm(`Confirmar: ${estado.icone} ${estado.acao}?`)) return;
     try {
         const atualizar = httpsCallable(functions, 'atualizarEstadoPedido');
         await atualizar({ codigoRastreio, status: novoStatus });
-        alert('Status atualizado!');
-        location.reload();
+        alert('Status atualizado com sucesso!');
+        await carregarDados();
     } catch(e) { alert('Erro: ' + e.message); }
 };
 
