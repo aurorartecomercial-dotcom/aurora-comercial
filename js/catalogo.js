@@ -114,7 +114,7 @@ export function criarCardProduto(produto) {
   avaliacao.style.cssText = 'margin-top:6px;font-size:13px;min-height:18px;';
   info.append(avaliacao);
 
-  const acoes = elemento('div');
+  const acoes = elemento('div', null, 'acoes-produto');
   acoes.style.cssText = 'margin-top:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;';
   const adicionar = elemento('button', '🛒 Adicionar', 'btn-add-carrinho-card');
   adicionar.type = 'button';
