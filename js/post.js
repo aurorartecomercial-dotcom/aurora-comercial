@@ -1,27 +1,50 @@
+import { htmlEditorialSeguro, IMAGEM_FALLBACK, urlSegura } from './utils.js';
+
 async function carregarPost() {
-    const params = new URLSearchParams(window.location.search);
-    const id = parseInt(params.get('id'));
-    if (!id) return;
+  const container = document.getElementById('postConteudo');
+  const id = Number.parseInt(new URLSearchParams(window.location.search).get('id'), 10);
+  if (!Number.isInteger(id)) return mostrarErro(container);
+  try {
+    const response = await fetch('blog.json', { credentials: 'same-origin' });
+    if (!response.ok) throw new Error('Blog indisponível');
+    const posts = await response.json();
+    const post = posts.find((item) => Number(item.id) === id);
+    if (!post) throw new Error('Artigo não encontrado');
+    document.getElementById('postTituloBreadcrumb').textContent = String(post.titulo || 'Artigo');
+    renderizarPost(container, post);
+  } catch (_) {
+    mostrarErro(container);
+  }
+}
 
-    try {
-        const res = await fetch('blog.json');
-        const posts = await res.json();
-        const post = posts.find(p => p.id === id);
-        if (!post) throw new Error('Post não encontrado');
+function renderizarPost(container, post) {
+  container.replaceChildren();
+  const artigo = document.createElement('article');
+  artigo.style.cssText = 'background:#fff;padding:24px;border-radius:16px;box-shadow:var(--sombra-card);';
+  const titulo = document.createElement('h1');
+  titulo.textContent = String(post.titulo || 'Artigo');
+  titulo.style.color = 'var(--cor-esmeralda)';
+  const data = document.createElement('p');
+  data.textContent = String(post.data || '');
+  data.style.cssText = 'color:#888;font-size:14px;margin-bottom:10px;';
+  const imagem = document.createElement('img');
+  imagem.src = urlSegura(post.imagem, IMAGEM_FALLBACK);
+  imagem.alt = String(post.titulo || 'Artigo');
+  imagem.style.cssText = 'width:100%;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:16px;';
+  imagem.addEventListener('error', () => { imagem.src = IMAGEM_FALLBACK; }, { once: true });
+  const conteudo = document.createElement('div');
+  conteudo.style.cssText = 'line-height:1.8;font-size:16px;color:#444;';
+  conteudo.innerHTML = htmlEditorialSeguro(post.conteudo);
+  const voltar = document.createElement('a');
+  voltar.href = 'blog.html';
+  voltar.textContent = '← Voltar ao Blog';
+  voltar.style.cssText = 'display:inline-block;margin-top:20px;color:var(--cor-esmeralda);font-weight:600;';
+  artigo.append(titulo, data, imagem, conteudo, voltar);
+  container.append(artigo);
+}
 
-        document.getElementById('postTituloBreadcrumb').textContent = post.titulo;
-        document.getElementById('postConteudo').innerHTML = `
-            <div style="background:#fff; padding:24px; border-radius:16px; box-shadow:var(--sombra-card);">
-                <h1 style="color:var(--cor-esmeralda);">${post.titulo}</h1>
-                <p style="color:#888; font-size:14px; margin-bottom:10px;">${post.data}</p>
-                <img src="${post.imagem}" alt="${post.titulo}" style="width:100%; max-height:400px; object-fit:cover; border-radius:12px; margin-bottom:16px;" />
-                <div style="line-height:1.8; font-size:16px; color:#444;">${post.conteudo}</div>
-                <a href="blog.html" style="display:inline-block; margin-top:20px; color:var(--cor-esmeralda); font-weight:600;">← Voltar ao Blog</a>
-            </div>
-        `;
-    } catch (e) {
-        document.getElementById('postConteudo').innerHTML = '<p style="text-align:center; color:#999;">Artigo não encontrado.</p>';
-    }
+function mostrarErro(container) {
+  container.textContent = 'Artigo não encontrado.';
 }
 
 document.addEventListener('DOMContentLoaded', carregarPost);

@@ -1,6 +1,7 @@
-import { auth, db } from './config.js';
-import { collection, getDocs, updateDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { auth, db, functions } from './config.js';
+import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getIdTokenResult, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 import { extrairValorNumerico } from './utils.js';
 import { exportarBackupCompleto } from './fase4.js'; // ✅ Fase 4
 
@@ -57,7 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLogin.addEventListener('click', async () => {
         try {
-            await signInWithEmailAndPassword(auth, emailInput.value, senhaInput.value);
+            const credencial = await signInWithEmailAndPassword(auth, emailInput.value.trim(), senhaInput.value);
+            const token = await getIdTokenResult(credencial.user, true);
+            if (token.claims.admin !== true) {
+                await signOut(auth);
+                throw new Error('Esta conta não possui acesso administrativo.');
+            }
             loginDiv.style.display = 'none';
             conteudoDiv.style.display = 'block';
             carregarDados();
@@ -1040,9 +1046,17 @@ function renderizarPedidos() {
         return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
     });
     vendas.forEach(v => {
-        const status = v.status || 'confirmado';
-        const isPendente = status === 'confirmado';
-        const bg = isPendente ? 'background:#ffe0e0;' : '';
+        const status = v.status || 'aguardando_pagamento';
+        const estados = {
+            aguardando_pagamento: { texto: '⏳ Aguardando pagamento', cor: '#E67E22', proximo: 'pago', acao: '✅ Confirmar pagamento' },
+            pago: { texto: '✅ Pago', cor: '#27ae60', proximo: 'em_preparacao', acao: '📦 Preparar' },
+            em_preparacao: { texto: '📦 Em preparação', cor: '#8E44AD', proximo: 'enviado', acao: '🚚 Enviar' },
+            enviado: { texto: '🔵 Enviado', cor: '#3498db', proximo: 'entregue', acao: '📦 Entregar' },
+            entregue: { texto: '🟢 Entregue', cor: '#27ae60' },
+            cancelado: { texto: '❌ Cancelado', cor: '#E74C3C' }
+        };
+        const estado = estados[status] || estados.aguardando_pagamento;
+        const bg = status === 'aguardando_pagamento' ? 'background:#fff3e0;' : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding:8px;">${v.dataHora || 'N/A'}</td>
@@ -1056,13 +1070,12 @@ function renderizarPedidos() {
             <td style="padding:8px; text-align:right; color:#007185;">${(v.frete || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; color:#25D366; font-weight:bold;">${(v.valorTotal || 0).toLocaleString('pt-AO')} Kz</td>
             <td style="padding:8px; ${bg}">
-                <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; ${isPendente?'background:#E74C3C; color:#FFF;':status==='enviado'?'background:#3498db; color:#FFF;':'background:#27ae60; color:#FFF;'}">
-                    ${isPendente?'⚠️ Pendente':status==='enviado'?'🔵 Enviado':'🟢 Entregue'}
+                <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; background:${estado.cor}; color:#FFF;">
+                    ${estado.texto}
                 </span>
             </td>
             <td style="padding:8px; display:flex; gap:4px; flex-wrap:wrap;">
-                ${!isPendente ? `<button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'enviado')" style="background:#3498db; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🚚 Enviar</button>` : ''}
-                <button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', 'entregue')" style="background:#27ae60; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">📦 Entregar</button>
+                ${estado.proximo ? `<button onclick="window.atualizarStatus('${v.codigoRastreio || ''}', '${estado.proximo}')" style="background:${estado.cor}; color:#fff; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">${estado.acao}</button>` : ''}
                 <button onclick="window.imprimirFatura('${v.codigoRastreio || ''}')" style="background:#D4AF37; color:#000; border:none; padding:4px 8px; border-radius:12px; font-size:11px; cursor:pointer;">🖨️</button>
             </td>
         `;
@@ -1263,16 +1276,10 @@ window.atualizarStatus = async function(codigoRastreio, novoStatus) {
     if(!codigoRastreio) return alert('Este pedido não tem código de rastreio.');
     if(!confirm(`Marcar ${codigoRastreio} como "${novoStatus === 'enviado' ? 'Enviado' : 'Entregue'}"?`)) return;
     try {
-        const q = query(collection(db, 'vendas'), where('codigoRastreio', '==', codigoRastreio));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-            const docRef = snapshot.docs[0].ref;
-            await updateDoc(docRef, { status: novoStatus });
-            alert('Status atualizado!');
-            location.reload();
-        } else {
-            alert('Pedido não encontrado.');
-        }
+        const atualizar = httpsCallable(functions, 'atualizarEstadoPedido');
+        await atualizar({ codigoRastreio, status: novoStatus });
+        alert('Status atualizado!');
+        location.reload();
     } catch(e) { alert('Erro: ' + e.message); }
 };
 

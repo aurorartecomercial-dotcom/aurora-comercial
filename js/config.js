@@ -4,6 +4,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getStorage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDhXoAdNf7eAT0GqrpNSHDN1x_Hd5JvzH4",
@@ -18,10 +20,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
+export const functions = getFunctions(app, 'us-central1');
 
 // ⚠️ NÃO ESQUEÇA DE EXPORTAR O CONFIG!
 export const CONFIG = {
     CACHE_KEY: 'aurora_catalogo_cache',
     CACHE_TTL: 30 * 60 * 1000, // 30 minutos (reduzido de 1h)
-    NUMERO_WHATSAPP: '244933677628'
+    NUMERO_WHATSAPP: '244933677628',
+    FUNCTIONS_REGION: 'us-central1'
 };

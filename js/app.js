@@ -1,7 +1,7 @@
 import { initCarrinho, adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo, filtrarEOrdenar, renderizarGrade, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
-import { debounce, mostrarToast } from './utils.js';
+import { debounce, extrairValorNumerico, mostrarToast } from './utils.js';
 import { initFidelidade } from './fidelidade.js';
 import { initFavoritos } from './favoritos.js';
 import { initRecomendacoes, initAfiliados, initI18n, initChatbot } from './fase3.js';
@@ -146,12 +146,9 @@ document.addEventListener('click', function(e) {
     if (btnAdd) {
         e.preventDefault();
         e.stopPropagation();
-        const nome = btnAdd.dataset.nome;
-        const preco = btnAdd.dataset.preco;
-        const estoque = parseInt(btnAdd.dataset.estoque) || 0;
-        const precoNum = btnAdd.dataset.precoNum ? parseFloat(btnAdd.dataset.precoNum) : extrairValorNumerico(preco);
-        if (precoNum > 0) {
-            adicionarProdutoCarrinho(nome, preco, estoque);
+        const produto = catalogo.find((item) => String(item.id) === String(btnAdd.dataset.produtoId));
+        if (produto && extrairValorNumerico(produto.preco) > 0) {
+            adicionarProdutoCarrinho(produto);
         } else {
             mostrarToast('Erro ao adicionar produto.', 'info');
         }

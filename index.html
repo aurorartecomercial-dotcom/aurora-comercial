@@ -464,8 +464,8 @@
     <!-- MODAL DE PAGAMENTO MULTICAIXA -->
     <div id="modalPagamento" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:#fff; max-width:450px; width:100%; padding:30px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center; position:relative;">
-            <h2 style="color:var(--cor-esmeralda); margin-bottom:8px;">💳 Pagamento Multicaixa</h2>
-            <p style="color:#666; font-size:14px;">Transfira o valor usando os dados abaixo:</p>
+            <h2 style="color:var(--cor-esmeralda); margin-bottom:8px;">💳 Pagamento pendente</h2>
+            <p style="color:#666; font-size:14px;">Use a referência abaixo e envie o comprovativo para validação.</p>
             
             <div style="background:#f4f4f4; padding:16px; border-radius:12px; margin:16px 0; text-align:left; border:1px dashed var(--cor-ouro);">
                 <p style="margin:4px 0; font-size:13px;"><strong>Banco:</strong> BAI / Standard Bank</p>
@@ -477,17 +477,17 @@
                 <p style="margin:4px 0; font-size:13px;"><strong>Referência:</strong> <span id="pagRef" style="background:#222; color:#fff; padding:2px 8px; border-radius:4px; font-family:monospace;">PAY-2026-0000</span></p>
             </div>
 
-            <div style="margin:10px 0;">
+            <div style="margin:10px 0; display:none;">
                 <img id="pagQR" src="" alt="QR Code para pagamento" style="width:140px; height:140px; border:1px solid #ddd; border-radius:8px; padding:4px;" />
                 <p style="font-size:11px; color:#888;">Escaneie pelo aplicativo do seu banco</p>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
                 <button id="btnCopiarRef" style="background:#D4AF37; color:#000; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">📋 Copiar Referência</button>
-                <button id="btnConfirmarPagamento" style="background:#25D366; color:#fff; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">✅ Já paguei, enviar pedido</button>
-                <button id="btnFecharPagamento" style="background:transparent; color:#999; border:none; cursor:pointer; font-size:13px;">Cancelar pedido</button>
+                <button id="btnConfirmarPagamento" style="background:#25D366; color:#fff; border:none; padding:12px; border-radius:40px; font-weight:700; cursor:pointer;">📤 Enviar comprovativo por WhatsApp</button>
+                <button id="btnFecharPagamento" style="background:transparent; color:#999; border:none; cursor:pointer; font-size:13px;">Fechar</button>
             </div>
-            <small style="display:block; margin-top:10px; color:#999; font-size:11px;">O pedido só será processado após a confirmação do pagamento via WhatsApp.</small>
+            <small style="display:block; margin-top:10px; color:#999; font-size:11px;">O pedido só será processado após a confirmação do pagamento pela Aurora.</small>
         </div>
     </div>
 

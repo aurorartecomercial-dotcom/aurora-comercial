@@ -1,16 +1,16 @@
-import { auth, db } from './config.js';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
+import { auth, db, storage } from './config.js';
+import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getIdTokenResult, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDownloadURL, ref, uploadBytes } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { escapeHTML, extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK, urlSegura } from './utils.js';
 
 let produtos = [];
 let editandoId = null;
-
-// ⚠️ Substitua pela SUA chave do ImgBB (https://api.imgbb.com)
-const IMGBB_API_KEY = 'b85a8d73cde5cf0bf399fffbdcb53a69';
+let adminInicializado = false;
 
 // ✅ FALLBACK PARA NAVEGADORES ANTIGOS
 function gerarId() {
+    if (crypto.randomUUID) return crypto.randomUUID();
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
         const v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -28,20 +28,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLogin.addEventListener('click', async () => {
         try {
-            await signInWithEmailAndPassword(auth, emailInput.value, senhaInput.value);
-            loginDiv.style.display = 'none';
-            conteudoAdmin.style.display = 'block';
-            iniciarAdmin();
+            const credencial = await signInWithEmailAndPassword(auth, emailInput.value.trim(), senhaInput.value);
+            await abrirComoAdmin(credencial.user, loginDiv, conteudoAdmin, erroLogin);
         } catch (error) {
             erroLogin.style.display = 'block';
-            erroLogin.textContent = 'Credenciais inválidas';
+            erroLogin.textContent = error.message || 'Credenciais inválidas';
         }
     });
 
     senhaInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') btnLogin.click();
     });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) abrirComoAdmin(user, loginDiv, conteudoAdmin, erroLogin).catch(() => {});
+    });
 });
+
+async function abrirComoAdmin(user, loginDiv, conteudoAdmin, erroLogin) {
+    const token = await getIdTokenResult(user, true);
+    if (token.claims.admin !== true) {
+        await signOut(auth);
+        erroLogin.style.display = 'block';
+        erroLogin.textContent = 'Esta conta não possui acesso administrativo.';
+        return;
+    }
+    loginDiv.style.display = 'none';
+    conteudoAdmin.style.display = 'block';
+    if (!adminInicializado) {
+        adminInicializado = true;
+        iniciarAdmin();
+    }
+}
 
 function iniciarAdmin() {
     const form = document.getElementById('formProduto');
@@ -73,44 +91,19 @@ function iniciarAdmin() {
     const imgUploadInput = document.getElementById('imgUpload');
     const uploadProgress = document.getElementById('uploadProgress');
 
-    // Função de upload para ImgBB
-    async function uploadParaImgBB(file) {
+    // Upload autenticado: a regra do Storage aceita apenas administradores.
+    async function uploadParaStorage(file) {
         const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!tiposPermitidos.includes(file.type)) {
             throw new Error(`Formato não suportado: ${file.type}. Use JPG, PNG, GIF ou WEBP.`);
         }
-        if (file.size > 32 * 1024 * 1024) {
-            throw new Error(`Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo 32MB.`);
+        if (file.size > 5 * 1024 * 1024) {
+            throw new Error(`Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo 5MB.`);
         }
-
-        const formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', file);
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
-
-        try {
-            const res = await fetch('https://api.imgbb.com/1/upload', {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(`Erro ${res.status}: ${errData.error?.message || 'Falha no upload'}`);
-            }
-            const data = await res.json();
-            return data.data.display_url || data.data.url;
-        } catch (e) {
-            clearTimeout(timeout);
-            if (e.name === 'AbortError') {
-                throw new Error('Tempo esgotado. Verifique sua conexão ou tente novamente.');
-            }
-            throw e;
-        }
+        const nomeSeguro = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const arquivo = ref(storage, `produtos/${Date.now()}_${gerarId()}_${nomeSeguro}`);
+        await uploadBytes(arquivo, file, { contentType: file.type });
+        return getDownloadURL(arquivo);
     }
 
     btnUploadImg.addEventListener('click', async () => {
@@ -131,7 +124,7 @@ function iniciarAdmin() {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             try {
-                const url = await uploadParaImgBB(file);
+                const url = await uploadParaStorage(file);
                 imagensAtuais.push(url);
                 sucesso++;
                 uploadProgress.textContent = `${sucesso}/${files.length} enviadas`;
@@ -144,7 +137,7 @@ function iniciarAdmin() {
         imagens.value = imagensAtuais.join(', ');
         atualizarPreview(imagens.value);
         btnUploadImg.disabled = false;
-        btnUploadImg.textContent = '⬆ Enviar para ImgBB';
+        btnUploadImg.textContent = '⬆ Enviar para Firebase Storage';
         uploadProgress.textContent = `✅ ${sucesso} imagens adicionadas!`;
 
         if (erros.length > 0) {
@@ -158,7 +151,7 @@ function iniciarAdmin() {
     async function carregarProdutos() {
         try {
             const snapshot = await getDocs(collection(db, 'produtos'));
-            produtos = snapshot.docs.map(doc => doc.data());
+            produtos = snapshot.docs.map(snapshotDoc => ({ ...snapshotDoc.data(), _firestoreId: snapshotDoc.id }));
             renderizarLista();
         } catch (e) {
             console.error('Erro ao carregar produtos:', e);
@@ -185,21 +178,28 @@ function iniciarAdmin() {
             htmlLista = ordenados.map(prod => `
                 <div class="produto-item" data-id="${prod.id}">
                     <div>
-                        <span>${prod.nome}</span>
+                        <span>${escapeHTML(prod.nome)}</span>
                         <small style="color:#888; display:block;">
-                            ${prod.categoria} | ${prod.preco} | Custo: ${prod.custo || 'N/A'}
-                            ${prod.estoque !== undefined ? `| Estoque: ${prod.estoque}` : ''}
+                            ${escapeHTML(prod.categoria)} | ${escapeHTML(prod.preco)} | Custo: ${escapeHTML(prod.custo || 'N/A')}
+                            ${prod.estoque !== undefined ? `| Estoque: ${escapeHTML(prod.estoque)}` : ''}
                         </small>
                     </div>
                     <div class="acoes">
-                        <button class="btn-admin" onclick="window.editarProduto('${prod.id}')">✏️ Editar</button>
-                        <button class="btn-admin btn-admin-excluir" onclick="window.excluirProduto('${prod.id}')">🗑️ Excluir</button>
+                        <button class="btn-admin" data-editar="${escapeHTML(prod._firestoreId)}">✏️ Editar</button>
+                        <button class="btn-admin btn-admin-excluir" data-excluir="${escapeHTML(prod._firestoreId)}">🗑️ Excluir</button>
                     </div>
                 </div>
             `).join('');
         }
         listaDiv.innerHTML = htmlLista;
     }
+
+    listaDiv.addEventListener('click', (event) => {
+        const editar = event.target.closest('[data-editar]');
+        const excluir = event.target.closest('[data-excluir]');
+        if (editar) window.editarProduto(editar.dataset.editar);
+        if (excluir) window.excluirProduto(excluir.dataset.excluir);
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -235,7 +235,9 @@ function iniciarAdmin() {
                 await updateDoc(doc(db, 'produtos', editandoId), novoProduto);
                 mostrarMensagem('Produto atualizado!', 'sucesso');
             } else {
-                await addDoc(collection(db, 'produtos'), novoProduto);
+                // O ID do documento e o ID público do produto são iguais, para que
+                // a Cloud Function possa validar o carrinho em uma transação.
+                await setDoc(doc(db, 'produtos', novoProduto.id), novoProduto);
                 mostrarMensagem('Produto adicionado!', 'sucesso');
             }
             resetForm();
@@ -247,9 +249,9 @@ function iniciarAdmin() {
     });
 
     window.editarProduto = function(id) {
-        const prod = produtos.find(p => p.id === id);
+        const prod = produtos.find(p => p._firestoreId === id);
         if (!prod) return;
-        editandoId = prod.id;
+        editandoId = prod._firestoreId;
         prodId.value = prod.id;
         nome.value = prod.nome;
         categoria.value = prod.categoria;
@@ -277,7 +279,7 @@ function iniciarAdmin() {
         if (!confirm('Tem certeza que deseja excluir este produto?')) return;
         try {
             await deleteDoc(doc(db, 'produtos', id));
-            produtos = produtos.filter(p => p.id !== id);
+            produtos = produtos.filter(p => p._firestoreId !== id);
             if (editandoId === id) resetForm();
             renderizarLista();
             mostrarMensagem('Produto excluído.', 'sucesso');

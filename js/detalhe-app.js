@@ -2,7 +2,7 @@ import { adicionarProdutoCarrinho } from './carrinho.js';
 import { carregarCatalogo } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
-import { atualizarMetaTags, mostrarToast, IMAGEM_FALLBACK } from './utils.js';
+import { atualizarMetaTags, escapeHTML, mostrarToast, IMAGEM_FALLBACK, urlSegura } from './utils.js';
 import { registrarVista } from './fase3.js'; // ✅ Importação da Fase 3
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -66,26 +66,28 @@ function renderizarDetalhes(prod) {
     const catLink = document.getElementById('breadcrumbCat');
     const prodName = document.getElementById('breadcrumbProd');
     if (catLink) {
-        catLink.textContent = prod.categoria.charAt(0).toUpperCase() + prod.categoria.slice(1);
-        catLink.href = `index.html#?cat=${prod.categoria}`;
+        const categoria = String(prod.categoria || '');
+        catLink.textContent = categoria ? categoria.charAt(0).toUpperCase() + categoria.slice(1) : 'Produtos';
+        catLink.href = `categoria.html?cat=${encodeURIComponent(categoria)}`;
     }
     if (prodName) prodName.textContent = prod.nome;
 
-    const imagemPrincipal = (prod.imagens && prod.imagens.length > 0) ? prod.imagens[0] : IMAGEM_FALLBACK;
-    const miniaturasImagens = (prod.imagens && prod.imagens.length > 0) ? prod.imagens : [IMAGEM_FALLBACK];
+    const imagemPrincipal = urlSegura(prod.imagens?.[0], IMAGEM_FALLBACK);
+    const miniaturasImagens = Array.isArray(prod.imagens) && prod.imagens.length ? prod.imagens : [IMAGEM_FALLBACK];
 
     let miniaturasHtml = miniaturasImagens.map((src, i) =>
-        `<img src="${src}" alt="Miniatura ${i+1}" data-index="${i}" 
+        `<img src="${escapeHTML(urlSegura(src, IMAGEM_FALLBACK))}" alt="Miniatura ${i+1}" data-index="${i}" 
               class="${i === 0 ? 'ativa' : ''}" 
               loading="lazy"
               onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">`
     ).join('');
 
     let videoHtml = '';
-    if (prod.video) {
+    const videoUrl = urlSegura(prod.video);
+    if (videoUrl && /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com)\/embed\//.test(videoUrl)) {
         videoHtml = `
             <div class="video-container">
-                <iframe src="${prod.video}" frameborder="0" allowfullscreen loading="lazy"></iframe>
+                <iframe src="${escapeHTML(videoUrl)}" title="Vídeo do produto" frameborder="0" allowfullscreen loading="lazy"></iframe>
             </div>
         `;
     }
@@ -93,22 +95,22 @@ function renderizarDetalhes(prod) {
     container.innerHTML = `
         <div class="detalhes-layout">
             <div class="detalhes-imagem-principal">
-                <img id="detalhesImg" src="${imagemPrincipal}" alt="${prod.nome}" 
+                <img id="detalhesImg" src="${escapeHTML(imagemPrincipal)}" alt="${escapeHTML(prod.nome)}" 
                      onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
                 <div class="detalhes-miniaturas" id="miniaturas">${miniaturasHtml}</div>
                 ${videoHtml}
             </div>
             <div class="detalhes-info">
-                <span class="categoria-tag">${prod.tag || prod.categoria}</span>
-                <h2>${prod.nome}</h2>
+                <span class="categoria-tag">${escapeHTML(prod.tag || prod.categoria)}</span>
+                <h2>${escapeHTML(prod.nome)}</h2>
                 <div class="detalhes-precos">
-                    ${prod.precoAntigo ? `<span class="preco-antigo">${prod.precoAntigo}</span>` : ''}
-                    <span class="preco-destaque">${prod.preco}</span>
-                    ${prod.desconto ? `<span class="desconto-badge">${prod.desconto} OFF</span>` : ''}
+                    ${prod.precoAntigo ? `<span class="preco-antigo">${escapeHTML(prod.precoAntigo)}</span>` : ''}
+                    <span class="preco-destaque">${escapeHTML(prod.preco)}</span>
+                    ${prod.desconto ? `<span class="desconto-badge">${escapeHTML(prod.desconto)} OFF</span>` : ''}
                 </div>
-                ${prod.parcelas ? `<div class="parcelas">${prod.parcelas}</div>` : ''}
+                ${prod.parcelas ? `<div class="parcelas">${escapeHTML(prod.parcelas)}</div>` : ''}
                 ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
-                <div class="descricao">${prod.descricao || 'Descrição não disponível.'}</div>
+                <div class="descricao">${escapeHTML(prod.descricao || 'Descrição não disponível.')}</div>
                 
                 <div class="avaliacao" id="avaliacaoContainer">
                     <span>⭐ Carregando avaliações...</span>
@@ -130,7 +132,7 @@ function renderizarDetalhes(prod) {
     });
 
     document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
-        adicionarProdutoCarrinho(prod.nome, prod.preco, prod.estoque);
+        adicionarProdutoCarrinho(prod);
     });
 
     document.getElementById('btnPartilharDetalhe').addEventListener('click', function() {

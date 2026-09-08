@@ -5,6 +5,55 @@
 // Constante de imagem placeholder (fallback universal)
 export const IMAGEM_FALLBACK = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5TZW0gSW1hZ2VtPC90ZXh0Pjwvc3ZnPg==';
 
+// Use somente para texto que inevitavelmente precisa entrar em um template HTML.
+// Para elementos novos, prefira sempre `element.textContent`.
+export function escapeHTML(valor) {
+    return String(valor ?? '').replace(/[&<>'"]/g, (caractere) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    })[caractere]);
+}
+
+export function urlSegura(valor, fallback = '') {
+    if (!valor || typeof valor !== 'string') return fallback;
+    try {
+        const url = new URL(valor, window.location.origin);
+        if (url.protocol === 'https:' || url.protocol === 'http:') return url.href;
+        if (url.protocol === 'data:' && valor.startsWith('data:image/')) return valor;
+    } catch (_) {
+        // URL inválida: retornar o fallback sem expor uma URL executável.
+    }
+    return fallback;
+}
+
+// Sanitizador pequeno para o conteúdo editorial local. Não use para conteúdo
+// livre enviado por utilizadores sem uma política de sanitização no servidor.
+export function htmlEditorialSeguro(valor) {
+    const permitidas = new Set(['P', 'H2', 'H3', 'H4', 'STRONG', 'EM', 'B', 'I', 'BR', 'UL', 'OL', 'LI', 'A']);
+    const template = document.createElement('template');
+    template.innerHTML = String(valor ?? '');
+    [...template.content.querySelectorAll('*')].forEach((node) => {
+        if (!permitidas.has(node.tagName)) {
+            node.replaceWith(document.createTextNode(node.textContent || ''));
+            return;
+        }
+        const hrefOriginal = node.tagName === 'A' ? node.getAttribute('href') : null;
+        [...node.attributes].forEach((attribute) => node.removeAttribute(attribute.name));
+        if (node.tagName === 'A') {
+            const href = urlSegura(hrefOriginal);
+            if (href) {
+                node.href = href;
+                node.target = '_blank';
+                node.rel = 'noopener noreferrer';
+            } else node.replaceWith(document.createTextNode(node.textContent || ''));
+        }
+    });
+    return template.innerHTML;
+}
+
 /**
  * Extrai valor numérico de um preço formatado.
  * Suporta formatos:
