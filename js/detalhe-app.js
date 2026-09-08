@@ -1,67 +1,65 @@
 import { adicionarProdutoCarrinho } from './carrinho.js';
-import { carregarCatalogo } from './catalogo.js';
+import { carregarCatalogo, criarCardProduto } from './catalogo.js';
 import { initMobileMenu } from './menu.js';
 import { adicionarAvaliacao, obterAvaliacao } from './avaliacoes.js';
 import { atualizarMetaTags, escapeHTML, mostrarToast, IMAGEM_FALLBACK, urlSegura } from './utils.js';
-import { registrarVista } from './fase3.js'; // ✅ Importação da Fase 3
+import { registrarVista } from './fase3.js';
+
+let catalogoAtual = [];
+let produtoAtual = null;
+let quantidadeSelecionada = 1;
+
+const normalizar = (valor) => String(valor || '').trim().toLocaleLowerCase();
+
+function precoNumero(produto) {
+    const valor = String(produto?.preco || '').replace(/[^0-9,.-]/g, '').replace(/\./g, '').replace(',', '.');
+    const numero = Number.parseFloat(valor);
+    return Number.isFinite(numero) ? numero : 0;
+}
+
+function escaparAtributo(valor) {
+    return escapeHTML(String(valor || '')).replace(/`/g, '&#96;');
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     initMobileMenu();
-
     const params = new URLSearchParams(window.location.search);
     const idProduto = params.get('id');
-    
-    if (!idProduto) {
-        mostrarErro('Nenhum ID de produto foi informado.');
-        return;
-    }
 
-    let catalogo = [];
-    const cachedStr = localStorage.getItem('aurora_catalogo_cache');
-    if (cachedStr) {
-        try {
-            const cache = JSON.parse(cachedStr);
-            if (cache.data && cache.data.length > 0) catalogo = cache.data;
-        } catch (e) {}
-    }
+    if (!idProduto) return mostrarErro('Nenhum ID de produto foi informado.');
 
-    if (catalogo.length === 0) {
-        catalogo = await carregarCatalogo();
-    }
+    try {
+        const cache = JSON.parse(localStorage.getItem('aurora_catalogo_cache') || 'null');
+        if (Array.isArray(cache?.data) && cache.data.length) catalogoAtual = cache.data;
+    } catch (_) {}
 
-    if (!catalogo || catalogo.length === 0) {
-        mostrarErro('Erro ao carregar catálogo.');
-        return;
-    }
+    if (!catalogoAtual.length) catalogoAtual = await carregarCatalogo();
+    if (!catalogoAtual.length) return mostrarErro('Erro ao carregar catálogo.');
 
-    const prod = catalogo.find(p => String(p.id) === String(idProduto));
+    produtoAtual = catalogoAtual.find(p => String(p.id) === String(idProduto));
+    if (!produtoAtual) return mostrarErro('Produto não encontrado.');
 
-    if (!prod) {
-        mostrarErro('Produto não encontrado.');
-        return;
-    }
-
-    renderizarDetalhes(prod);
-    atualizarMetaTags(prod.nome, prod.descricao || 'Detalhes do produto', prod.imagens[0] || '');
-    
-    // ✅ Registar vista para recomendações (Fase 3)
-    registrarVista(prod);
-    
-    carregarAvaliacaoAsync(prod.id);
+    renderizarDetalhes(produtoAtual);
+    renderizarRecomendacoes(produtoAtual);
+    atualizarMetaTags(produtoAtual.nome, produtoAtual.descricao || 'Detalhes do produto', produtoAtual.imagens?.[0] || '');
+    registrarVista(produtoAtual);
+    carregarAvaliacaoAsync(produtoAtual.id);
 });
 
 function mostrarErro(mensagem) {
-    document.getElementById('detalhesConteudo').innerHTML = `
+    const container = document.getElementById('detalhesConteudo');
+    if (!container) return;
+    container.innerHTML = `
         <div class="erro-msg">
             <h2>⚠️ Ops!</h2>
-            <p>${mensagem}</p>
-            <p style="margin-top:20px;"><a href="index.html" style="color:#007185; font-weight:600;">Voltar para a loja</a></p>
-        </div>
-    `;
+            <p>${escapeHTML(mensagem)}</p>
+            <p style="margin-top:20px;"><a href="index.html" style="color:var(--cor-esmeralda);font-weight:700;">Voltar para a loja</a></p>
+        </div>`;
 }
 
 function renderizarDetalhes(prod) {
     const container = document.getElementById('detalhesConteudo');
+    if (!container) return;
 
     const catLink = document.getElementById('breadcrumbCat');
     const prodName = document.getElementById('breadcrumbProd');
@@ -70,113 +68,182 @@ function renderizarDetalhes(prod) {
         catLink.textContent = categoria ? categoria.charAt(0).toUpperCase() + categoria.slice(1) : 'Produtos';
         catLink.href = `categoria.html?cat=${encodeURIComponent(categoria)}`;
     }
-    if (prodName) prodName.textContent = prod.nome;
+    if (prodName) prodName.textContent = prod.nome || 'Produto';
 
-    const imagemPrincipal = urlSegura(prod.imagens?.[0], IMAGEM_FALLBACK);
-    const miniaturasImagens = Array.isArray(prod.imagens) && prod.imagens.length ? prod.imagens : [IMAGEM_FALLBACK];
-
-    let miniaturasHtml = miniaturasImagens.map((src, i) =>
-        `<img src="${escapeHTML(urlSegura(src, IMAGEM_FALLBACK))}" alt="Miniatura ${i+1}" data-index="${i}" 
-              class="${i === 0 ? 'ativa' : ''}" 
-              loading="lazy"
-              onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';">`
-    ).join('');
-
-    let videoHtml = '';
+    const imagens = Array.isArray(prod.imagens) && prod.imagens.length ? prod.imagens : [IMAGEM_FALLBACK];
+    const principal = urlSegura(imagens[0], IMAGEM_FALLBACK);
+    const stock = Number(prod.estoque);
+    const stockConhecido = Number.isFinite(stock);
+    const esgotado = stockConhecido && stock <= 0;
+    const descricao = prod.descricao || 'Descrição não disponível.';
     const videoUrl = urlSegura(prod.video);
-    if (videoUrl && /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com)\/embed\//.test(videoUrl)) {
-        videoHtml = `
-            <div class="video-container">
-                <iframe src="${escapeHTML(videoUrl)}" title="Vídeo do produto" frameborder="0" allowfullscreen loading="lazy"></iframe>
-            </div>
-        `;
-    }
+    const videoHtml = videoUrl && /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com)\/embed\//.test(videoUrl)
+        ? `<div class="video-container"><iframe src="${escaparAtributo(videoUrl)}" title="Vídeo do produto" frameborder="0" allowfullscreen loading="lazy"></iframe></div>` : '';
+
+    quantidadeSelecionada = 1;
+
+    const miniaturasHtml = imagens.map((src, i) => `
+        <button type="button" class="miniatura-produto ${i === 0 ? 'ativa' : ''}" data-index="${i}" aria-label="Ver imagem ${i + 1}">
+            <img src="${escaparAtributo(urlSegura(src, IMAGEM_FALLBACK))}" alt="${escaparAtributo(prod.nome)} - imagem ${i + 1}" loading="lazy" onerror="this.onerror=null;this.src='${IMAGEM_FALLBACK}';">
+        </button>`).join('');
 
     container.innerHTML = `
         <div class="detalhes-layout">
             <div class="detalhes-imagem-principal">
-                <img id="detalhesImg" src="${escapeHTML(imagemPrincipal)}" alt="${escapeHTML(prod.nome)}" 
-                     onerror="this.onerror=null; this.src='${IMAGEM_FALLBACK}';" />
+                <div class="detalhes-imagem-wrap">
+                    <img id="detalhesImg" src="${escaparAtributo(principal)}" alt="${escaparAtributo(prod.nome)}" onerror="this.onerror=null;this.src='${IMAGEM_FALLBACK}';">
+                </div>
                 <div class="detalhes-miniaturas" id="miniaturas">${miniaturasHtml}</div>
                 ${videoHtml}
             </div>
+
             <div class="detalhes-info">
-                <span class="categoria-tag">${escapeHTML(prod.tag || prod.categoria)}</span>
-                <h2>${escapeHTML(prod.nome)}</h2>
+                <span class="categoria-tag">${escaparAtributo(prod.tag || prod.categoria || 'Produto')}</span>
+                <h2>${escaparAtributo(prod.nome || 'Produto')}</h2>
                 <div class="detalhes-precos">
-                    ${prod.precoAntigo ? `<span class="preco-antigo">${escapeHTML(prod.precoAntigo)}</span>` : ''}
-                    <span class="preco-destaque">${escapeHTML(prod.preco)}</span>
-                    ${prod.desconto ? `<span class="desconto-badge">${escapeHTML(prod.desconto)} OFF</span>` : ''}
+                    ${prod.precoAntigo ? `<span class="preco-antigo">${escaparAtributo(prod.precoAntigo)}</span>` : ''}
+                    <span class="preco-destaque">${escaparAtributo(prod.preco || '')}</span>
+                    ${prod.desconto ? `<span class="desconto-badge">${escaparAtributo(prod.desconto)} OFF</span>` : ''}
                 </div>
-                ${prod.parcelas ? `<div class="parcelas">${escapeHTML(prod.parcelas)}</div>` : ''}
-                ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
-                <div class="descricao">${escapeHTML(prod.descricao || 'Descrição não disponível.')}</div>
-                
-                <div class="avaliacao" id="avaliacaoContainer">
-                    <span>⭐ Carregando avaliações...</span>
+                <div id="avaliacaoContainer" class="avaliacao detalhe-avaliacao"><span>⭐ Carregando avaliações...</span></div>
+
+                <div class="detalhe-compra-box">
+                    ${prod.parcelas ? `<div class="parcelas">${escaparAtributo(prod.parcelas)}</div>` : ''}
+                    ${prod.freteGratis ? `<div class="frete-gratis">🚚 Frete grátis</div>` : ''}
+                    ${stockConhecido ? `<div class="detalhe-stock ${esgotado ? 'esgotado' : ''}">${esgotado ? '🚫 Produto esgotado' : `✓ ${stock} unidade${stock === 1 ? '' : 's'} disponível${stock === 1 ? '' : 'is'}`}</div>` : '<div class="detalhe-stock">✓ Disponibilidade confirmada no carrinho</div>'}
+                    <div class="detalhe-quantidade" aria-label="Quantidade">
+                        <span class="quantidade-label">Quantidade</span>
+                        <div class="quantidade-controle">
+                            <button type="button" id="diminuirQtd" aria-label="Diminuir quantidade">−</button>
+                            <span id="quantidadeProduto">1</span>
+                            <button type="button" id="aumentarQtd" aria-label="Aumentar quantidade">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-comprar-grande" id="btnComprarDetalhe" ${esgotado ? 'disabled' : ''}>🛒 Comprar Agora</button>
+                    <button class="btn-adicionar-detalhe" id="btnAdicionarDetalhe" ${esgotado ? 'disabled' : ''}>Adicionar à sacola</button>
+                    <button class="btn-partilhar-detalhe" id="btnPartilharDetalhe">↗ Partilhar produto</button>
                 </div>
-                <button class="btn-comprar-grande" id="btnComprarDetalhe">🛒 Comprar Agora</button>
-                <button class="btn-partilhar-detalhe" id="btnPartilharDetalhe">📤 Partilhar</button>
+
+                <div class="detalhe-beneficios">
+                    <div class="detalhe-beneficio">🔒<br><strong>Compra segura</strong></div>
+                    <div class="detalhe-beneficio">🚚<br><strong>Entrega em Angola</strong></div>
+                    <div class="detalhe-beneficio">💬<br><strong>Suporte Aurora</strong></div>
+                </div>
             </div>
+        </div>
+
+        <div class="detalhe-secoes">
+            <section class="detalhe-bloco">
+                <h3>Descrição do produto</h3>
+                <p class="descricao">${escapeHTML(descricao).replace(/\n/g, '<br>')}</p>
+            </section>
+            ${renderizarCaracteristicas(prod)}
         </div>
     `;
 
-    const miniaturas = document.querySelectorAll('#miniaturas img');
-    const imgPrincipal = document.getElementById('detalhesImg');
-    miniaturas.forEach(img => {
-        img.addEventListener('click', function() {
-            miniaturas.forEach(m => m.classList.remove('ativa'));
-            this.classList.add('ativa');
-            imgPrincipal.src = this.src;
+    configurarGaleria(imagens, prod.nome);
+    document.getElementById('diminuirQtd')?.addEventListener('click', () => alterarQuantidade(-1));
+    document.getElementById('aumentarQtd')?.addEventListener('click', () => alterarQuantidade(1));
+    document.getElementById('btnAdicionarDetalhe')?.addEventListener('click', () => adicionarQuantidadeAoCarrinho(prod));
+    document.getElementById('btnComprarDetalhe')?.addEventListener('click', () => {
+        adicionarQuantidadeAoCarrinho(prod);
+        setTimeout(() => document.getElementById('abrirCarrinhoFlutuante')?.click(), 80);
+    });
+    document.getElementById('btnPartilharDetalhe')?.addEventListener('click', () => partilharProduto(prod));
+}
+
+function renderizarCaracteristicas(prod) {
+    const candidatos = [prod.especificacoes, prod.caracteristicas, prod.detalhes];
+    const fonte = candidatos.find(v => v && typeof v === 'object' && !Array.isArray(v));
+    if (!fonte) return '';
+    const entradas = Object.entries(fonte).filter(([_, valor]) => valor !== null && valor !== undefined && String(valor).trim());
+    if (!entradas.length) return '';
+    return `<section class="detalhe-bloco"><h3>Características</h3><div class="detalhe-caracteristicas">${entradas.map(([chave, valor]) => `<div class="detalhe-caracteristica"><strong>${escapeHTML(chave)}:</strong> ${escapeHTML(valor)}</div>`).join('')}</div></section>`;
+}
+
+function configurarGaleria(imagens, nome) {
+    const principal = document.getElementById('detalhesImg');
+    document.querySelectorAll('#miniaturas .miniatura-produto').forEach((botao) => {
+        botao.addEventListener('click', () => {
+            const index = Number(botao.dataset.index);
+            const src = urlSegura(imagens[index], IMAGEM_FALLBACK);
+            if (principal) principal.src = src;
+            document.querySelectorAll('#miniaturas .miniatura-produto').forEach(b => b.classList.remove('ativa'));
+            botao.classList.add('ativa');
         });
     });
+}
 
-    document.getElementById('btnComprarDetalhe').addEventListener('click', function() {
-        adicionarProdutoCarrinho(prod);
-    });
+function alterarQuantidade(delta) {
+    const stock = Number(produtoAtual?.estoque);
+    const max = Number.isFinite(stock) && stock > 0 ? stock : 99;
+    quantidadeSelecionada = Math.min(max, Math.max(1, quantidadeSelecionada + delta));
+    const alvo = document.getElementById('quantidadeProduto');
+    if (alvo) alvo.textContent = String(quantidadeSelecionada);
+}
 
-    document.getElementById('btnPartilharDetalhe').addEventListener('click', function() {
-        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-        const link = `${baseUrl}/detalhe.html?id=${prod.id}`;
-        const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${prod.nome}*\n💰 Preço: ${prod.preco}\n🔗 Confira aqui: ${link}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+function adicionarQuantidadeAoCarrinho(prod) {
+    if (!prod) return;
+    for (let i = 0; i < quantidadeSelecionada; i += 1) adicionarProdutoCarrinho(prod);
+    if (quantidadeSelecionada > 1) mostrarToast(`${quantidadeSelecionada} unidades adicionadas à sacola.`, 'sucesso');
+}
+
+function partilharProduto(prod) {
+    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
+    const link = `${baseUrl}/detalhe.html?id=${encodeURIComponent(prod.id)}`;
+    const texto = `Olha só este produto da Aurora Comercial!\n\n${prod.nome}\nPreço: ${prod.preco}\n${link}`;
+    if (navigator.share) navigator.share({ title: prod.nome, text: `Confira ${prod.nome} na Aurora Comercial.`, url: link }).catch(() => {});
+    else window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank', 'noopener,noreferrer');
+}
+
+function renderizarRecomendacoes(prod) {
+    const container = document.getElementById('detalhesConteudo');
+    if (!container || !catalogoAtual.length) return;
+
+    const categoria = normalizar(prod.categoria);
+    const relacionados = catalogoAtual.filter(p => String(p.id) !== String(prod.id) && normalizar(p.categoria) === categoria);
+    const outros = catalogoAtual.filter(p => String(p.id) !== String(prod.id) && normalizar(p.categoria) !== categoria);
+    const usados = new Set();
+    const combinar = (lista, limite) => lista.filter(p => !usados.has(String(p.id))).slice(0, limite).map(p => { usados.add(String(p.id)); return p; });
+
+    const secao1 = combinar(relacionados, 10);
+    const secao2 = combinar(outros.sort((a,b) => Number(b.ordem || 0) - Number(a.ordem || 0)), 10);
+    const criarSecao = (titulo, subtitulo, produtos) => {
+        if (!produtos.length) return '';
+        const railId = `rail-${Math.random().toString(36).slice(2, 8)}`;
+        return `<section class="recomendacoes-secao"><div class="secao-titulo"><h2>${titulo}</h2><span class="ver-todos">Deslize para ver mais →</span></div><p class="recomendacoes-subtitulo">${subtitulo}</p><div id="${railId}" class="grade-produtos produtos-rail"></div></section>`;
+    };
+
+    const html1 = criarSecao('Produtos relacionados', 'Mais opções da mesma categoria', secao1);
+    const html2 = criarSecao('Também podes gostar', 'Sugestões para continuar a explorar a Aurora', secao2);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html1 + html2;
+    const secoes = [...wrapper.children];
+    secoes.forEach((secao, index) => {
+        const produtos = index === 0 ? secao1 : secao2;
+        const rail = secao.querySelector('.produtos-rail');
+        const fragment = document.createDocumentFragment();
+        produtos.forEach(p => fragment.appendChild(criarCardProduto(p)));
+        rail?.appendChild(fragment);
     });
+    container.appendChild(wrapper);
 }
 
 async function carregarAvaliacaoAsync(prodId) {
     try {
         const avaliacao = await obterAvaliacao(prodId);
-        const containerAvaliacao = document.getElementById('avaliacaoContainer');
-        if (containerAvaliacao) {
-            let html = `<span>⭐ ${avaliacao.media.toFixed(1)} (${avaliacao.total} avaliações)</span>`;
-            html += `
-                <div>
-                    <label for="notaAvaliacao">Sua nota: </label>
-                    <select id="notaAvaliacao">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5" selected>5</option>
-                    </select>
-                    <button id="btnAvaliar" class="btn-avaliar" style="background:var(--cor-botao); border:none; padding:4px 12px; border-radius:8px; cursor:pointer; color:#000; font-weight:600;">Avaliar</button>
-                </div>
-            `;
-            containerAvaliacao.innerHTML = html;
-
-            document.getElementById('btnAvaliar').addEventListener('click', async () => {
-                const nota = parseInt(document.getElementById('notaAvaliacao').value);
-                await adicionarAvaliacao(prodId, nota);
-                mostrarToast('Avaliação registada!', 'sucesso');
-                const novaAval = await obterAvaliacao(prodId);
-                containerAvaliacao.innerHTML = `<span>⭐ ${novaAval.media.toFixed(1)} (${novaAval.total} avaliações)</span>`;
-            });
-        }
-    } catch (e) {
-        console.warn('Erro ao carregar avaliação:', e);
-        const containerAvaliacao = document.getElementById('avaliacaoContainer');
-        if (containerAvaliacao) {
-            containerAvaliacao.innerHTML = '<span>⭐ Sem avaliações</span>';
-        }
+        const container = document.getElementById('avaliacaoContainer');
+        if (!container) return;
+        container.innerHTML = `<span>⭐ ${Number(avaliacao.media || 0).toFixed(1)} (${avaliacao.total || 0} avaliações)</span>
+            <div class="avaliar-form"><label for="notaAvaliacao">Sua nota:</label><select id="notaAvaliacao"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option></select><button id="btnAvaliar" class="btn-avaliar">Avaliar</button></div>`;
+        document.getElementById('btnAvaliar')?.addEventListener('click', async () => {
+            const nota = Number.parseInt(document.getElementById('notaAvaliacao')?.value || '5', 10);
+            await adicionarAvaliacao(prodId, nota);
+            mostrarToast('Avaliação registada!', 'sucesso');
+            carregarAvaliacaoAsync(prodId);
+        });
+    } catch (_) {
+        const container = document.getElementById('avaliacaoContainer');
+        if (container) container.innerHTML = '<span>⭐ Ainda sem avaliações</span>';
     }
 }

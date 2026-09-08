@@ -70,70 +70,80 @@ function imagemProduto(src, alt, classe = '') {
 
 export function criarCardProduto(produto) {
   const prod = { ...produto, id: String(produto.id || '') };
-  const card = document.createElement('a');
+  const card = document.createElement('article');
   card.className = 'produto-card';
-  card.href = `detalhe.html?id=${encodeURIComponent(prod.id)}`;
-  card.style.cssText = 'text-decoration:none;color:inherit;';
+  card.dataset.produtoId = prod.id;
+
+  const link = document.createElement('a');
+  link.className = 'produto-card-link';
+  link.href = `detalhe.html?id=${encodeURIComponent(prod.id)}`;
+  link.setAttribute('aria-label', `Ver ${prod.nome || 'produto'}`);
 
   const imagemContainer = elemento('div', null, 'produto-imagem');
-  imagemContainer.append(imagemProduto(prod.imagens?.[0], prod.nome));
-  card.append(imagemContainer);
+  const imagem = imagemProduto(prod.imagens?.[0], prod.nome);
+  imagem.loading = 'lazy';
+  imagemContainer.append(imagem);
 
-  const favorito = elemento('button', verificarFavorito(prod.id) ? '❤️' : '🤍', `btn-favorito${verificarFavorito(prod.id) ? ' ativo' : ''}`);
-  favorito.type = 'button';
-  favorito.dataset.produtoId = prod.id;
-  favorito.style.cssText = 'position:absolute;top:10px;left:10px;background:rgba(255,255,255,.9);border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.1);z-index:5;';
-  card.append(favorito);
+  const selo = prod.desconto ? elemento('span', String(prod.desconto).replace(/\s*OFF/i, '') + ' OFF', 'produto-selo-desconto') : null;
+  if (selo) imagemContainer.append(selo);
+  link.append(imagemContainer);
 
   const info = elemento('div', null, 'produto-info');
-  info.append(elemento('span', prod.tag || prod.categoria || '', 'categoria-tag'));
+  const tagTexto = prod.tag || prod.categoria || '';
+  if (tagTexto) info.append(elemento('span', tagTexto, 'categoria-tag'));
   info.append(elemento('h3', prod.nome || 'Produto'));
-  const preco = elemento('p', prod.preco || '', 'preco');
-  if (prod.precoAntigo && prod.desconto) preco.prepend(elemento('span', prod.desconto, 'desconto'));
-  info.append(preco);
-  if (prod.precoAntigo) {
-    const antigo = elemento('span', prod.precoAntigo);
-    antigo.style.cssText = 'text-decoration:line-through;color:#999;font-size:14px;';
-    info.append(antigo);
-  }
-  if (prod.parcelas) info.append(elemento('p', prod.parcelas, 'parcelas'));
-  if (prod.freteGratis) info.append(elemento('span', 'Frete grátis FULL', 'selo-frete'));
-
-  const estoque = Number(prod.estoque);
-  if (Number.isFinite(estoque)) {
-    const aviso = elemento('span');
-    aviso.style.cssText = 'display:block;margin-top:6px;font-size:13px;';
-    if (estoque <= 0) { aviso.textContent = '🚫 Esgotado'; aviso.style.color = '#E74C3C'; }
-    else if (estoque <= 5) { aviso.textContent = `🔥 Últimas ${estoque} unidades!`; aviso.style.color = '#E74C3C'; }
-    else { aviso.textContent = `✅ ${estoque} em estoque`; aviso.style.color = '#27ae60'; }
-    info.append(aviso);
-  }
 
   const avaliacao = elemento('div', '', 'avaliacao-card');
   avaliacao.dataset.produtoId = prod.id;
-  avaliacao.style.cssText = 'margin-top:6px;font-size:13px;min-height:18px;';
+  avaliacao.setAttribute('aria-label', 'Avaliação do produto');
   info.append(avaliacao);
 
+  const precoLinha = elemento('div', null, 'produto-preco-linha');
+  const preco = elemento('span', prod.preco || '', 'preco');
+  precoLinha.append(preco);
+  if (prod.precoAntigo) precoLinha.append(elemento('span', prod.precoAntigo, 'preco-antigo-card'));
+  info.append(precoLinha);
+  if (prod.parcelas) info.append(elemento('p', prod.parcelas, 'parcelas'));
+  if (prod.freteGratis) info.append(elemento('span', '🚚 Frete grátis', 'selo-frete'));
+
+  const estoque = Number(prod.estoque);
+  if (Number.isFinite(estoque)) {
+    const aviso = elemento('span', '', 'estoque-card');
+    if (estoque <= 0) { aviso.textContent = 'Esgotado'; aviso.classList.add('esgotado'); }
+    else if (estoque <= 5) { aviso.textContent = `🔥 Últimas ${estoque}`; aviso.classList.add('urgente'); }
+    else aviso.textContent = '✓ Em estoque';
+    info.append(aviso);
+  }
+  link.append(info);
+  card.append(link);
+
+  const favorito = elemento('button', verificarFavorito(prod.id) ? '♥' : '♡', `btn-favorito${verificarFavorito(prod.id) ? ' ativo' : ''}`);
+  favorito.type = 'button';
+  favorito.dataset.produtoId = prod.id;
+  favorito.setAttribute('aria-label', 'Adicionar aos favoritos');
+  card.append(favorito);
+
   const acoes = elemento('div', null, 'acoes-produto');
-  acoes.style.cssText = 'margin-top:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;';
-  const adicionar = elemento('button', '🛒 Adicionar', 'btn-add-carrinho-card');
+  const adicionar = elemento('button', '🛒 Adicionar ao carrinho', 'btn-add-carrinho-card');
   adicionar.type = 'button';
   adicionar.dataset.produtoId = prod.id;
-  adicionar.style.cssText = 'background:var(--cor-ouro);color:#000;border:none;padding:8px 16px;border-radius:30px;font-weight:700;font-size:14px;cursor:pointer;flex:1;';
-  const partilhar = elemento('button', '📤 Partilhar', 'btn-share');
+  adicionar.setAttribute('aria-label', `Adicionar ${prod.nome || 'produto'} ao carrinho`);
+  const partilhar = elemento('button', '↗', 'btn-share');
   partilhar.type = 'button';
   partilhar.dataset.nome = String(prod.nome || 'Produto');
   partilhar.dataset.preco = String(prod.preco || '');
   const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
   partilhar.dataset.link = obterLinkAfiliado(`${baseUrl}/detalhe.html?id=${encodeURIComponent(prod.id)}`);
-  partilhar.style.cssText = 'background:transparent;border:1px solid #25D366;color:#25D366;padding:8px 16px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;';
+  partilhar.title = 'Partilhar produto';
+  partilhar.setAttribute('aria-label', 'Partilhar produto');
   acoes.append(adicionar, partilhar);
-  info.append(acoes);
-  card.append(info);
+  card.append(acoes);
 
   obterAvaliacao(prod.id).then((dados) => {
-    if (dados.media > 0) avaliacao.textContent = `⭐ ${dados.media.toFixed(1)} (${dados.total})`;
-  }).catch(() => {});
+    if (dados.media > 0) avaliacao.textContent = `★ ${dados.media.toFixed(1)} · ${dados.total}`;
+    else avaliacao.textContent = '☆ Ainda sem avaliações';
+  }).catch(() => { avaliacao.textContent = '☆ Ainda sem avaliações'; });
+
   return card;
 }
 
