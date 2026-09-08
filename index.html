@@ -51,6 +51,14 @@
 
     <!-- HEADER -->
     <header class="header-principal" role="banner">
+        <div class="aurora-util-bar">
+            <div class="aurora-util-inner">
+                <span>🚚 Entrega em todo Angola</span>
+                <span>🔒 Pagamento seguro</span>
+                <span>✓ Garantia de qualidade</span>
+                <span class="util-atendimento">📞 Atendimento ao cliente: <strong>+244 933 677 628</strong></span>
+            </div>
+        </div>
         <div class="header-top">
             <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
                 <img src="logo auro.png" alt="Logo Aurora Comercial" />
@@ -211,57 +219,14 @@
                 <h2 style="color:#333;">⭐ Mais Comprados da Semana</h2>
                 <a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a>
             </div>
-            <div class="grade-produtos" id="maisCompradosGrid"></div>
+            <div class="aurora-rail-wrap">
+                <button class="aurora-rail-btn anterior" type="button" data-rail-target="maisCompradosGrid" aria-label="Produtos anteriores">‹</button>
+                <div class="grade-produtos" id="maisCompradosGrid"></div>
+                <button class="aurora-rail-btn proximo" type="button" data-rail-target="maisCompradosGrid" aria-label="Mais produtos">›</button>
+            </div>
         </section>
 
-        <!-- VITRINE COM FILTROS AVANÇADOS -->
-        <div class="vitrine-container">
-            <aside class="filtros-sidebar">
-                <h3>Filtrar por</h3>
-                <div class="filtro-preco">
-                    <label for="precoMin">Preço mínimo: <span id="precoMinLabel">0</span> Kz</label>
-                    <input type="range" id="precoMin" min="0" max="500000" value="0" step="1000" />
-                    <label for="precoMax" style="margin-top:10px;">Preço máximo: <span id="precoMaxLabel">500000</span> Kz</label>
-                    <input type="range" id="precoMax" min="0" max="500000" value="500000" step="1000" />
-                </div>
-                <div class="filtro-avaliacao">
-                    <label for="minAvaliacao">Avaliação mínima:</label>
-                    <select id="minAvaliacao">
-                        <option value="0">Todas</option>
-                        <option value="4">⭐ 4 ou mais</option>
-                        <option value="4.5">⭐ 4.5 ou mais</option>
-                        <option value="5">⭐ 5 estrelas</option>
-                    </select>
-                </div>
-                <div class="filtro-ordem" style="margin-top:16px;">
-                    <label for="ordenar">Ordenar por:</label>
-                    <select id="ordenar">
-                        <option value="ordem">Destaque</option>
-                        <option value="preco-asc">Menor preço</option>
-                        <option value="preco-desc">Maior preço</option>
-                        <option value="nome">Nome A-Z</option>
-                    </select>
-                </div>
-                <div class="filtro-data" style="margin-top:12px;">
-                    <label for="ordenarData">Novidades:</label>
-                    <select id="ordenarData">
-                        <option value="">Todos</option>
-                        <option value="30d">Últimos 30 dias</option>
-                        <option value="90d">Últimos 90 dias</option>
-                    </select>
-                </div>
-            </aside>
-            <section>
-                <div id="carregandoProdutos" style="text-align:center; padding:40px; color:#999;">Carregando produtos...</div>
-                <div class="grade-produtos" id="gradeProdutos"></div>
-                <div id="paginaControles" style="display:flex; justify-content:center; margin:20px 0;">
-                    <button id="carregarMais" style="background:var(--cor-botao); border:none; padding:10px 30px; border-radius:20px; font-weight:600; cursor:pointer; color:#000;">Carregar mais</button>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- ✅ NOVA SEÇÃO DE CATEGORIAS -->
+        <!-- ✅ NOVA SEÇÃO DE CATEGORIAS -->
     <section class="secao-categorias" id="secao-categorias">
         <h2>📂 Categorias</h2>
         <div class="grade-categorias">
@@ -395,6 +360,54 @@
             </a>
         </div>
     </section>
+
+
+    <!-- VITRINE COM FILTROS AVANÇADOS -->
+        <div class="vitrine-container">
+            <aside class="filtros-sidebar">
+                <h3>Filtrar por</h3>
+                <div class="filtro-preco">
+                    <label for="precoMin">Preço mínimo: <span id="precoMinLabel">0</span> Kz</label>
+                    <input type="range" id="precoMin" min="0" max="500000" value="0" step="1000" />
+                    <label for="precoMax" style="margin-top:10px;">Preço máximo: <span id="precoMaxLabel">500000</span> Kz</label>
+                    <input type="range" id="precoMax" min="0" max="500000" value="500000" step="1000" />
+                </div>
+                <div class="filtro-avaliacao">
+                    <label for="minAvaliacao">Avaliação mínima:</label>
+                    <select id="minAvaliacao">
+                        <option value="0">Todas</option>
+                        <option value="4">⭐ 4 ou mais</option>
+                        <option value="4.5">⭐ 4.5 ou mais</option>
+                        <option value="5">⭐ 5 estrelas</option>
+                    </select>
+                </div>
+                <div class="filtro-ordem" style="margin-top:16px;">
+                    <label for="ordenar">Ordenar por:</label>
+                    <select id="ordenar">
+                        <option value="ordem">Destaque</option>
+                        <option value="preco-asc">Menor preço</option>
+                        <option value="preco-desc">Maior preço</option>
+                        <option value="nome">Nome A-Z</option>
+                    </select>
+                </div>
+                <div class="filtro-data" style="margin-top:12px;">
+                    <label for="ordenarData">Novidades:</label>
+                    <select id="ordenarData">
+                        <option value="">Todos</option>
+                        <option value="30d">Últimos 30 dias</option>
+                        <option value="90d">Últimos 90 dias</option>
+                    </select>
+                </div>
+            </aside>
+            <section>
+                <div id="carregandoProdutos" style="text-align:center; padding:40px; color:#999;">Carregando produtos...</div>
+                <div class="grade-produtos" id="gradeProdutos"></div>
+                <div id="paginaControles" style="display:flex; justify-content:center; margin:20px 0;">
+                    <button id="carregarMais" style="background:var(--cor-botao); border:none; padding:10px 30px; border-radius:20px; font-weight:600; cursor:pointer; color:#000;">Carregar mais</button>
+                </div>
+            </section>
+        </div>
+    </main>
 
     <!-- ✅ CONTAINER DE RECOMENDAÇÕES (Fase 3) -->
     <div id="recomendacoesProdutos"></div>
@@ -540,12 +553,38 @@
         </div>
     </div>
 
+    <!-- PAGAMENTOS ACEITES -->
+    <section class="aurora-pagamentos" aria-label="Métodos de pagamento">
+        <span>Cartões aceites:</span>
+        <strong class="pay-badge pay-visa">VISA</strong>
+        <strong class="pay-badge pay-master">●●</strong>
+        <strong class="pay-badge pay-paypal">PayPal</strong>
+        <strong class="pay-badge pay-k">K</strong>
+        <span class="pay-secure">🔒 Pagamento seguro e rápido</span>
+    </section>
+
     <!-- RODAPÉ -->
     <footer class="rodape-profissional" id="sobre-empresa">
         <div class="rodape-grid">
             <div class="rodape-coluna">
                 <h3>Aurora Comercial</h3>
                 <p>Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais.</p>
+                <div class="rodape-social">
+                    <a href="#" aria-label="Facebook">f</a>
+                    <a href="#" aria-label="Instagram">◎</a>
+                    <a href="#" aria-label="YouTube">▶</a>
+                    <a href="https://wa.me/244933677628" target="_blank" rel="noopener" aria-label="WhatsApp">◉</a>
+                </div>
+            </div>
+            <div class="rodape-coluna">
+                <h4>Links úteis</h4>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="sobre.html">Sobre Nós</a></li>
+                    <li><a href="sobre.html">Contactos</a></li>
+                    <li><a href="politica.html">Termos e Condições</a></li>
+                    <li><a href="politica.html">Política de Privacidade</a></li>
+                </ul>
             </div>
             <div class="rodape-coluna">
                 <h4>Categorias</h4>
@@ -595,6 +634,18 @@
             <a href="#" data-chat-opcao="duvida" style="display:block; padding:8px; background:#25D366; color:#fff; border-radius:8px; text-align:center; text-decoration:none;">💬 Dúvidas Gerais</a>
         </div>
     </div>
+
+    <!-- CONTROLES DOS CARROSSÉIS -->
+    <script>
+        document.addEventListener('click', (event) => {
+            const btn = event.target.closest('[data-rail-target]');
+            if (!btn) return;
+            const rail = document.getElementById(btn.dataset.railTarget);
+            if (!rail) return;
+            const amount = Math.max(240, Math.round(rail.clientWidth * 0.82));
+            rail.scrollBy({ left: btn.classList.contains('proximo') ? amount : -amount, behavior: 'smooth' });
+        });
+    </script>
 
     <!-- SCRIPTS PRINCIPAIS -->
     <script type="module" src="js/app.js?v=8"></script>

@@ -22,7 +22,11 @@ export async function initRecomendacoes() {
         container.innerHTML = `
             <section class="secao-recomendacoes" style="max-width:1480px; margin:30px auto; padding:0 24px;">
                 <h2 style="color:#333; font-size:1.8rem; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">💡 Recomendado para si</h2>
-                <div class="grade-produtos" style="display:flex; overflow-x:auto; gap:16px; padding-bottom:10px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; grid-template-columns:none;"></div>
+                <div class="aurora-rail-wrap">
+                    <button class="aurora-rail-btn anterior" type="button" data-rail-target="recomendadosRail" aria-label="Recomendações anteriores">‹</button>
+                    <div class="grade-produtos" id="recomendadosRail" style="display:flex; overflow-x:auto; gap:16px; padding-bottom:10px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; grid-template-columns:none;"></div>
+                    <button class="aurora-rail-btn proximo" type="button" data-rail-target="recomendadosRail" aria-label="Mais recomendações">›</button>
+                </div>
             </section>
         `;
 
