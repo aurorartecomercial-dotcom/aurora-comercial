@@ -1,3 +1,10 @@
 node_modules/
 .env
 .secret.local
+
+# Chaves privadas do Firebase
+*firebase-adminsdk*.json
+serviceAccountKey.json
+
+# Script temporário de administrador
+set-admin.js
