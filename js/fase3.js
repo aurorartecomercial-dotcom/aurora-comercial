@@ -34,7 +34,7 @@ export async function initRecomendacoes() {
             card.style.maxWidth = '220px';
             card.style.flexShrink = '0';
             card.style.scrollSnapAlign = 'start';
-            grid.appendChild(card);
+            if (card) grid.appendChild(card);
         });
     } catch (e) {
         console.error('Erro ao carregar recomendações:', e);

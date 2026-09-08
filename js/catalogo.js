@@ -70,6 +70,7 @@ function imagemProduto(src, alt, classe = '') {
 
 export function criarCardProduto(produto) {
   const prod = { ...produto, id: String(produto.id || '') };
+  if (prod.ativo === false) return null;
   const card = document.createElement('article');
   card.className = 'produto-card';
   card.dataset.produtoId = prod.id;
@@ -188,6 +189,6 @@ export async function renderizarGrade(produtosFiltrados, container, pagina = 1, 
     return;
   }
   const fragment = document.createDocumentFragment();
-  produtos.forEach((prod) => fragment.append(criarCardProduto(prod)));
+  produtos.forEach((prod) => { const card = criarCardProduto(prod); if (card) fragment.append(card); });
   container.append(fragment);
 }

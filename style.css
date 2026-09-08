@@ -969,3 +969,31 @@ body.modo-escuro .detalhe-caracteristica { border-color:#333; }
  .recomendacoes-secao .secao-titulo h2 { font-size:18px !important; }
  .recomendacoes-subtitulo { font-size:11px; }
 }
+
+
+/* ============================================================
+   AURORA PRODUCT MANAGER — ficha profissional + mobile
+   ============================================================ */
+.detalhe-selo {
+    display:inline-flex; align-items:center; width:max-content; margin:6px 0 2px;
+    padding:5px 9px; border-radius:7px; background:var(--cor-ouro); color:#111;
+    font-size:11px; font-weight:800; text-transform:uppercase;
+}
+.detalhe-marca { color:#666; font-size:13px; margin:3px 0 8px; }
+.detalhe-destaques {
+    margin:12px 0 14px; padding:12px 14px 12px 30px; border-radius:10px;
+    background:#f7faf9; border:1px solid #e2ece8; color:#333;
+}
+.detalhe-destaques li { margin:6px 0; font-size:13px; }
+.detalhe-entrega .entrega-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.detalhe-entrega .entrega-grid > div { display:flex; flex-direction:column; gap:4px; padding:12px; border:1px solid #eee; border-radius:10px; background:#fafafa; }
+.detalhe-entrega .entrega-grid span { color:#666; font-size:12px; }
+.admin-pro-section { position:relative; margin-top:20px; padding:11px 12px; border-radius:9px; background:rgba(212,175,55,.10); border-left:3px solid #D4AF37; }
+#previewImagens img { width:72px; height:72px; object-fit:cover; border-radius:8px; border:1px solid #444; }
+@media (max-width:768px) {
+    .detalhe-entrega .entrega-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:480px) {
+    .detalhe-entrega .entrega-grid { grid-template-columns:1fr; }
+    .detalhe-destaques { padding-left:26px; }
+}

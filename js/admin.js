@@ -94,6 +94,12 @@ function iniciarAdmin() {
     const ordem = document.getElementById('ordem');
     const estoque = document.getElementById('estoque');
     const video = document.getElementById('video');
+    const marca = document.getElementById('marca');
+    const sku = document.getElementById('sku');
+    const destaques = document.getElementById('destaques');
+    const especificacoes = document.getElementById('especificacoes');
+    const selo = document.getElementById('selo');
+    const produtoAtivo = document.getElementById('produtoAtivo');
 
     const btnUploadImg = document.getElementById('btnUploadImg');
     const imgUploadInput = document.getElementById('imgUpload');
@@ -212,7 +218,7 @@ function iniciarAdmin() {
                 <div class="produto-item" data-id="${escapeHTML(prod.id || prod._firestoreId)}">
                     <div style="min-width:0;flex:1;">
                         <strong>${escapeHTML(prod.nome || 'Produto')}</strong>
-                        <small style="color:#888;display:block;margin-top:3px;">${escapeHTML(prod.categoria || 'Sem categoria')} | ${escapeHTML(prod.preco || '')} | Custo: ${escapeHTML(prod.custo || 'N/A')}</small>
+                        <small style="color:#888;display:block;margin-top:3px;">${escapeHTML(prod.categoria || 'Sem categoria')} | ${escapeHTML(prod.preco || '')} | ${escapeHTML(prod.marca || '')}${prod.sku ? ` | SKU: ${escapeHTML(prod.sku)}` : ''}</small>
                         <small class="admin-pro-stock ${classeEstoque}" style="display:block;margin-top:5px;">${textoEstoque}</small>
                     </div>
                     <div class="acoes">
@@ -229,6 +235,24 @@ function iniciarAdmin() {
         if (editar) window.editarProduto(editar.dataset.editar);
         if (excluir) window.excluirProduto(excluir.dataset.excluir);
     });
+
+    function textoParaLista(texto) {
+        return String(texto || '').split('\n').map(v => v.trim()).filter(Boolean);
+    }
+
+    function textoParaEspecificacoes(texto) {
+        const obj = {};
+        textoParaLista(texto).forEach(linha => {
+            const pos = linha.indexOf(':');
+            if (pos > 0) obj[linha.slice(0, pos).trim()] = linha.slice(pos + 1).trim();
+        });
+        return obj;
+    }
+
+    function especificacoesParaTexto(valor) {
+        if (!valor || typeof valor !== 'object') return '';
+        return Object.entries(valor).map(([k, v]) => `${k}: ${v}`).join('\n');
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -256,7 +280,14 @@ function iniciarAdmin() {
             imagens: imagensFinal,
             tag: tag.value.trim() || categoria.value,
             estoque: parseInt(estoque.value) || 0,
-            video: video.value.trim()
+            video: video.value.trim(),
+            marca: marca.value.trim(),
+            sku: sku.value.trim(),
+            destaques: textoParaLista(destaques.value),
+            especificacoes: textoParaEspecificacoes(especificacoes.value),
+            selo: selo.value.trim(),
+            ativo: produtoAtivo.checked,
+            atualizadoEm: new Date().toISOString()
         };
 
         try {
@@ -296,6 +327,12 @@ function iniciarAdmin() {
         ordem.value = prod.ordem || 0;
         estoque.value = prod.estoque || 0;
         video.value = prod.video || '';
+        marca.value = prod.marca || '';
+        sku.value = prod.sku || '';
+        destaques.value = Array.isArray(prod.destaques) ? prod.destaques.join('\n') : '';
+        especificacoes.value = especificacoesParaTexto(prod.especificacoes);
+        selo.value = prod.selo || '';
+        produtoAtivo.checked = prod.ativo !== false;
         atualizarPreview(imagens.value);
 
         formTitulo.textContent = '✏️ Editar Produto';
@@ -327,6 +364,12 @@ function iniciarAdmin() {
         estoque.value = '10';
         video.value = '';
         custo.value = '';
+        marca.value = '';
+        sku.value = '';
+        destaques.value = '';
+        especificacoes.value = '';
+        selo.value = '';
+        produtoAtivo.checked = true;
         formTitulo.textContent = '➕ Novo Produto';
         btnSalvar.textContent = '💾 Salvar Produto';
         btnCancelar.style.display = 'none';

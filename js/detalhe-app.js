@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!produtoAtual) return mostrarErro('Produto não encontrado.');
 
     renderizarDetalhes(produtoAtual);
+    registarProdutoVisto(produtoAtual);
     renderizarRecomendacoes(produtoAtual);
     atualizarMetaTags(produtoAtual.nome, produtoAtual.descricao || 'Detalhes do produto', produtoAtual.imagens?.[0] || '');
     registrarVista(produtoAtual);
@@ -99,7 +100,10 @@ function renderizarDetalhes(prod) {
 
             <div class="detalhes-info">
                 <span class="categoria-tag">${escaparAtributo(prod.tag || prod.categoria || 'Produto')}</span>
+                ${prod.selo ? `<span class="detalhe-selo">${escaparAtributo(prod.selo)}</span>` : ''}
                 <h2>${escaparAtributo(prod.nome || 'Produto')}</h2>
+                ${prod.marca ? `<div class="detalhe-marca">Marca: <strong>${escaparAtributo(prod.marca)}</strong>${prod.sku ? ` · SKU: ${escaparAtributo(prod.sku)}` : ''}</div>` : (prod.sku ? `<div class="detalhe-marca">SKU: <strong>${escaparAtributo(prod.sku)}</strong></div>` : '')}
+                ${renderizarDestaques(prod)}
                 <div class="detalhes-precos">
                     ${prod.precoAntigo ? `<span class="preco-antigo">${escaparAtributo(prod.precoAntigo)}</span>` : ''}
                     <span class="preco-destaque">${escaparAtributo(prod.preco || '')}</span>
@@ -138,6 +142,7 @@ function renderizarDetalhes(prod) {
                 <p class="descricao">${escapeHTML(descricao).replace(/\n/g, '<br>')}</p>
             </section>
             ${renderizarCaracteristicas(prod)}
+            ${renderizarEntrega(prod)}
         </div>
     `;
 
@@ -150,6 +155,24 @@ function renderizarDetalhes(prod) {
         setTimeout(() => document.getElementById('abrirCarrinhoFlutuante')?.click(), 80);
     });
     document.getElementById('btnPartilharDetalhe')?.addEventListener('click', () => partilharProduto(prod));
+}
+
+function renderizarDestaques(prod) {
+    if (!Array.isArray(prod.destaques) || !prod.destaques.length) return '';
+    return `<ul class="detalhe-destaques">${prod.destaques.slice(0, 8).map(item => `<li>✓ ${escapeHTML(item)}</li>`).join('')}</ul>`;
+}
+
+function renderizarEntrega(prod) {
+    return `<section class="detalhe-bloco detalhe-entrega"><h3>Compra e entrega</h3><div class="entrega-grid"><div><strong>🚚 Entrega</strong><span>Disponível em Angola</span></div><div><strong>🔒 Pagamento</strong><span>Processo seguro</span></div><div><strong>↩️ Devolução</strong><span>Consulte as condições da loja</span></div>${prod.freteGratis ? '<div><strong>🎁 Frete</strong><span>Frete grátis</span></div>' : ''}</div></section>`;
+}
+
+function registarProdutoVisto(prod) {
+    try {
+        const atual = JSON.parse(localStorage.getItem('aurora_produtos_vistos') || '[]');
+        const item = { id: String(prod.id), nome: prod.nome || 'Produto', imagem: Array.isArray(prod.imagens) ? prod.imagens[0] : '', preco: prod.preco || '', vistoEm: Date.now() };
+        const semAtual = atual.filter(p => String(p.id) !== String(prod.id));
+        localStorage.setItem('aurora_produtos_vistos', JSON.stringify([item, ...semAtual].slice(0, 12)));
+    } catch (_) {}
 }
 
 function renderizarCaracteristicas(prod) {
@@ -201,8 +224,8 @@ function renderizarRecomendacoes(prod) {
     if (!container || !catalogoAtual.length) return;
 
     const categoria = normalizar(prod.categoria);
-    const relacionados = catalogoAtual.filter(p => String(p.id) !== String(prod.id) && normalizar(p.categoria) === categoria);
-    const outros = catalogoAtual.filter(p => String(p.id) !== String(prod.id) && normalizar(p.categoria) !== categoria);
+    const relacionados = catalogoAtual.filter(p => p.ativo !== false && String(p.id) !== String(prod.id) && normalizar(p.categoria) === categoria);
+    const outros = catalogoAtual.filter(p => p.ativo !== false && String(p.id) !== String(prod.id) && normalizar(p.categoria) !== categoria);
     const usados = new Set();
     const combinar = (lista, limite) => lista.filter(p => !usados.has(String(p.id))).slice(0, limite).map(p => { usados.add(String(p.id)); return p; });
 

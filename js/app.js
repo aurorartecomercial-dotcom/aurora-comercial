@@ -205,7 +205,7 @@ async function renderizarMaisComprados() {
     const fragment = document.createDocumentFragment();
     for (const prod of produtos) {
         const card = criarCardProduto(prod);
-        fragment.appendChild(card);
+        if (card) fragment.appendChild(card);
     }
     grid.appendChild(fragment);
 }

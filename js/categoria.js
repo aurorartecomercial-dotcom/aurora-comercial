@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fragment = document.createDocumentFragment();
     for (const prod of produtosFiltrados) {
         const card = criarCardProduto(prod);
-        fragment.appendChild(card);
+        if (card) fragment.appendChild(card);
     }
     grid.appendChild(fragment);
 });
