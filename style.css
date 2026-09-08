@@ -38,9 +38,11 @@ body {
 
 .header-principal {
     position: sticky; top: 0; left: 0; width: 100%; z-index: 1000;
+    transform: translateY(0);
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+    will-change: transform;
     background: var(--cor-esmeralda); border-bottom: 2px solid var(--cor-ouro);
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    isolation: isolate;
 }
 .header-top {
     display: flex; align-items: center; gap: 16px; padding: 10px 24px;
@@ -116,6 +118,19 @@ body {
 .dropdown .submenu li a:hover { background: var(--cor-ouro); color: #000; border-bottom: none; }
 
 #menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-right: 0; }
+
+/* ============================================================
+   CABEÇALHO INTELIGENTE
+   ============================================================ */
+.header-principal.header-escondido {
+    transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .header-principal {
+        transition: none;
+    }
+}
 
 /* ============================================================
    AUTOCOMPLETE DA BUSCA
@@ -810,41 +825,4 @@ body.modo-escuro .preco { color: var(--cor-ouro); }
     .slide-texto p { font-size: 11px; }
     .grade-produtos { gap: 7px !important; }
     .produto-imagem { height: 125px; }
-}
-
-/* ============================================================
-   HEADER STICKY — NÃO DEIXAR PRODUTOS PASSAREM POR BAIXO
-   ============================================================ */
-.header-principal {
-    /* O header participa do fluxo da página e fica preso ao topo
-       durante a rolagem. Assim os produtos nunca ficam escondidos
-       atrás da barra superior. */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.header-principal .header-top,
-.header-principal .menu-categorias {
-    position: relative;
-}
-
-@media (max-width: 768px) {
-    .header-principal {
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
-    }
-
-    .header-top {
-        min-height: 72px;
-    }
-
-    .menu-categorias {
-        min-height: 48px;
-    }
-
-    /* Mantém o menu aberto acima da vitrine, sem criar sobreposição
-       visual indevida dos produtos. */
-    .menu-categorias ul.menu-aberto {
-        max-height: min(70vh, 520px);
-        overflow-y: auto;
-    }
 }
