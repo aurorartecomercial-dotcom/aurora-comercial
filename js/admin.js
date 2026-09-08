@@ -7,6 +7,8 @@ import { escapeHTML, extrairValorNumerico, mostrarToast, IMAGEM_FALLBACK, urlSeg
 let produtos = [];
 let editandoId = null;
 let adminInicializado = false;
+let filtroProdutosAdmin = '';
+let filtroEstoqueAdmin = 'todos';
 
 // ✅ FALLBACK PARA NAVEGADORES ANTIGOS
 function gerarId() {
@@ -69,6 +71,12 @@ function iniciarAdmin() {
     const listaDiv = document.getElementById('listaProdutos');
     const contadorSpan = document.getElementById('contadorProdutos');
     const statusMsg = document.getElementById('statusMsg');
+    const filtroProdutosInput = document.getElementById('filtroProdutosAdmin');
+    const filtroEstoqueInput = document.getElementById('filtroEstoqueAdmin');
+    const kpiProdutos = document.getElementById('kpiProdutosAdmin');
+    const kpiEstoqueOk = document.getElementById('kpiEstoqueOkAdmin');
+    const kpiEstoqueBaixo = document.getElementById('kpiEstoqueBaixoAdmin');
+    const kpiEsgotados = document.getElementById('kpiEsgotadosAdmin');
 
     const prodId = document.getElementById('prodId');
     const nome = document.getElementById('nome');
@@ -170,28 +178,49 @@ function iniciarAdmin() {
 
     function renderizarLista() {
         contadorSpan.textContent = produtos.length;
-        let htmlLista = '';
-        if (produtos.length === 0) {
-            htmlLista = '<p style="color:#999;">Nenhum produto cadastrado.</p>';
-        } else {
-            const ordenados = [...produtos].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-            htmlLista = ordenados.map(prod => `
-                <div class="produto-item" data-id="${prod.id}">
-                    <div>
-                        <span>${escapeHTML(prod.nome)}</span>
-                        <small style="color:#888; display:block;">
-                            ${escapeHTML(prod.categoria)} | ${escapeHTML(prod.preco)} | Custo: ${escapeHTML(prod.custo || 'N/A')}
-                            ${prod.estoque !== undefined ? `| Estoque: ${escapeHTML(prod.estoque)}` : ''}
-                        </small>
+        const total = produtos.length;
+        const esgotados = produtos.filter(p => Number(p.estoque || 0) <= 0).length;
+        const baixos = produtos.filter(p => Number(p.estoque || 0) > 0 && Number(p.estoque || 0) <= 5).length;
+        const normais = Math.max(0, total - esgotados - baixos);
+        if (kpiProdutos) kpiProdutos.textContent = total;
+        if (kpiEstoqueOk) kpiEstoqueOk.textContent = normais;
+        if (kpiEstoqueBaixo) kpiEstoqueBaixo.textContent = baixos;
+        if (kpiEsgotados) kpiEsgotados.textContent = esgotados;
+
+        const termo = filtroProdutosAdmin.trim().toLowerCase();
+        const ordenados = [...produtos].sort((a,b) => (a.ordem || 0) - (b.ordem || 0));
+        const filtrados = ordenados.filter(prod => {
+            const texto = `${prod.nome || ''} ${prod.categoria || ''} ${prod.tag || ''}`.toLowerCase();
+            const estoque = Number(prod.estoque || 0);
+            const passaTexto = !termo || texto.includes(termo);
+            const passaEstoque = filtroEstoqueAdmin === 'todos' ||
+                (filtroEstoqueAdmin === 'ok' && estoque > 5) ||
+                (filtroEstoqueAdmin === 'baixo' && estoque > 0 && estoque <= 5) ||
+                (filtroEstoqueAdmin === 'esgotado' && estoque <= 0);
+            return passaTexto && passaEstoque;
+        });
+
+        if (filtrados.length === 0) {
+            listaDiv.innerHTML = `<p style="color:#999;padding:18px;text-align:center;">Nenhum produto corresponde ao filtro.</p>`;
+            return;
+        }
+        listaDiv.innerHTML = filtrados.map(prod => {
+            const estoqueAtual = Number(prod.estoque || 0);
+            const classeEstoque = estoqueAtual <= 0 ? 'out' : estoqueAtual <= 5 ? 'low' : 'ok';
+            const textoEstoque = estoqueAtual <= 0 ? 'Esgotado' : `${estoqueAtual} em estoque`;
+            return `
+                <div class="produto-item" data-id="${escapeHTML(prod.id || prod._firestoreId)}">
+                    <div style="min-width:0;flex:1;">
+                        <strong>${escapeHTML(prod.nome || 'Produto')}</strong>
+                        <small style="color:#888;display:block;margin-top:3px;">${escapeHTML(prod.categoria || 'Sem categoria')} | ${escapeHTML(prod.preco || '')} | Custo: ${escapeHTML(prod.custo || 'N/A')}</small>
+                        <small class="admin-pro-stock ${classeEstoque}" style="display:block;margin-top:5px;">${textoEstoque}</small>
                     </div>
                     <div class="acoes">
                         <button class="btn-admin" data-editar="${escapeHTML(prod._firestoreId)}">✏️ Editar</button>
                         <button class="btn-admin btn-admin-excluir" data-excluir="${escapeHTML(prod._firestoreId)}">🗑️ Excluir</button>
                     </div>
-                </div>
-            `).join('');
-        }
-        listaDiv.innerHTML = htmlLista;
+                </div>`;
+        }).join('');
     }
 
     listaDiv.addEventListener('click', (event) => {
@@ -319,6 +348,11 @@ function iniciarAdmin() {
     }
 
     document.getElementById('btnRecarregar').addEventListener('click', () => { carregarProdutos(); mostrarMensagem('Lista recarregada.', 'info'); });
+
+    filtroProdutosInput?.addEventListener('input', () => { filtroProdutosAdmin = filtroProdutosInput.value; renderizarLista(); });
+    filtroEstoqueInput?.addEventListener('change', () => { filtroEstoqueAdmin = filtroEstoqueInput.value; renderizarLista(); });
+    document.getElementById('btnNovoProdutoRapido')?.addEventListener('click', () => { resetForm(); nome?.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    document.getElementById('btnSairAdmin')?.addEventListener('click', async () => { await signOut(auth); location.reload(); });
 
     carregarProdutos();
 }

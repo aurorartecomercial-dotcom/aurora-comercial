@@ -114,10 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('selectAnoFiltro').value = '';
         renderizarAnual();
     });
+    document.getElementById('filtroGlobalPedidos')?.addEventListener('input', () => renderizarPedidos());
     document.getElementById('filtroPedidoCliente')?.addEventListener('input', () => renderizarPedidos());
     document.getElementById('filtroStatus')?.addEventListener('change', () => renderizarPedidos());
     document.getElementById('btnFiltrarPendentes')?.addEventListener('click', () => {
-        document.getElementById('filtroStatus').value = 'confirmado';
+        document.getElementById('filtroStatus').value = 'aguardando_pagamento';
         renderizarPedidos();
     });
     document.getElementById('btnFiltrarEntregues')?.addEventListener('click', () => {
@@ -263,6 +264,7 @@ function renderizarDashboard() {
     setText('kpiFaturamentoSemana', faturamentoSemana.toLocaleString('pt-AO') + ' Kz');
     setText('kpiPedidosSemana', vendasSemana.length);
 
+    renderizarCentroOperacoes(vendas);
     renderizarResumoDiario(vendas);
     renderizarGraficoRoscaCategorias(vendas);
     renderizarGraficoTopClientes(vendas);
@@ -272,6 +274,55 @@ function renderizarDashboard() {
     renderizarGraficoVendas(vendas);
     renderizarGraficoProdutos(vendas);
 }
+
+function renderizarCentroOperacoes(vendas) {
+    const contar = status => vendas.filter(v => String(v.status || '').toLowerCase() === status).length;
+    setText('opsAguardandoPagamento', contar('aguardando_pagamento'));
+    setText('opsPagos', contar('pago'));
+    setText('opsPreparacao', contar('em_preparacao'));
+    setText('opsEnviados', contar('enviado'));
+
+    const hoje = new Date();
+    const entreguesHoje = vendas.filter(v => {
+        if (String(v.status || '').toLowerCase() !== 'entregue') return false;
+        const d = parseDataHora(v.dataHora);
+        return d && d.toDateString() === hoje.toDateString();
+    }).length;
+    setText('opsEntreguesHoje', entreguesHoje);
+
+    const lista = document.getElementById('opsListaAcoes');
+    if (lista) {
+        const prioridades = [
+            ['aguardando_pagamento','🟠','Pagamentos aguardando confirmação'],
+            ['pago','🟡','Pedidos pagos para processar'],
+            ['em_preparacao','🔵','Pedidos em preparação'],
+            ['enviado','🚚','Pedidos em entrega']
+        ];
+        lista.innerHTML = prioridades.map(([status,icon,label]) => {
+            const qtd = contar(status);
+            return `<div class="ops-item"><div><strong>${icon} ${label}</strong><small>${qtd} pedido(s)</small></div><span class="ops-badge">${qtd ? 'Atenção' : 'OK'}</span></div>`;
+        }).join('');
+    }
+
+    const estoque = document.getElementById('opsResumoEstoque');
+    if (estoque) {
+        const esgotados = catalogo.filter(p => Number(p.estoque || 0) <= 0).length;
+        const baixos = catalogo.filter(p => Number(p.estoque || 0) > 0 && Number(p.estoque || 0) <= 5).length;
+        const normais = Math.max(0, catalogo.length - esgotados - baixos);
+        estoque.innerHTML = `
+          <div class="ops-item"><div><strong>🟢 Normal</strong><small>Mais de 5 unidades</small></div><span class="ops-badge">${normais}</span></div>
+          <div class="ops-item"><div><strong>🟡 Baixo</strong><small>1 a 5 unidades</small></div><span class="ops-badge">${baixos}</span></div>
+          <div class="ops-item"><div><strong>🔴 Esgotado</strong><small>Precisa de reposição</small></div><span class="ops-badge">${esgotados}</span></div>`;
+    }
+}
+
+document.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-ops-status]');
+    if (!btn) return;
+    trocarAba('pedidos');
+    const select = document.getElementById('filtroStatus');
+    if (select) { select.value = btn.dataset.opsStatus; renderizarPedidos(); }
+});
 
 function renderizarResumoDiario(vendas) {
     const tbody = document.getElementById('corpoResumoDiario');
@@ -1031,10 +1082,14 @@ function renderizarContabilidade() {
 
 function renderizarPedidos() {
     const clienteFiltro = document.getElementById('filtroPedidoCliente').value.trim().toLowerCase();
+    const globalFiltro = document.getElementById('filtroGlobalPedidos')?.value.trim().toLowerCase() || '';
     const statusFiltro = document.getElementById('filtroStatus').value;
 
     let vendas = todasVendas;
     if (clienteFiltro) vendas = vendas.filter(v => (v.nomeCliente || '').toLowerCase().includes(clienteFiltro));
+    if (globalFiltro) {
+        vendas = vendas.filter(v => `${v.nomeCliente || ''} ${v.telefoneCliente || ''} ${v.codigoRastreio || ''} ${v.numeroFatura || ''}`.toLowerCase().includes(globalFiltro));
+    }
     if (statusFiltro !== 'todos') vendas = vendas.filter(v => v.status === statusFiltro);
 
     const tbody = document.getElementById('corpoTabelaPedidos');

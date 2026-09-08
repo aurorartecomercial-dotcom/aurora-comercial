@@ -37,6 +37,22 @@
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
     </style>
+
+<style>
+/* Aurora Admin Pro - Operations */
+.ops-hero{background:linear-gradient(135deg,#005A4C,#00372f);color:#fff;padding:22px;border-radius:16px;margin:12px 0 18px;display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+.ops-hero h2{margin:0;color:#D4AF37}.ops-hero p{margin:5px 0 0;color:#d9eeea}
+.ops-actions{display:flex;gap:9px;flex-wrap:wrap}.ops-actions a{ text-decoration:none }
+.ops-center{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.ops-card{background:#fff;border:1px solid #e4e7ea;border-radius:14px;padding:14px;box-shadow:0 3px 12px rgba(0,0,0,.05)}
+.ops-card .num{font-size:28px;font-weight:800;display:block;color:#005A4C}.ops-card .lbl{font-size:12px;color:#69727a}.ops-card button{margin-top:10px;width:100%}
+.ops-card.alert{border-color:#f0c36d}.ops-card.danger{border-color:#f3a39a}.ops-card.success{border-color:#92d6b2}
+.ops-two{display:grid;grid-template-columns:1.3fr .7fr;gap:16px;margin-bottom:18px}.ops-panel{background:#fff;border:1px solid #e4e7ea;border-radius:14px;padding:16px}.ops-panel h3{margin:0 0 12px;color:#005A4C}
+.ops-list{display:grid;gap:8px}.ops-item{display:flex;justify-content:space-between;gap:12px;padding:11px;border-radius:10px;background:#f7f8f9;align-items:center}.ops-item small{display:block;color:#7a838b}.ops-badge{padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;background:#eef2f3}
+@media(max-width:900px){.ops-center{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-two{grid-template-columns:1fr}}
+@media(max-width:560px){.ops-center{grid-template-columns:1fr}.ops-hero{padding:16px}.ops-item{align-items:flex-start;flex-direction:column}}
+</style>
+
 </head>
 <body>
     <div style="max-width: 1300px; margin: 40px auto; padding: 0 24px;">
@@ -74,6 +90,24 @@
 
             <!-- DASHBOARD -->
             <div id="aba-dashboard" class="aba-conteudo ativa">
+                <div class="ops-hero">
+                    <div><h2>⚡ Central de Operações</h2><p>Veja o que precisa de atenção antes de analisar os gráficos.</p></div>
+                    <div class="ops-actions">
+                        <button class="btn-admin" type="button" id="btnIrPedidosRapido">🛒 Abrir pedidos</button>
+                        <a class="btn-admin" href="admin.html">📦 Gerir produtos</a>
+                    </div>
+                </div>
+                <div class="ops-center">
+                    <div class="ops-card alert"><span class="num" id="opsAguardandoPagamento">0</span><span class="lbl">🟠 Aguardando pagamento</span><button class="btn-admin" data-ops-status="aguardando_pagamento">Ver</button></div>
+                    <div class="ops-card alert"><span class="num" id="opsPagos">0</span><span class="lbl">🟡 Pagos / confirmar</span><button class="btn-admin" data-ops-status="pago">Ver</button></div>
+                    <div class="ops-card"><span class="num" id="opsPreparacao">0</span><span class="lbl">🔵 Em preparação</span><button class="btn-admin" data-ops-status="em_preparacao">Ver</button></div>
+                    <div class="ops-card"><span class="num" id="opsEnviados">0</span><span class="lbl">🚚 Em entrega</span><button class="btn-admin" data-ops-status="enviado">Ver</button></div>
+                    <div class="ops-card success"><span class="num" id="opsEntreguesHoje">0</span><span class="lbl">🟢 Entregues</span><button class="btn-admin" data-ops-status="entregue">Ver</button></div>
+                </div>
+                <div class="ops-two">
+                    <div class="ops-panel"><h3>📋 Próximas ações</h3><div id="opsListaAcoes" class="ops-list"></div></div>
+                    <div class="ops-panel"><h3>📦 Estoque</h3><div id="opsResumoEstoque" class="ops-list"></div></div>
+                </div>
                 <div class="exportar-botoes">
                     <button id="btnExportarPDFDashboard" class="btn-admin" style="background:#25D366;">📄 Exportar PDF</button>
                     <button id="btnExportarExcelDashboard" class="btn-admin" style="background:#005A4C;">📊 Exportar Excel</button>
@@ -337,12 +371,16 @@
                     <button id="btnExportarExcelPedidos" class="btn-admin" style="background:#005A4C;">📊 Exportar Excel</button>
                 </div>
                 <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="search" id="filtroGlobalPedidos" placeholder="🔎 Pedido, cliente, telefone ou rastreio..." style="padding:8px;border:1px solid #ddd;border-radius:6px;flex:1;min-width:220px;font-size:13px;" />
                     <input type="text" id="filtroPedidoCliente" placeholder="🔍 Buscar por cliente..." style="padding:8px; border:1px solid #ddd; border-radius:6px; flex:1; min-width:150px; font-size:13px;" />
                     <select id="filtroStatus" style="padding:8px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
                         <option value="todos">Todos os status</option>
-                        <option value="confirmado">🟡 Confirmado</option>
-                        <option value="enviado">🔵 Enviado</option>
+                        <option value="aguardando_pagamento">🟠 Aguardando pagamento</option>
+                        <option value="pago">🟡 Pago</option>
+                        <option value="em_preparacao">🔵 Em preparação</option>
+                        <option value="enviado">🚚 Enviado</option>
                         <option value="entregue">🟢 Entregue</option>
+                        <option value="cancelado">❌ Cancelado</option>
                     </select>
                     <button id="btnFiltrarPendentes" class="btn-admin" style="background:#E74C3C; color:#fff;">⚠️ Pendentes</button>
                     <button id="btnFiltrarEntregues" class="btn-admin" style="background:#27ae60; color:#fff;">✅ Entregues</button>

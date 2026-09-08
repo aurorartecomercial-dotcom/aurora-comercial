@@ -22,7 +22,7 @@ html { scroll-behavior: smooth; }
 body {
     background: var(--cor-fundo);
     font-family: var(--fonte-corpo);
-    padding-top: 0;
+    padding-top: 110px;
     color: var(--cor-texto);
     -webkit-font-smoothing: antialiased;
 }
@@ -37,10 +37,7 @@ body {
 #toast-notificacao button { background: none; border: none; color: var(--cor-ouro); font-size: 20px; cursor: pointer; }
 
 .header-principal {
-    position: sticky; top: 0; left: 0; width: 100%; z-index: 1000;
-    transform: translateY(0);
-    transition: transform 0.28s ease, box-shadow 0.28s ease;
-    will-change: transform;
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
     background: var(--cor-esmeralda); border-bottom: 2px solid var(--cor-ouro);
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
@@ -118,19 +115,6 @@ body {
 .dropdown .submenu li a:hover { background: var(--cor-ouro); color: #000; border-bottom: none; }
 
 #menuToggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-right: 0; }
-
-/* ============================================================
-   CABEÇALHO INTELIGENTE
-   ============================================================ */
-.header-principal.header-escondido {
-    transform: translateY(-100%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .header-principal {
-        transition: none;
-    }
-}
 
 /* ============================================================
    AUTOCOMPLETE DA BUSCA
@@ -341,7 +325,7 @@ body {
     .filtros-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 }
 @media (max-width: 768px) {
-    body { padding-top: 0 !important; }
+    body { padding-top: 160px !important; }
     .header-top { flex-wrap: wrap; padding: 8px 12px; }
     .busca-container { width: 100%; order: 3; margin-top: 8px; }
     .btn-entrar { font-size: 12px; }

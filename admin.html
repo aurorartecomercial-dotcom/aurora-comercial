@@ -34,6 +34,26 @@
         #loginAdmin input { background: #121212; color: #fff; border: 1px solid #444; }
         #loginAdmin input:focus { border-color: #D4AF37; }
     </style>
+
+<style>
+/* Aurora Admin Pro */
+.admin-pro-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
+.admin-pro-actions{display:flex;gap:8px;flex-wrap:wrap}
+.admin-pro-search{flex:1;min-width:220px;max-width:520px}
+.admin-pro-search input,.admin-pro-search select{margin:0!important}
+.admin-pro-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 22px}
+.admin-pro-kpi{background:linear-gradient(135deg,#171717,#222);border:1px solid #333;border-radius:14px;padding:16px}
+.admin-pro-kpi strong{display:block;font-size:24px;color:#fff;margin-top:4px}
+.admin-pro-kpi span{color:#999;font-size:12px}
+.admin-pro-section{margin:18px 0 8px;padding:10px 12px;border-left:4px solid #D4AF37;background:#202020;border-radius:8px;color:#D4AF37;font-weight:800}
+.admin-pro-help{font-size:12px;color:#888;margin:4px 0 12px}
+.admin-pro-stock{font-weight:800}
+.admin-pro-stock.low{color:#f1c40f}.admin-pro-stock.out{color:#ff5b4d}.admin-pro-stock.ok{color:#35d07f}
+.produto-item{gap:12px}.produto-item .acoes{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:900px){.admin-pro-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.painel-admin{grid-template-columns:1fr!important}}
+@media(max-width:560px){.admin-pro-kpis{grid-template-columns:1fr}.admin-container{padding:0 10px}.form-card,.lista-card{padding:15px}.produto-item{flex-direction:column;align-items:stretch}.produto-item .acoes button{flex:1}}
+</style>
+
 </head>
 <body class="admin-page">
 
@@ -53,6 +73,23 @@
         </div>
 
         <div id="conteudoAdmin" style="display:none;">
+            <div class="admin-pro-toolbar">
+                <div>
+                    <strong style="font-size:18px;color:#fff;">⚡ Central de Operações</strong>
+                    <div class="admin-pro-help">Gerencie produtos e estoque sem perder tempo.</div>
+                </div>
+                <div class="admin-pro-actions">
+                    <a class="btn-admin" href="admin-vendas.html" style="text-decoration:none;">🛒 Pedidos</a>
+                    <button class="btn-admin" type="button" id="btnNovoProdutoRapido">➕ Novo produto</button>
+                    <button class="btn-admin" type="button" id="btnSairAdmin" style="background:#333;color:#fff;">🚪 Sair</button>
+                </div>
+            </div>
+            <div class="admin-pro-kpis">
+                <div class="admin-pro-kpi"><span>📦 Produtos cadastrados</span><strong id="kpiProdutosAdmin">0</strong></div>
+                <div class="admin-pro-kpi"><span>🟢 Estoque normal</span><strong id="kpiEstoqueOkAdmin">0</strong></div>
+                <div class="admin-pro-kpi"><span>🟡 Estoque baixo</span><strong id="kpiEstoqueBaixoAdmin">0</strong></div>
+                <div class="admin-pro-kpi"><span>🔴 Esgotados</span><strong id="kpiEsgotadosAdmin">0</strong></div>
+            </div>
             <div class="aviso" id="statusMsg" style="display:none;"></div>
 
             <div class="painel-admin" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
@@ -101,10 +138,10 @@
                             <option value="viagem">Viagem</option>
                         </select>
 
-                        <label>Tag (rótulo exibido no card)</label>
+                        <div class="admin-pro-section">🏷️ Apresentação</div><label>Tag (rótulo exibido no card)</label>
                         <input type="text" id="tag" placeholder="Ex: Eletrônicos, Moda Feminina..." />
 
-                        <label>Preço * (ex: KZ 12.500,00)</label>
+                        <div class="admin-pro-section">💰 Preços e venda</div><label>Preço * (ex: KZ 12.500,00)</label>
                         <input type="text" id="preco" required />
 
                         <label>Preço Antigo (opcional, ex: KZ 15.000,00)</label>
@@ -127,7 +164,7 @@
                         <label>Descrição</label>
                         <textarea id="descricao"></textarea>
 
-                        <label>Imagens (URLs, separadas por vírgula)</label>
+                        <div class="admin-pro-section">🖼️ Imagens e conteúdo</div><label>Imagens (URLs, separadas por vírgula)</label>
                         <textarea id="imagens" placeholder="img1.jpg, img2.jpg, img3.jpg"></textarea>
                         <div id="previewImagens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
 
@@ -138,7 +175,7 @@
                         </div>
                         <div id="uploadProgress" style="font-size:12px; color:#888; margin-top:4px;"></div>
 
-                        <label>Ordem (número, quanto menor, antes aparece)</label>
+                        <div class="admin-pro-section">📦 Estoque e publicação</div><label>Ordem (número, quanto menor, antes aparece)</label>
                         <input type="number" id="ordem" value="0" />
 
                         <label>Estoque (quantidade disponível) *</label>
@@ -167,6 +204,15 @@
 
                 <div class="lista-card">
                     <h2 style="color:#D4AF37;">📦 Produtos (<span id="contadorProdutos">0</span>)</h2>
+                    <div class="admin-pro-toolbar" style="margin:12px 0;">
+                        <div class="admin-pro-search"><input type="search" id="filtroProdutosAdmin" placeholder="🔎 Pesquisar produto, categoria ou tag..."></div>
+                        <select id="filtroEstoqueAdmin" style="max-width:220px;margin:0;">
+                            <option value="todos">Todos os estoques</option>
+                            <option value="ok">🟢 Estoque normal</option>
+                            <option value="baixo">🟡 Estoque baixo (1–5)</option>
+                            <option value="esgotado">🔴 Esgotado</option>
+                        </select>
+                    </div>
                     <div id="listaProdutos" style="max-height: 60vh; overflow-y: auto;"></div>
                     
                     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">

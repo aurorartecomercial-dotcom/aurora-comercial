@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+.secret.local
+*firebase-adminsdk*.json
+serviceAccountKey.json
+set-admin.js
