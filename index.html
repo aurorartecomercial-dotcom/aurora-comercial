@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=6" />
+    <link rel="stylesheet" href="style.css?v=7" />
     <link rel="icon" type="image/png" href="logo-vora-313.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo-vora-313.png" />
@@ -144,57 +144,29 @@
     </header>
 
     <main id="conteudo-principal" role="main">
-        <!-- HERO VORA 313 — evolução visual inspirada na referência enviada -->
-        <section class="vora-brand-hero" aria-label="VORA 313 — marketplace">
-            <div class="vora-brand-hero-inner">
-                <div class="vora-brand-copy">
-                    <span class="vora-brand-kicker">VORA 313 · MARKETPLACE ANGOLANO</span>
-                    <h1>Mais do que compras,<br><strong>uma conexão.</strong></h1>
-                    <p>Encontra produtos, descobre novas oportunidades e compra com confiança — tudo num só lugar.</p>
-                    <div class="vora-brand-actions">
-                        <a href="#secao-categorias" class="vora-hero-primary">Explorar categorias</a>
-                        <a href="#mais-comprados" class="vora-hero-secondary">Ver mais vendidos</a>
-                    </div>
-                    <div class="vora-brand-points" aria-label="Vantagens VORA 313">
-                        <span>✓ Compra segura</span><span>✓ Entrega em Angola</span><span>✓ Suporte rápido</span>
-                    </div>
-                </div>
-                <div class="vora-device-stage" aria-hidden="true">
-                    <div class="vora-glow"></div>
-                    <div class="vora-laptop">
-                        <div class="vora-screen">
-                            <div class="vora-screen-top">
-                                <div class="vora-mini-brand"><img src="logo-vora-313.png" alt=""><b>VORA <em>313</em></b></div>
-                                <span>🛒</span>
-                            </div>
-                            <div class="vora-screen-search">🔍 &nbsp; O que você procura?</div>
-                            <div class="vora-screen-cats"><span>📱<small>Eletrónicos</small></span><span>🎮<small>Consolas</small></span><span>🏠<small>Casa</small></span><span>💄<small>Beleza</small></span><span>🚗<small>Auto</small></span><span>＋<small>Mais</small></span></div>
-                            <div class="vora-screen-banner">
-                                <div><small>VORA 313</small><strong>Tudo o que precisa<br><b>num só lugar.</b></strong><button>Comprar agora</button></div>
-                                <div class="vora-screen-art"><span>⌁</span><span>◈</span><span>▰</span></div>
-                            </div>
-                            <div class="vora-screen-benefits"><span>🛡️ Produtos de qualidade</span><span>🚚 Entrega segura</span><span>💳 Pagamentos seguros</span></div>
-                        </div>
-                        <div class="vora-base"></div>
-                    </div>
-                    <div class="vora-phone">
-                        <div class="vora-phone-screen"><img src="logo-vora-313.png" alt="Logo VORA 313"><b>VORA <i>313</i></b><small>COMPRA · VENDE · CONECTA</small><div>⌕ &nbsp; Pesquisar</div><strong>Ofertas<br>para ti</strong></div>
-                    </div>
-                    <div class="vora-box"><span>V</span><b>VORA <i>313</i></b><small>DO SEU CLIQUE<br>ATÉ VOCÊ</small></div>
-                </div>
-            </div>
-            <div class="vora-hero-footer"><span>COMPRA <b>com segurança</b></span><span>VENDE <b>sem complicação</b></span><span>CONECTA <b>com o que importa</b></span><span>ENTREGA <b>em todo o país</b></span></div>
-        </section>
-
         <!-- CARROSSEL -->
         <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
+                <div class="vora-hero-marca" aria-label="VORA 313 — identidade da marca">
+                    <div class="vora-hero-logo-wrap">
+                        <img src="logo-vora-313.png" alt="VORA 313" class="vora-hero-logo" />
+                        <div class="vora-hero-wordmark">VORA <strong>313</strong></div>
+                    </div>
+                    <p class="vora-hero-kicker">COMPRA <span>•</span> VENDE <span>•</span> CONECTA</p>
+                    <h1>Mais do que compras,<br><em>uma conexão.</em></h1>
+                    <p class="vora-hero-copy">Um marketplace feito para encontrar, vender e receber com confiança em Angola.</p>
+                    <div class="vora-hero-actions">
+                        <a href="#secao-categorias" class="vora-hero-primary">Explorar categorias</a>
+                        <a href="#gradeProdutos" class="vora-hero-secondary">Ver produtos</a>
+                    </div>
+                </div>
+                <div class="vora-hero-glow" aria-hidden="true"></div>
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo">
                         <img src="https://i.ibb.co/YThMhNBw/ppp.jpg" alt="Oferta 1" />
                         <div class="slide-texto">
-                            <h2>🔥 Promoção Gamer!</h2>
-                            <p> PS5, Xbox e Nintendo Switch com até 20% OFF</p>
+                            <h2>🔥 Ofertas que valem a pena</h2>
+                            <p>Produtos selecionados com preços especiais e entrega em Angola.</p>
                             <a href="#" class="btn-slide">Aproveitar Oferta</a>
                         </div>
                     </div>
@@ -256,7 +228,7 @@
         </div>
 
         <!-- MAIS COMPRADOS (agora em carrossel horizontal via CSS) -->
-        <section class="secao-mais-comprados" id="mais-comprados">
+        <section class="secao-mais-comprados">
             <div class="secao-titulo">
                 <h2 style="color:#333;">⭐ Mais Comprados da Semana</h2>
                 <a href="#" class="ver-todos" style="color:#007185; text-decoration:none;">Ver todos →</a>
@@ -660,7 +632,7 @@
                 <p>📍 Luanda, Angola</p>
             </div>
         </div>
-        <div class="rodape-copyright">&copy; 2026 AURORARTE COMERCIAL. Todos os direitos reservados.</div>
+        <div class="rodape-copyright">&copy; 2026 VORA 313. Todos os direitos reservados.</div>
     </footer>
 
     <!-- ✅ CHAT FLUTUANTE AVANÇADO (Fase 3) -->

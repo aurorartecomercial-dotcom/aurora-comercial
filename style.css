@@ -1136,40 +1136,195 @@ body[data-vora-theme="dark"] .filtros-sidebar h3 { color:#fff !important; }
   #maisCompradosGrid > .produto-card, #recomendacoesProdutos .produtos-rail > .produto-card { min-width:calc(50vw - 14px) !important; }
 }
 
+/* ============================================================
+   VORA 313 — MOBILE V3
+   Ajustes finais para evitar aperto/overflow em telemóveis.
+   Não altera nomes de ficheiros, IDs ou integrações técnicas.
+   ============================================================ */
+@media (max-width: 768px) {
+  html, body { width:100%; max-width:100%; overflow-x:hidden !important; }
+  main#conteudo-principal { width:100%; max-width:100%; overflow:hidden; }
+
+  .header-principal { width:100%; max-width:100vw; }
+  .header-top { width:100%; box-sizing:border-box; grid-template-columns:minmax(0,1fr) auto; }
+  .logo { min-width:0; overflow:hidden; }
+  .logo-wordmark { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .header-icones { flex-shrink:0; }
+  .header-icones > * { flex-shrink:0; }
+  .menu-categorias { width:100%; box-sizing:border-box; overflow:hidden; }
+  #menuCategorias { max-width:100vw; box-sizing:border-box; }
+
+  /* benefícios: dois por linha, sem textos a esmagarem os ícones */
+  .aurora-trust-bar { width:100%; box-sizing:border-box; }
+  .aurora-trust-item { overflow:hidden; }
+  .aurora-trust-item > div { min-width:0; }
+  .aurora-trust-item strong, .aurora-trust-item span {
+    overflow:hidden; text-overflow:ellipsis;
+  }
+
+  /* carrossel ocupa apenas a largura disponível */
+  .carrossel-ofertas { width:calc(100% - 16px); box-sizing:border-box; }
+  .carrossel-container, .carrossel-slides, .slide { width:100%; max-width:100%; }
+  .slide img { width:100%; height:100%; object-fit:cover; }
+
+  /* rails: swipe horizontal sem aumentar a página */
+  .aurora-rail-wrap { min-width:0; max-width:100%; position:relative; }
+  #maisCompradosGrid, #recomendacoesProdutos .produtos-rail {
+    width:100%; max-width:100%; box-sizing:border-box;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .aurora-rail-btn { z-index:4; }
+
+  /* categorias compactas e legíveis */
+  .secao-categorias { width:100%; box-sizing:border-box; }
+  .grade-categorias { width:100%; box-sizing:border-box; }
+  .categoria-card { min-width:0; overflow:hidden; }
+  .categoria-nome { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; }
+
+  /* vitrine: duas colunas reais */
+  .vitrine-container, .grade-produtos { width:100%; box-sizing:border-box; min-width:0; }
+  .grade-produtos > .produto-card { min-width:0 !important; max-width:none !important; width:auto; }
+  .produto-card { min-width:0; overflow:hidden; }
+  .produto-imagem { width:100%; box-sizing:border-box; overflow:hidden; }
+  .produto-imagem img { width:100%; height:100%; object-fit:contain; }
+  .produto-info h3 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .acoes-produto { min-width:0; }
+  .acoes-produto .btn-add-carrinho-card { min-width:0; flex:1 1 auto; white-space:normal; line-height:1.1; }
+
+  /* rodapé: uma coluna em ecrãs muito pequenos fica mais limpo */
+  .rodape-profissional { width:100%; box-sizing:border-box; overflow:hidden; }
+}
+
+@media (max-width: 480px) {
+  body { padding-top:112px !important; }
+  .header-top { padding-left:8px; padding-right:8px; }
+  .logo img { width:32px; height:32px; }
+  .logo-wordmark { font-size:14px !important; }
+  .header-icones { gap:3px; }
+  #btnModoEscuro { width:31px; height:31px; }
+  .carrinho-icone { font-size:19px; }
+  .busca-container { height:38px; }
+  .busca-input { font-size:12px; }
+
+  .aurora-trust-bar { grid-template-columns:1fr 1fr; gap:6px; padding:0 7px; }
+  .aurora-trust-item { min-height:52px; padding:7px; }
+  .aurora-trust-icon { font-size:17px; }
+  .aurora-trust-item strong { font-size:9px; }
+
+  .slide { height:170px; }
+  .slide-texto { left:8%; max-width:78%; }
+  .slide-texto h2 { font-size:17px; }
+  .slide-texto p { font-size:9px; }
+
+  .secao-titulo { padding-left:7px; padding-right:7px; }
+  .secao-titulo h2 { font-size:17px !important; }
+  .grade-categorias { grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }
+  .categoria-card { min-height:68px; padding:6px 2px; }
+  .categoria-icone { font-size:20px; }
+  .categoria-nome { font-size:8px; }
+
+  .filtros-sidebar { grid-template-columns:1fr 1fr; }
+  .produto-imagem { height:120px !important; }
+  .produto-info h3 { font-size:10px; }
+  .preco { font-size:14px; }
+  .acoes-produto .btn-add-carrinho-card { font-size:8px !important; }
+  .acoes-produto .btn-share { width:29px; flex-basis:29px; }
+
+  .rodape-grid { grid-template-columns:1fr !important; }
+  .rodape-grid .rodape-coluna:first-child { grid-column:auto; }
+}
 
 /* ============================================================
-   VORA 313 — HERO PREMIUM / EVOLUÇÃO VISUAL
-   Camada independente: não altera IDs técnicos nem integrações.
+   VORA 313 — EVOLUÇÃO VISUAL V5
+   Nova composição inspirada na referência enviada pelo cliente.
+   Incremental: preserva classes, IDs, JS e integrações existentes.
    ============================================================ */
-.vora-brand-hero{position:relative;max-width:1480px;margin:18px auto 0;padding:0 24px;color:#fff}
-.vora-brand-hero-inner{position:relative;min-height:430px;overflow:hidden;border:1px solid rgba(212,175,55,.55);border-radius:22px;background:radial-gradient(circle at 75% 35%,rgba(212,175,55,.18),transparent 28%),linear-gradient(120deg,#050505 0%,#111 58%,#061c17 100%);box-shadow:0 18px 50px rgba(0,0,0,.24);display:grid;grid-template-columns:minmax(320px,.86fr) minmax(520px,1.14fr);align-items:center}
-.vora-brand-hero-inner:before{content:"";position:absolute;inset:auto -8% -48% 45%;height:420px;background:linear-gradient(120deg,transparent 20%,rgba(212,175,55,.12) 50%,transparent 78%);transform:rotate(-9deg);pointer-events:none}
-.vora-brand-copy{position:relative;z-index:3;padding:54px 0 54px 54px;max-width:600px}
-.vora-brand-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--cor-ouro);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
-.vora-brand-copy h1{font-size:clamp(36px,4.3vw,66px);line-height:.98;letter-spacing:-2.5px;margin:0 0 18px;font-weight:500}
-.vora-brand-copy h1 strong{color:#fff;font-weight:850}
-.vora-brand-copy p{max-width:510px;color:#c9c9c9;font-size:15px;line-height:1.65;margin-bottom:25px}
-.vora-brand-actions{display:flex;flex-wrap:wrap;gap:10px}
-.vora-hero-primary,.vora-hero-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;text-decoration:none;font-size:13px;font-weight:800;transition:.2s ease}
-.vora-hero-primary{background:var(--cor-ouro);color:#070707;box-shadow:0 8px 24px rgba(212,175,55,.2)}
-.vora-hero-secondary{border:1px solid rgba(255,255,255,.25);color:#fff;background:rgba(255,255,255,.04)}
+:root {
+  --vora-green-deep:#063f32;
+  --vora-green:#08745b;
+  --vora-green-soft:#eaf5f1;
+  --vora-gold:#d4af37;
+  --vora-gold-bright:#f2c94c;
+  --vora-ink:#0b1714;
+}
+
+/* Header premium */
+.header-principal{background:linear-gradient(180deg,#073d32 0%,#052d25 100%);border-bottom:1px solid rgba(212,175,55,.65)}
+.aurora-util-bar{background:#031f1a;color:#e9f3ef;border-bottom:1px solid rgba(212,175,55,.22)}
+.header-top{max-width:1540px;padding:12px 28px;gap:20px}
+.logo img{width:44px;height:44px;background:#fff;padding:5px;border:2px solid var(--vora-gold)}
+.logo-wordmark{font-size:20px!important;letter-spacing:.02em}
+.logo-wordmark span{color:var(--vora-gold)}
+.busca-container{max-width:900px;height:44px;border:1px solid rgba(212,175,55,.18);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.busca-input{font-size:14px}
+.busca-container button{min-width:58px}
+.menu-categorias{max-width:none;padding:0 max(24px,calc((100vw - 1480px)/2));background:#042b23;border-top:1px solid rgba(255,255,255,.07)}
+.menu-categorias ul li a{font-size:12px;padding:9px 11px}
+
+/* Hero: marca à esquerda + produto/oferta à direita */
+.carrossel-ofertas{max-width:1480px;margin:18px auto 0;border:0;border-radius:22px;box-shadow:0 18px 50px rgba(3,52,42,.16)}
+.carrossel-container{min-height:390px;background:#061f1a}
+.carrossel-slides{height:390px}
+.slide{height:390px;justify-content:flex-end;background:#0b2d25}
+.slide img{object-position:center;opacity:.78;filter:saturate(.92)}
+.slide::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#061f1a 0%,rgba(6,31,26,.88) 25%,rgba(6,31,26,.24) 57%,rgba(6,31,26,.08) 100%);pointer-events:none}
+.vora-hero-marca{position:absolute;z-index:6;left:6%;top:50%;transform:translateY(-50%);width:min(47%,600px);color:#fff}
+.vora-hero-logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:13px}
+.vora-hero-logo{width:74px;height:74px;border-radius:18px;background:#fff;padding:8px;border:1px solid rgba(212,175,55,.8);box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.vora-hero-wordmark{font-size:46px;font-weight:800;letter-spacing:.01em;line-height:1}.vora-hero-wordmark strong{color:var(--vora-gold-bright)}
+.vora-hero-kicker{font-size:12px;font-weight:800;letter-spacing:.24em;color:#dcebe6;margin:0 0 13px}.vora-hero-kicker span{color:var(--vora-gold-bright);padding:0 6px}
+.vora-hero-marca h1{font-size:clamp(32px,3.7vw,56px);line-height:1.02;letter-spacing:-.035em;margin:0 0 14px;font-weight:800}.vora-hero-marca h1 em{font-style:normal;color:var(--vora-gold-bright)}
+.vora-hero-copy{max-width:470px;color:#e4efeb;font-size:15px;line-height:1.6;margin-bottom:22px}
+.vora-hero-actions{display:flex;gap:10px;flex-wrap:wrap}.vora-hero-actions a{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:800;font-size:13px;transition:.2s}
+.vora-hero-primary{background:var(--vora-gold-bright);color:#111;border:1px solid var(--vora-gold-bright);box-shadow:0 8px 20px rgba(212,175,55,.2)}
+.vora-hero-secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.38);backdrop-filter:blur(8px)}
 .vora-hero-primary:hover,.vora-hero-secondary:hover{transform:translateY(-2px)}
-.vora-brand-points{display:flex;flex-wrap:wrap;gap:14px;margin-top:22px;color:#aeb0ad;font-size:10px;font-weight:700}
-.vora-brand-points span:first-child{color:#fff}
-.vora-device-stage{position:relative;min-height:430px;height:100%;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding:30px 24px 0}
-.vora-glow{position:absolute;width:430px;height:430px;right:14%;top:0;background:radial-gradient(circle,rgba(212,175,55,.18),transparent 66%);filter:blur(2px)}
-.vora-laptop{position:relative;width:min(610px,92%);z-index:2;filter:drop-shadow(0 25px 28px rgba(0,0,0,.45));transform:perspective(1200px) rotateY(-4deg) rotateX(1deg)}
-.vora-screen{background:#f5f6f3;border:9px solid #191919;border-bottom-width:11px;border-radius:15px 15px 8px 8px;min-height:300px;padding:10px;box-shadow:inset 0 0 0 1px #555}
-.vora-screen-top{display:flex;align-items:center;justify-content:space-between;color:#151515;font-size:13px}
-.vora-mini-brand{display:flex;align-items:center;gap:5px}.vora-mini-brand img{width:20px;height:20px;object-fit:contain}.vora-mini-brand b{font-size:12px}.vora-mini-brand em{color:#c79e25;font-style:normal}
-.vora-screen-search{margin:8px auto;width:68%;height:25px;border:1px solid #ddd;border-radius:20px;background:#fff;color:#a0a0a0;padding:5px 10px;font-size:8px}
-.vora-screen-cats{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 3px;border-top:1px solid #e7e7e7;border-bottom:1px solid #e7e7e7;color:#222;text-align:center}.vora-screen-cats span{font-size:14px}.vora-screen-cats small{display:block;font-size:6px;margin-top:2px}
-.vora-screen-banner{margin-top:8px;border-radius:7px;background:linear-gradient(125deg,#090d0c,#17382f 55%,#b18a24);min-height:150px;color:#fff;display:grid;grid-template-columns:1fr .55fr;align-items:center;padding:18px 22px;overflow:hidden}.vora-screen-banner small{color:#d7b13b;font-weight:800;letter-spacing:1px}.vora-screen-banner strong{display:block;font-size:22px;line-height:1.05;margin:8px 0}.vora-screen-banner strong b{color:#e6bb43}.vora-screen-banner button{border:0;border-radius:20px;background:#d4af37;color:#111;padding:7px 13px;font-weight:800;font-size:8px}.vora-screen-art{height:100%;display:flex;align-items:center;justify-content:center;gap:7px;transform:rotate(-14deg)}.vora-screen-art span{display:grid;place-items:center;width:54px;height:75px;border-radius:9px;background:#111;box-shadow:0 10px 20px rgba(0,0,0,.35);color:#d4af37;font-size:28px}.vora-screen-art span:nth-child(2){background:#f0f0ed;color:#111;height:95px}.vora-screen-art span:nth-child(3){background:#d4af37;color:#111;width:48px;height:62px}
-.vora-screen-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px;color:#333;font-size:6px;font-weight:800}.vora-screen-benefits span{background:#fff;padding:6px;border-radius:5px}
-.vora-base{height:18px;background:linear-gradient(#777,#222);clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);border-radius:0 0 18px 18px}
-.vora-phone{position:absolute;right:8%;bottom:25px;width:116px;height:238px;padding:6px;border:4px solid #1a1a1a;border-radius:20px;background:#080808;z-index:4;box-shadow:0 20px 35px rgba(0,0,0,.45);transform:rotate(3deg)}
-.vora-phone-screen{height:100%;border-radius:14px;background:linear-gradient(155deg,#101514,#06100e 62%,#bd9226);display:flex;flex-direction:column;align-items:center;padding:17px 7px;color:#fff;text-align:center}.vora-phone-screen img{width:35px;height:35px;object-fit:contain}.vora-phone-screen>b{font-size:14px;margin-top:4px}.vora-phone-screen>b i{font-style:normal;color:#d4af37}.vora-phone-screen>small{font-size:4px;letter-spacing:1px;margin:3px 0 16px}.vora-phone-screen>div{width:100%;background:#fff;color:#999;border-radius:9px;padding:5px;font-size:6px;text-align:left}.vora-phone-screen>strong{font-size:17px;line-height:1;margin-top:35px;text-align:left;align-self:flex-start;padding-left:7px}
-.vora-box{position:absolute;right:2%;bottom:35px;width:150px;height:115px;background:linear-gradient(145deg,#1b1b1b,#050505);border:1px solid #444;border-radius:4px;z-index:3;box-shadow:0 20px 35px rgba(0,0,0,.38);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-1deg)}.vora-box span{color:var(--cor-ouro);font-size:28px;font-weight:900}.vora-box b{font-size:17px}.vora-box b i{font-style:normal;color:var(--cor-ouro)}.vora-box small{font-size:6px;color:#aaa;letter-spacing:1px;text-align:center;margin-top:7px}
-.vora-hero-footer{display:grid;grid-template-columns:repeat(4,1fr);margin-top:10px;border:1px solid #2b2b2b;border-radius:12px;background:#0b0b0b;overflow:hidden}.vora-hero-footer span{padding:14px 18px;color:var(--cor-ouro);font-size:11px;font-weight:900;border-right:1px solid #2b2b2b}.vora-hero-footer span:last-child{border-right:0}.vora-hero-footer b{display:block;color:#aaa;font-size:9px;font-weight:500;margin-top:3px}
-@media (max-width:900px){.vora-brand-hero{padding:0 10px;margin-top:10px}.vora-brand-hero-inner{grid-template-columns:1fr;min-height:auto}.vora-brand-copy{padding:34px 24px 8px}.vora-brand-copy h1{font-size:42px}.vora-brand-copy p{font-size:13px}.vora-device-stage{min-height:340px;padding-top:0}.vora-laptop{width:86%;margin-left:-5%}.vora-phone{right:7%;bottom:18px;transform:rotate(2deg) scale(.82)}.vora-box{right:0;bottom:30px;transform:scale(.78)}.vora-hero-footer{grid-template-columns:repeat(2,1fr)}.vora-hero-footer span{padding:12px}.vora-hero-footer span:nth-child(2){border-right:0}.vora-hero-footer span:nth-child(-n+2){border-bottom:1px solid #2b2b2b}}
-@media (max-width:600px){.vora-brand-copy{padding:28px 18px 4px}.vora-brand-kicker{font-size:8px;letter-spacing:1.3px}.vora-brand-copy h1{font-size:34px;letter-spacing:-1.4px}.vora-brand-copy p{font-size:12px;line-height:1.5}.vora-brand-actions{display:grid;grid-template-columns:1fr}.vora-hero-primary,.vora-hero-secondary{min-height:40px}.vora-brand-points{gap:7px;font-size:8px;margin-top:16px}.vora-device-stage{min-height:255px;padding:10px 2px 0}.vora-laptop{width:93%;transform:perspective(1000px) rotateY(-2deg)}.vora-screen{border-width:5px;min-height:205px;padding:6px}.vora-screen-search{margin:5px auto;height:19px;padding:4px 7px;font-size:6px}.vora-screen-cats{padding:4px 1px}.vora-screen-cats span{font-size:9px}.vora-screen-cats small{font-size:4px}.vora-screen-banner{min-height:104px;padding:10px 12px}.vora-screen-banner strong{font-size:13px}.vora-screen-banner button{font-size:6px;padding:5px 8px}.vora-screen-art span{width:31px;height:45px;font-size:17px}.vora-screen-art span:nth-child(2){height:55px}.vora-screen-art span:nth-child(3){width:28px;height:38px}.vora-screen-benefits{font-size:4px}.vora-phone{width:82px;height:170px;right:4%;bottom:8px;padding:4px;border-width:3px}.vora-phone-screen{border-radius:11px;padding:11px 5px}.vora-phone-screen img{width:25px;height:25px}.vora-phone-screen>b{font-size:10px}.vora-phone-screen>small{font-size:3px;margin-bottom:10px}.vora-phone-screen>strong{font-size:11px;margin-top:22px}.vora-box{display:none}.vora-hero-footer{margin-top:7px}.vora-hero-footer span{font-size:9px;padding:10px 9px}.vora-hero-footer b{font-size:7px}}
+.vora-hero-glow{position:absolute;z-index:2;right:4%;top:9%;width:330px;height:330px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.22),rgba(212,175,55,0) 68%);pointer-events:none}
+.slide-texto{z-index:5;right:5%;left:auto;bottom:25px;transform:none;text-align:right;max-width:330px;padding:0}.slide-texto h2{font-size:18px}.slide-texto p{font-size:11px;margin:5px 0 10px}.slide-texto .btn-slide{font-size:11px;padding:8px 15px}
+.carrossel-btn{z-index:8;background:rgba(4,63,50,.8);padding:10px 13px;font-size:18px}
+
+/* Benefícios mais próximos da referência */
+.aurora-trust-bar{max-width:1400px;margin:10px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:0;border:1px solid #dce9e5;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(4,63,50,.08)}
+.aurora-trust-item{min-height:76px;padding:15px 18px;border-radius:0;box-shadow:none;border:0;border-right:1px solid #e6eeeb;background:#fff}.aurora-trust-item:last-child{border-right:0}
+.aurora-trust-icon{font-size:22px}.aurora-trust-item strong{font-size:12px;color:#173b32}.aurora-trust-item span{font-size:10px;color:#71827c}
+
+/* Títulos de seção */
+.secao-mais-comprados,.secao-categorias,.vitrine-container,.recomendacoes-secao{max-width:1480px}
+.secao-mais-comprados{margin:26px auto 0;padding:0 24px}.secao-titulo{display:flex;align-items:end;justify-content:space-between;border-bottom:1px solid #dfe8e4;padding:0 2px 10px;margin-bottom:12px}.secao-titulo h2,.secao-categorias h2{font-size:21px!important;color:#0b2f27!important;letter-spacing:-.02em}.ver-todos{font-weight:700;font-size:11px!important;color:var(--vora-green)!important}
+
+/* Rails e cards mais premium */
+.aurora-rail-wrap{position:relative}.aurora-rail-btn{background:#fff!important;color:var(--vora-green)!important;border:1px solid #d6e4df!important;box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.produto-card{border:1px solid #e3ebe8;box-shadow:0 4px 16px rgba(10,52,44,.07);border-radius:14px;padding:9px}.produto-card:hover{box-shadow:0 12px 30px rgba(10,52,44,.14);transform:translateY(-3px)}
+.produto-imagem{border-radius:10px;background:#f7faf9}.btn-add-carrinho-card{background:var(--vora-green)!important;color:#fff!important;border-color:var(--vora-green)!important}
+
+/* Categorias: visual de navegação, não parede de caixas */
+.secao-categorias{margin:34px auto;padding:0 24px}.secao-categorias h2{border:0;padding:0;margin-bottom:14px}.grade-categorias{grid-template-columns:repeat(8,1fr);gap:8px}.categoria-card{min-height:78px;padding:9px 6px;border:1px solid #e4ece9;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(8,56,46,.05);transition:.2s}.categoria-card:hover{border-color:var(--vora-gold);box-shadow:0 8px 20px rgba(8,56,46,.1);transform:translateY(-2px)}.categoria-icone{font-size:25px}.categoria-nome{font-size:9px;font-weight:700;color:#17483d}
+
+/* Área da vitrine */
+.vitrine-container{margin:20px auto;padding:0 24px;grid-template-columns:220px 1fr;gap:18px}.filtros-sidebar{border:1px solid #e0eae6;box-shadow:0 6px 20px rgba(8,56,46,.06)}
+
+/* Rodapé */
+.rodape-profissional{background:#052f26!important;border-top:3px solid var(--vora-gold);color:#fff}.rodape-coluna h3,.rodape-coluna h4{color:var(--vora-gold)!important}.rodape-coluna p,.rodape-coluna li,.rodape-coluna a{color:#d6e5e0!important}
+
+/* Tema verde: transforma o seletor em identidade oficial quando escolhido */
+body[data-vora-theme="green"] .header-principal{background:linear-gradient(180deg,#063f32,#052f27)}
+body[data-vora-theme="green"] .btn-add-carrinho-card{background:#0f6b54!important}
+
+@media (max-width:1024px){
+ .grade-categorias{grid-template-columns:repeat(6,1fr)}
+ .vora-hero-marca{left:5%;width:54%}.vora-hero-wordmark{font-size:38px}.vora-hero-logo{width:62px;height:62px}.vora-hero-marca h1{font-size:38px}
+}
+@media (max-width:768px){
+ .header-top{padding:7px 10px}.carrossel-ofertas{margin:10px 8px 0;border-radius:14px}.carrossel-container,.carrossel-slides{min-height:300px;height:300px}.slide{height:300px}
+ .slide::after{background:linear-gradient(180deg,rgba(5,31,25,.45),rgba(5,31,25,.88) 82%)}
+ .vora-hero-marca{left:18px;right:18px;top:20px;transform:none;width:auto;text-align:left}.vora-hero-logo-wrap{gap:8px;margin-bottom:6px}.vora-hero-logo{width:40px;height:40px;padding:4px;border-radius:10px}.vora-hero-wordmark{font-size:25px}.vora-hero-kicker{font-size:7px;letter-spacing:.15em;margin-bottom:5px}.vora-hero-marca h1{font-size:24px;line-height:1.04;margin-bottom:5px}.vora-hero-copy{font-size:9px;line-height:1.35;max-width:280px;margin-bottom:8px}.vora-hero-actions a{padding:7px 11px;font-size:9px}.vora-hero-glow{width:180px;height:180px;right:-30px;top:10px}
+ .slide-texto{right:18px;left:18px;bottom:34px;max-width:none;text-align:right}.slide-texto h2{font-size:13px}.slide-texto p{font-size:8px}.slide-texto .btn-slide{font-size:8px;padding:6px 10px}
+ .aurora-trust-bar{margin:8px 8px 0;border-radius:10px}.aurora-trust-item{min-height:58px;padding:9px}.aurora-trust-icon{font-size:17px}.aurora-trust-item strong{font-size:9px}.aurora-trust-item span{font-size:7px}
+ .secao-mais-comprados{padding:0 8px;margin-top:22px}.secao-titulo h2,.secao-categorias h2{font-size:17px!important}.secao-categorias{padding:0 8px;margin-top:24px}.grade-categorias{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .categoria-card{min-height:70px}.categoria-icone{font-size:21px}.categoria-nome{font-size:8px}
+ .vitrine-container{padding:0 8px;grid-template-columns:1fr;margin-top:14px}.filtros-sidebar{padding:9px}
+}
+@media (max-width:420px){
+ .carrossel-container,.carrossel-slides,.slide{height:285px;min-height:285px}.vora-hero-marca h1{font-size:22px}.vora-hero-copy{max-width:245px}.slide-texto{bottom:28px}.aurora-trust-item span{display:none}
+}
