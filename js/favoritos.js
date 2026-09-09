@@ -1,5 +1,5 @@
 // ============================================================
-// LISTA DE DESEJOS - VORA 313 (VERSÃO MELHORADA)
+// LISTA DE DESEJOS - AURORA COMERCIAL (VERSÃO MELHORADA)
 // ============================================================
 
 let favoritos = [];

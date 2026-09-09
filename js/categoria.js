@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nomeCategoria = categoria.charAt(0).toUpperCase() + categoria.slice(1);
     document.getElementById('breadcrumbCat').textContent = nomeCategoria;
     document.getElementById('tituloCategoria').textContent = `📦 ${nomeCategoria}`;
-    document.getElementById('paginaTitulo').textContent = `${nomeCategoria} - VORA 313`;
+    document.getElementById('paginaTitulo').textContent = `${nomeCategoria} - Aurora Comercial`;
 
     // ✅ Tenta carregar do cache local primeiro
     let catalogo = [];

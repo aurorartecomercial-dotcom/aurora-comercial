@@ -344,7 +344,7 @@ function enviarPedidoWhatsApp(pedido) {
   gerarFaturaHTML(pedido);
   const linhas = pedido.itens.map((item) => `• ${item.nome} (x${item.quantidade}) - ${formatarMoeda(item.preco * item.quantidade)}`);
   const texto = [
-    '*VORA 313 — PEDIDO PENDENTE*', '',
+    '*AURORA COMERCIAL — PEDIDO PENDENTE*', '',
     `Pedido: ${pedido.codigoRastreio}`,
     `Referência: ${pedido.numeroFatura}`,
     ...linhas, '',
@@ -361,7 +361,7 @@ function gerarFaturaHTML(pedido) {
     const subtotal = Number(item.preco) * Number(item.quantidade);
     return `<tr><td>${escapeHTML(item.nome)}</td><td>${item.quantidade}</td><td>${escapeHTML(formatarMoeda(item.preco))}</td><td>${escapeHTML(formatarMoeda(subtotal))}</td></tr>`;
   }).join('');
-  const html = `<!doctype html><html lang="pt"><head><meta charset="utf-8"><title>Fatura ${escapeHTML(pedido.numeroFatura)}</title><style>body{font-family:Arial;margin:30px}h1{color:#005A4C;text-align:center}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#005A4C;color:white}.total{text-align:right;font-size:20px;font-weight:bold}@media print{body{margin:0}}</style></head><body><h1>VORA 313</h1><p><strong>Fatura:</strong> ${escapeHTML(pedido.numeroFatura)}</p><p><strong>Rastreio:</strong> ${escapeHTML(pedido.codigoRastreio)}</p><p><strong>Estado:</strong> Aguardando confirmação de pagamento</p><table><thead><tr><th>Descrição</th><th>Qtd.</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>${linhas}</tbody></table><p class="total">Total: ${escapeHTML(formatarMoeda(pedido.valorTotal))}</p><script>window.print();</script></body></html>`;
+  const html = `<!doctype html><html lang="pt"><head><meta charset="utf-8"><title>Fatura ${escapeHTML(pedido.numeroFatura)}</title><style>body{font-family:Arial;margin:30px}h1{color:#005A4C;text-align:center}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#005A4C;color:white}.total{text-align:right;font-size:20px;font-weight:bold}@media print{body{margin:0}}</style></head><body><h1>AURORA COMERCIAL</h1><p><strong>Fatura:</strong> ${escapeHTML(pedido.numeroFatura)}</p><p><strong>Rastreio:</strong> ${escapeHTML(pedido.codigoRastreio)}</p><p><strong>Estado:</strong> Aguardando confirmação de pagamento</p><table><thead><tr><th>Descrição</th><th>Qtd.</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>${linhas}</tbody></table><p class="total">Total: ${escapeHTML(formatarMoeda(pedido.valorTotal))}</p><script>window.print();</script></body></html>`;
   const janela = window.open('', '_blank', 'noopener');
   if (!janela) return;
   janela.document.write(html);

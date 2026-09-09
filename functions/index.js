@@ -1,5 +1,5 @@
 /*
- * Funções privilegiadas da VORA 313.
+ * Funções privilegiadas da Aurora Comercial.
  *
  * Credenciais de Stripe, Multicaixa e qualquer segredo de um provedor de
  * pagamento pertencem a este ambiente (Secret Manager), nunca ao browser.

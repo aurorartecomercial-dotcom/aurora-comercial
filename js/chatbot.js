@@ -1,5 +1,5 @@
 // ============================================================
-// CHATBOT WHATSAPP - VORA 313
+// CHATBOT WHATSAPP - AURORA COMERCIAL
 // ============================================================
 
 const NUMERO_WHATSAPP = '244933677628';
@@ -27,12 +27,12 @@ export function initChatbot() {
 
 function obterMensagem(opcao) {
     const mensagens = {
-        'pedido': 'Olá! Quero fazer um pedido na VORA 313. Pode me ajudar?',
+        'pedido': 'Olá! Quero fazer um pedido na Aurora Comercial. Pode me ajudar?',
         'rastrear': 'Olá! Preciso de ajuda para rastrear o meu pedido. O código é: ',
         'duvida': 'Olá! Tenho uma dúvida sobre um produto. Pode me ajudar?',
         'pagamento': 'Olá! Como posso pagar o meu pedido?',
         'devolucao': 'Olá! Preciso de ajuda com uma devolução. Pode me orientar?',
-        'vender': 'Olá! Quero vender os meus produtos na VORA 313. Como funciona?'
+        'vender': 'Olá! Quero vender os meus produtos na Aurora Comercial. Como funciona?'
     };
     return mensagens[opcao] || 'Olá! Posso ajudar?';
 }
