@@ -220,7 +220,13 @@ export function initVoraThemePicker() {
         { id:'purple', name:'Roxo', primary:'#7C3AED', dark:'#24113D', bg:'#F7F4FC' },
         { id:'dark', name:'Escuro', primary:'#D4AF37', dark:'#050505', bg:'#0D0D0D' }
     ];
-    const saved = localStorage.getItem('vora313_tema') || 'gold';
+    let saved = localStorage.getItem('vora313_tema');
+    // A identidade padrão da VORA 313 volta a ser o verde.
+    // Se uma versão antiga deixou 'gold' salvo, migramos uma vez para verde.
+    if (!saved || saved === 'gold') {
+        saved = 'green';
+        localStorage.setItem('vora313_tema', saved);
+    }
     document.body.dataset.voraTheme = saved;
     const picker = document.createElement('div');
     picker.id='vora-theme-picker';

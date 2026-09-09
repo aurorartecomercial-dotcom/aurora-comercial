@@ -1328,3 +1328,21 @@ body[data-vora-theme="green"] .btn-add-carrinho-card{background:#0f6b54!importan
 @media (max-width:420px){
  .carrossel-container,.carrossel-slides,.slide{height:285px;min-height:285px}.vora-hero-marca h1{font-size:22px}.vora-hero-copy{max-width:245px}.slide-texto{bottom:28px}.aurora-trust-item span{display:none}
 }
+
+
+/* VORA 313 — correção definitiva do menu mobile */
+@media (max-width: 768px) {
+  .menu-categorias { position: relative !important; z-index: 1005 !important; overflow: visible !important; }
+  #menuToggle { display: flex !important; align-items: center; justify-content: center; width: 40px; height: 38px; position: relative; z-index: 1007; color: #fff; }
+  #menuCategorias { display: none !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; width: 100% !important; max-height: calc(100vh - 120px) !important; overflow-y: auto !important; overflow-x: hidden !important; background: var(--cor-esmeralda-escuro) !important; z-index: 1006 !important; }
+  #menuCategorias.menu-aberto { display: flex !important; flex-direction: column !important; }
+  #menuCategorias > li { width: 100%; }
+  #menuCategorias > li > a { width: 100%; padding: 13px 18px !important; font-size: 14px !important; }
+  #menuCategorias .submenu { display: none !important; position: static !important; width: 100% !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; }
+  #menuCategorias > li.dropdown.menu-aberto > .submenu { display: grid !important; grid-template-columns: 1fr 1fr !important; padding: 4px 8px 10px !important; background: rgba(0,0,0,.12) !important; }
+  #menuCategorias .submenu li a { padding: 9px 8px !important; font-size: 12px !important; white-space: normal !important; }
+}
+
+/* Verde como aparência padrão oficial */
+body[data-vora-theme="green"] .header-principal,
+body[data-vora-theme="green"] .menu-categorias { background: var(--cor-esmeralda) !important; }

@@ -1,51 +1,70 @@
 export function initMobileMenu() {
     const menuToggle = document.getElementById('menuToggle');
     const menuLista = document.getElementById('menuCategorias');
-    const dropdowns = document.querySelectorAll('.dropdown');
-    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    if (!menuToggle || !menuLista || menuToggle.dataset.menuReady === '1') return;
 
-    // Abrir/fechar menu principal (hambúrguer)
-    if (menuToggle && menuLista) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuLista.classList.toggle('menu-aberto');
-            const isOpen = menuLista.classList.contains('menu-aberto');
-            menuToggle.setAttribute('aria-expanded', isOpen);
-        });
+    menuToggle.dataset.menuReady = '1';
+    const menuContainer = menuToggle.closest('.menu-categorias');
+    const dropdowns = menuLista.querySelectorAll(':scope > li.dropdown');
+    const dropdownToggles = menuLista.querySelectorAll(':scope > li.dropdown > .dropdown-toggle');
 
-        // Fechar ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.menu-categorias')) {
-                menuLista.classList.remove('menu-aberto');
-                dropdowns.forEach(d => d.classList.remove('menu-aberto'));
-            }
-        });
-    }
+    const closeAll = () => {
+        menuLista.classList.remove('menu-aberto');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        dropdowns.forEach(d => d.classList.remove('menu-aberto'));
+        dropdownToggles.forEach(t => t.setAttribute('aria-expanded', 'false'));
+    };
 
-    // Abrir/fechar dropdowns (Roupas, Mais Categorias) por clique
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-controls', 'menuCategorias');
+
+    // Menu principal: funciona por toque/clique no celular.
+    menuToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const aberto = menuLista.classList.toggle('menu-aberto');
+        menuToggle.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+        if (!aberto) dropdowns.forEach(d => d.classList.remove('menu-aberto'));
+    });
+
+    // Submenu Categorias.
     dropdownToggles.forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const parentDropdown = toggle.closest('.dropdown');
-            // Fecha os outros dropdowns
+            if (!menuLista.classList.contains('menu-aberto')) {
+                menuLista.classList.add('menu-aberto');
+                menuToggle.setAttribute('aria-expanded', 'true');
+            }
+            const parent = toggle.closest('.dropdown');
             dropdowns.forEach(d => {
-                if (d !== parentDropdown) d.classList.remove('menu-aberto');
+                if (d !== parent) d.classList.remove('menu-aberto');
             });
-            // Alterna o atual
-            parentDropdown.classList.toggle('menu-aberto');
-            toggle.setAttribute('aria-expanded', parentDropdown.classList.contains('menu-aberto'));
+            const aberto = parent.classList.toggle('menu-aberto');
+            toggle.setAttribute('aria-expanded', aberto ? 'true' : 'false');
         });
     });
 
-    // Fechar dropdown ao clicar em um link do submenu
-    dropdowns.forEach(dropdown => {
-        const submenuLinks = dropdown.querySelectorAll('.submenu a');
-        submenuLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                dropdown.classList.remove('menu-aberto');
-                menuLista.classList.remove('menu-aberto');
-            });
-        });
+    // Links normais/submenu fecham o menu depois da navegação começar.
+    menuLista.querySelectorAll('a').forEach(link => {
+        if (link.classList.contains('dropdown-toggle')) return;
+        link.addEventListener('click', () => closeAll());
     });
+
+    // Clique fora fecha tudo, sem interferir no clique do botão.
+    document.addEventListener('click', (e) => {
+        if (!menuContainer || !menuContainer.contains(e.target)) closeAll();
+    });
+
+    // ESC fecha no desktop e mobile.
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAll();
+    });
+}
+
+// Segurança: se uma página carregar este módulo diretamente, inicializa sozinho.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobileMenu, { once: true });
+} else {
+    initMobileMenu();
 }
