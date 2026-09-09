@@ -1,133 +1,36 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog - VORA 313</title>
-    <link rel="icon" type="image/png" href="logo-vora-313.png" />
-    <meta name="description" content="Blog da VORA 313 - dicas de moda, tecnologia e muito mais." />
-    <meta name="keywords" content="aurora, comercial, blog, angola, moda, tecnologia" />
-    <meta property="og:title" content="Blog - VORA 313" />
-    <meta property="og:description" content="Artigos e novidades da VORA 313." />
-    <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
-    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/blog.html" />
-    <meta property="og:type" content="website" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=3" />
-    
-
-    <!-- ESTILOS EXCLUSIVOS DO BLOG -->
-    <style>
-        body.blog-page { background: #0f0f0f; color: #f0f0f0; }
-        .pagina-blog { background: #0f0f0f; padding: 30px 24px; border-radius: 24px; }
-        .pagina-blog h1 { color: #00d4ff !important; font-size: 2.8rem; text-align: center; margin-bottom: 20px; position: relative; }
-        .pagina-blog h1::after { content: ''; display: block; width: 80px; height: 3px; background: #8b5cf6; margin: 10px auto 0; }
-        #blogGrid .produto-card { background: #1a1a1a; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.8); border: 1px solid #333; color: #f0f0f0; transition: 0.3s; }
-        #blogGrid .produto-card:hover { border-color: #00d4ff; box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2); transform: translateY(-4px); }
-        #blogGrid .produto-imagem { background: #222; }
-        #blogGrid .produto-info h3 { color: #ffffff; }
-        #blogGrid .produto-info p { color: #a0a0a0; }
-        #blogGrid .categoria-tag { color: #8b5cf6 !important; }
-        #blogGrid .produto-info span:last-child { color: #00d4ff !important; }
-        #blogGrid .produto-info span:last-child:hover { color: #8b5cf6 !important; }
-        .breadcrumb { color: #888; }
-        .breadcrumb a { color: #00d4ff; }
-        .breadcrumb a:hover { color: #8b5cf6; }
-    </style>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VORA 313 Media | Ideias, Guias e Tendências</title>
+  <link rel="icon" type="image/png" href="logo-vora-313.png" />
+  <meta name="description" content="VORA 313 Media: guias, ideias, tendências e conteúdos para ajudar a comprar melhor e descobrir novas oportunidades." />
+  <meta name="keywords" content="VORA 313, blog Angola, compras online Angola, tecnologia, moda, casa" />
+  <link rel="stylesheet" href="style.css?v=6" />
+  <style>
+    .media-page{background:#f5f7f6;color:#173b31}.media-wrap{max-width:1280px;margin:auto;padding:28px 22px 0}
+    .media-hero{position:relative;overflow:hidden;border-radius:25px;padding:48px 52px;background:linear-gradient(135deg,#063f32,#075946);color:#fff;box-shadow:0 20px 50px rgba(4,63,50,.16)}.media-hero:after{content:"";position:absolute;width:310px;height:310px;right:-110px;top:-150px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.28),transparent 70%)}
+    .media-kicker{color:#f4d66b;font-size:11px;font-weight:800;letter-spacing:.17em;text-transform:uppercase}.media-hero h1{font-size:clamp(35px,5vw,60px);line-height:1.03;margin:10px 0 12px;letter-spacing:-.04em}.media-hero h1 span{color:#f4d66b}.media-hero p{max-width:700px;color:#dceae5;line-height:1.7;margin:0;font-size:15px}.media-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.media-nav a{padding:9px 13px;border:1px solid rgba(255,255,255,.25);border-radius:999px;color:#fff;text-decoration:none;font-size:12px;font-weight:700;background:rgba(255,255,255,.06)}
+    .media-feature{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin:24px 0}.feature-copy,.feature-side{background:#fff;border:1px solid #e0e9e5;border-radius:20px;overflow:hidden}.feature-copy{display:grid;grid-template-columns:.95fr 1.05fr}.feature-image{min-height:280px;background:#eef4f1}.feature-image img{width:100%;height:100%;object-fit:cover}.feature-text{padding:28px}.tag{display:inline-block;color:#0a6a53;background:#eaf5f1;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:800}.feature-text h2{font-size:27px;line-height:1.12;margin:12px 0 10px;color:#123f34}.feature-text p{color:#687a74;line-height:1.65;font-size:14px}.read-btn{display:inline-flex;margin-top:7px;color:#075946;font-weight:800;text-decoration:none}.feature-side{padding:24px;background:#073f32;color:#fff}.feature-side h3{margin:0 0 15px;font-size:21px}.mini-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.12)}.mini-item:last-child{border-bottom:0}.mini-number{color:#f4d66b;font-weight:800}.mini-item b{font-size:13px;line-height:1.4}.mini-item span{display:block;color:#bdd0c9;font-size:10px;margin-top:3px}
+    .media-head{display:flex;justify-content:space-between;align-items:end;margin:34px 0 14px}.media-head h2{margin:0;color:#073f32;font-size:27px}.media-head p{margin:5px 0 0;color:#71817c;font-size:13px}.media-filter{display:flex;gap:7px;flex-wrap:wrap}.media-filter button{border:1px solid #dce7e2;background:#fff;color:#44635a;padding:8px 12px;border-radius:999px;font-weight:700;font-size:11px;cursor:pointer}.media-filter button.active{background:#075946;color:#fff;border-color:#075946}
+    #blogGrid.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.media-card{display:block;background:#fff;border:1px solid #e0e9e5;border-radius:18px;overflow:hidden;text-decoration:none;box-shadow:0 7px 24px rgba(8,56,46,.06);transition:.2s}.media-card:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(8,56,46,.12)}.media-card-image{height:205px;background:#eef3f1;overflow:hidden}.media-card-image img{width:100%;height:100%;object-fit:cover;transition:.3s}.media-card:hover img{transform:scale(1.03)}.media-card-body{padding:17px}.media-meta{display:flex;justify-content:space-between;gap:8px;color:#78908a;font-size:10px}.media-card h3{font-size:18px;line-height:1.3;color:#163e34;margin:9px 0}.media-card p{font-size:13px;line-height:1.6;color:#687a74;margin:0 0 12px}.media-read{color:#075946;font-size:12px;font-weight:800}.media-bottom{margin:32px 0 10px;padding:27px;border-radius:20px;background:#eaf4f0;border:1px solid #d7e7e1;display:flex;justify-content:space-between;align-items:center;gap:20px}.media-bottom h3{margin:0 0 5px;color:#073f32}.media-bottom p{margin:0;color:#62766f;font-size:13px}.media-bottom a{background:#d4af37;color:#162a24;text-decoration:none;font-weight:800;padding:11px 16px;border-radius:999px;white-space:nowrap}
+    @media(max-width:900px){.media-feature{grid-template-columns:1fr}.feature-copy{grid-template-columns:1fr}.feature-image{min-height:230px}#blogGrid.media-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.media-wrap{padding:12px 10px 0}.media-hero{padding:30px 20px;border-radius:18px}.media-hero h1{font-size:35px}.media-hero p{font-size:13px}.media-feature{margin-top:16px}.feature-text{padding:20px}.feature-text h2{font-size:22px}.media-head{display:block}.media-head h2{font-size:23px;margin-bottom:10px}#blogGrid.media-grid{grid-template-columns:1fr}.media-card-image{height:190px}.media-bottom{display:block}.media-bottom a{display:inline-flex;margin-top:14px}}
+  </style>
 </head>
-<body class="blog-page">
-    <header class="header-principal" role="banner">
-        <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo-vora-313.png" alt="Logo VORA 313" />
-                <span class="logo-wordmark">VORA <span>313</span></span>
-            </a>
-            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" />
-                <button type="submit">🔍</button>
-            </form>
-            <div class="header-icones">
-                <button class="btn-entrar" id="btnEntrar">
-                    <small>Olá, faça seu login</small>
-                    Conta
-                </button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
-            </div>
-        </div>
-        <!-- NOVO MENU -->
-        <nav class="menu-categorias" aria-label="Categorias">
-            <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
-            </button>
-            <ul id="menuCategorias">
-                <li><a href="index.html">Início</a></li>
-                <li><a href="sobre.html">Contactos</a></li>
-                <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
-                <li><a href="blog.html">📰 Media</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">📂 Categorias ▾</a>
-                    <ul class="submenu">
-                        <li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li>
-                        <li><a href="categoria.html?cat=consolas">Consolas</a></li>
-                        <li><a href="categoria.html?cat=beleza">Beleza</a></li>
-                        <li><a href="categoria.html?cat=cozinha">Cozinha</a></li>
-                        <li><a href="categoria.html?cat=colunas">Colunas</a></li>
-                        <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
-                        <li><a href="categoria.html?cat=casa">Casa</a></li>
-                        <li><a href="categoria.html?cat=feminino">Feminino</a></li>
-                        <li><a href="categoria.html?cat=masculino">Masculino</a></li>
-                        <li><a href="categoria.html?cat=calcados">Sapatos</a></li>
-                        <li><a href="categoria.html?cat=joias">Pulseiras</a></li>
-                        <li><a href="categoria.html?cat=automoveis">Carros</a></li>
-                        <li><a href="categoria.html?cat=papelaria">Papelaria</a></li>
-                        <li><a href="categoria.html?cat=jardinagem">Jardinagem</a></li>
-                        <li><a href="categoria.html?cat=energia-solar">Energia Solar</a></li>
-                        <li><a href="categoria.html?cat=seguranca">Segurança</a></li>
-                        <li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li>
-                        <li><a href="categoria.html?cat=relogios">Relógios</a></li>
-                        <li><a href="categoria.html?cat=oculos">Óculos</a></li>
-                        <li><a href="categoria.html?cat=malas-mochilas">Malas e Mochilas</a></li>
-                        <li><a href="categoria.html?cat=instrumentos">Instrumentos Musicais</a></li>
-                        <li><a href="categoria.html?cat=artesanato">Artesanato</a></li>
-                        <li><a href="categoria.html?cat=festas">Festas</a></li>
-                        <li><a href="categoria.html?cat=automotivo">Automotivo</a></li>
-                        <li><a href="categoria.html?cat=construcao">Construção</a></li>
-                        <li><a href="categoria.html?cat=limpeza">Limpeza</a></li>
-                        <li><a href="categoria.html?cat=saude">Saúde e Bem-estar</a></li>
-                        <li><a href="categoria.html?cat=eletrodomesticos">Eletrodomésticos</a></li>
-                        <li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li>
-                        <li><a href="categoria.html?cat=fotografia">Fotografia</a></li>
-                        <li><a href="categoria.html?cat=utensilios-cozinha">Utensílios de Cozinha</a></li>
-                        <li><a href="categoria.html?cat=viagem">Viagem</a></li>
-                    </ul>
-                </li>
-                <li><a href="sobre.html">↩️ Retornos</a></li>
-                <li><a href="sobre.html">🏷️ Vender</a></li>
-                <li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
-        <div class="pagina-blog">
-            <h1>📖 Blog VORA 313</h1>
-            <div id="blogGrid" class="grade-produtos" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
-        </div>
-    </main>
-
-    <footer class="rodape-profissional">
-        <div class="rodape-copyright">&copy; 2026 VORA 313.</div>
-    </footer>
-
-    <script type="module" src="js/blog.js?v=3"></script>
+<body class="media-page">
+  <header class="header-principal" role="banner">
+    <div class="header-top"><a href="index.html" class="logo" aria-label="Voltar para a página inicial"><img src="logo-vora-313.png" alt="Logo VORA 313" /><span class="logo-wordmark">VORA <span>313</span></span></a><form class="busca-container" role="search" onsubmit="event.preventDefault();"><input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" /><button type="submit">🔍</button></form><div class="header-icones"><button class="btn-entrar" id="btnEntrar"><small>Olá, faça seu login</small>Conta</button><button id="abrirCarrinhoFlutuante" class="carrinho-icone">🛒 <span id="badgeContador">0</span></button></div></div>
+    <nav class="menu-categorias" aria-label="Navegação principal"><button id="menuToggle" aria-label="Abrir menu"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button><ul id="menuCategorias"><li><a href="index.html">Início</a></li><li><a href="sobre.html">Sobre nós</a></li><li><a href="https://wa.me/244933677628" target="_blank">💬 WhatsApp</a></li><li><a href="blog.html">📰 Media</a></li><li class="dropdown"><a href="#" class="dropdown-toggle">📂 Categorias ▾</a><ul class="submenu"><li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li><li><a href="categoria.html?cat=consolas">Consolas</a></li><li><a href="categoria.html?cat=beleza">Beleza</a></li><li><a href="categoria.html?cat=casa">Casa</a></li><li><a href="categoria.html?cat=moda">Moda</a></li><li><a href="categoria.html?cat=automotivo">Automotivo</a></li><li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li><li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li></ul></li><li><a href="rastreio.html">📦 Rastrear Pedido</a></li><li><a href="sobre.html#vender">🏷️ Vender</a></li></ul></nav>
+  </header>
+  <main class="media-wrap">
+    <section class="media-hero"><div class="media-kicker">VORA 313 Media</div><h1>Ideias para comprar<br><span>melhor.</span></h1><p>Guias, tendências, inspiração e conteúdos úteis para descobrir produtos, tomar melhores decisões e acompanhar o que está a acontecer no mundo do comércio.</p><div class="media-nav"><a href="#artigos">Todos os artigos</a><a href="#tecnologia">Tecnologia</a><a href="#casa">Casa & estilo</a><a href="#compras">Guias de compra</a></div></section>
+    <section class="media-feature"><article class="feature-copy"><div class="feature-image"><img src="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" alt="Smartphone" loading="lazy"></div><div class="feature-text"><span class="tag">GUIA DE COMPRA</span><h2>Como escolher tecnologia sem gastar dinheiro à toa</h2><p>Antes de comprar, vale comparar necessidades, qualidade, utilização e custo-benefício. Veja os pontos que merecem atenção.</p><a class="read-btn" href="post.html?id=1">Ler artigo completo →</a></div></article><aside class="feature-side"><h3>Por onde começar?</h3><div class="mini-item"><div class="mini-number">01</div><div><b>Escolha pelo que precisa</b><span>Evite comprar apenas pela aparência ou pela moda.</span></div></div><div class="mini-item"><div class="mini-number">02</div><div><b>Compare antes de decidir</b><span>Preço, características e utilidade fazem diferença.</span></div></div><div class="mini-item"><div class="mini-number">03</div><div><b>Compre com confiança</b><span>Procure informação clara e canais de contacto acessíveis.</span></div></div></aside></section>
+    <section id="artigos"><div class="media-head"><div><h2>Últimos conteúdos</h2><p>Conteúdos selecionados pela VORA 313.</p></div><div class="media-filter"><button class="active" type="button">Todos</button><button type="button">Tecnologia</button><button type="button">Casa</button><button type="button">Moda</button></div></div><div id="blogGrid" class="media-grid"></div></section>
+    <section class="media-bottom"><div><h3>Quer descobrir mais?</h3><p>Explore o marketplace e encontre produtos em dezenas de categorias.</p></div><a href="index.html">Explorar a VORA 313 →</a></section>
+  </main>
+  <footer class="rodape-profissional"><div class="rodape-grid"><div class="rodape-coluna"><h3>VORA 313</h3><p>Marketplace angolano com curadoria premium.</p></div><div class="rodape-coluna"><h4>Contacto</h4><p>📞 +244 933 677 628</p><p>✉️ contacto@aurorarte.ao</p></div><div class="rodape-coluna"><h4>Institucional</h4><ul><li><a href="sobre.html">🏬 Sobre Nós</a></li><li><a href="politica.html">📜 Política de Privacidade</a></li><li><a href="blog.html">📖 Media</a></li></ul></div></div><div class="rodape-copyright">&copy; 2026 VORA 313.</div></footer>
+  <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20VORA%20313." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+  <script type="module" src="js/blog.js?v=6"></script><script type="module" src="js/menu.js?v=6"></script>
 </body>
 </html>

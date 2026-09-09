@@ -1346,3 +1346,12 @@ body[data-vora-theme="green"] .btn-add-carrinho-card{background:#0f6b54!importan
 /* Verde como aparência padrão oficial */
 body[data-vora-theme="green"] .header-principal,
 body[data-vora-theme="green"] .menu-categorias { background: var(--cor-esmeralda) !important; }
+
+/* VORA 313 — acabamento das páginas institucionais */
+body.sobre-page .menu-categorias, body.media-page .menu-categorias{background:var(--cor-esmeralda)!important}
+body.sobre-page .rodape-profissional, body.media-page .rodape-profissional{margin-top:34px}
+@media(max-width:768px){
+  body.sobre-page .header-top, body.media-page .header-top{padding:7px 10px}
+  body.sobre-page .busca-container, body.media-page .busca-container{min-width:0}
+  body.sobre-page .logo-wordmark, body.media-page .logo-wordmark{font-size:16px}
+}

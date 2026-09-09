@@ -8,40 +8,47 @@ async function carregarBlog() {
     const posts = await response.json();
     renderizarPosts(Array.isArray(posts) ? posts : []);
   } catch (_) {
-    grid.textContent = 'Erro ao carregar artigos.';
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:25px;background:#fff;border:1px solid #e0e9e5;border-radius:16px;color:#6b7c76">Não foi possível carregar os artigos agora.</div>';
   }
 }
 
 function renderizarPosts(posts) {
   const grid = document.getElementById('blogGrid');
   grid.replaceChildren();
-  posts.forEach((post) => {
+  posts.forEach((post, index) => {
     const card = document.createElement('a');
-    card.className = 'produto-card';
+    card.className = 'media-card';
     card.href = `post.html?id=${encodeURIComponent(post.id)}`;
+
     const imagemDiv = document.createElement('div');
-    imagemDiv.className = 'produto-imagem';
+    imagemDiv.className = 'media-card-image';
     const imagem = document.createElement('img');
     imagem.src = urlSegura(post.imagem, IMAGEM_FALLBACK);
-    imagem.alt = String(post.titulo || 'Artigo');
+    imagem.alt = String(post.titulo || 'Artigo VORA 313');
+    imagem.loading = index < 2 ? 'eager' : 'lazy';
     imagem.addEventListener('error', () => { imagem.src = IMAGEM_FALLBACK; }, { once: true });
     imagemDiv.append(imagem);
-    const info = document.createElement('div');
-    info.className = 'produto-info';
+
+    const body = document.createElement('div');
+    body.className = 'media-card-body';
+    const meta = document.createElement('div');
+    meta.className = 'media-meta';
     const data = document.createElement('span');
     data.textContent = String(post.data || '');
-    data.style.cssText = 'color:var(--cor-esmeralda);font-size:11px;font-weight:600;';
+    const leitura = document.createElement('span');
+    const palavras = String(post.conteudo || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+    leitura.textContent = `${Math.max(2, Math.ceil(palavras / 180))} min de leitura`;
+    meta.append(data, leitura);
+
     const titulo = document.createElement('h3');
     titulo.textContent = String(post.titulo || 'Artigo');
-    titulo.style.cssText = 'font-size:16px;margin-top:6px;';
     const resumo = document.createElement('p');
     resumo.textContent = String(post.resumo || '');
-    resumo.style.cssText = 'font-size:13px;color:#666;margin:6px 0;';
     const mais = document.createElement('span');
+    mais.className = 'media-read';
     mais.textContent = 'Ler mais →';
-    mais.style.cssText = 'color:var(--cor-ouro);font-weight:600;font-size:12px;';
-    info.append(data, titulo, resumo, mais);
-    card.append(imagemDiv, info);
+    body.append(meta, titulo, resumo, mais);
+    card.append(imagemDiv, body);
     grid.append(card);
   });
 }

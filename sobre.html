@@ -1,146 +1,91 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sobre Nós - VORA 313</title>
-    <link rel="icon" type="image/png" href="logo-vora-313.png" />
-    <meta name="description" content="Conheça a VORA 313, marketplace angolano com curadoria premium. Contacte-nos em Luanda." />
-    <meta name="keywords" content="aurora, comercial, angola, marketplace" />
-    <meta property="og:title" content="Sobre Nós - VORA 313" />
-    <meta property="og:description" content="Conheça a VORA 313, marketplace angolano com curadoria premium." />
-    <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
-    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/aurora-comercial/sobre.html" />
-    <meta property="og:type" content="website" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=5" />
-    <link rel="manifest" href="manifest.json" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sobre a VORA 313 | Marketplace Angolano</title>
+  <link rel="icon" type="image/png" href="logo-vora-313.png" />
+  <meta name="description" content="Conheça a VORA 313, um marketplace angolano criado para aproximar pessoas, produtos e oportunidades com uma experiência simples, segura e moderna." />
+  <meta name="keywords" content="VORA 313, marketplace Angola, comprar online Angola, vender online Angola" />
+  <meta property="og:title" content="Sobre a VORA 313" />
+  <meta property="og:description" content="Mais do que compras, uma conexão." />
+  <meta property="og:image" content="logo-vora-313.png" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    .sobre-page{background:#f5f7f6;color:#163a31}
+    .sobre-wrap{max-width:1280px;margin:0 auto;padding:32px 22px 0}
+    .sobre-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center;padding:58px 56px;border-radius:26px;background:linear-gradient(135deg,#063f32 0%,#075946 62%,#0b6d55 100%);color:#fff;box-shadow:0 22px 55px rgba(4,63,50,.18)}
+    .sobre-hero:before{content:"";position:absolute;width:360px;height:360px;right:-120px;top:-150px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.26),transparent 68%)}
+    .sobre-kicker{display:inline-flex;align-items:center;gap:8px;color:#f5d76e;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:13px}
+    .sobre-hero h1{font-size:clamp(34px,5vw,62px);line-height:1.02;margin:0 0 16px;letter-spacing:-.04em}.sobre-hero h1 span{color:#f5d76e}
+    .sobre-hero p{max-width:680px;color:#e4f0ec;font-size:16px;line-height:1.75;margin:0 0 24px}
+    .sobre-actions{display:flex;gap:10px;flex-wrap:wrap}.sobre-actions a{display:inline-flex;padding:12px 18px;border-radius:999px;font-weight:800;text-decoration:none}.sobre-primary{background:#d4af37;color:#13241f}.sobre-secondary{border:1px solid rgba(255,255,255,.35);color:#fff;background:rgba(255,255,255,.08)}
+    .sobre-visual{position:relative;min-height:290px;display:flex;align-items:center;justify-content:center}.sobre-logo-card{width:min(300px,80%);aspect-ratio:1/1;border-radius:30px;background:#fff;display:flex;align-items:center;justify-content:center;padding:34px;box-shadow:0 25px 55px rgba(0,0,0,.22);transform:rotate(3deg)}.sobre-logo-card img{width:100%;height:100%;object-fit:contain}
+    .sobre-floating{position:absolute;bottom:8px;right:0;background:#082b23;border:1px solid rgba(212,175,55,.5);padding:12px 15px;border-radius:14px;box-shadow:0 12px 25px rgba(0,0,0,.2);font-size:12px;font-weight:700}.sobre-floating strong{color:#f5d76e;display:block;font-size:16px;margin-bottom:2px}
+    .sobre-section{padding:42px 0}.sobre-section-head{max-width:760px;margin-bottom:22px}.sobre-section-head .eyebrow{color:#b8960f;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.sobre-section-head h2{font-size:32px;margin:7px 0 9px;color:#073f32}.sobre-section-head p{color:#5e706a;line-height:1.7;margin:0}
+    .sobre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.sobre-card{background:#fff;border:1px solid #e0e9e5;border-radius:18px;padding:23px;box-shadow:0 7px 24px rgba(8,56,46,.06)}.sobre-card .icon{width:44px;height:44px;border-radius:13px;background:#edf6f2;display:grid;place-items:center;font-size:21px;margin-bottom:13px}.sobre-card h3{margin:0 0 8px;font-size:17px;color:#084b3c}.sobre-card p{margin:0;color:#667872;line-height:1.65;font-size:14px}
+    .sobre-modelo{display:grid;grid-template-columns:.9fr 1.1fr;gap:24px;align-items:stretch}.sobre-panel{border-radius:20px;padding:28px;background:#073f32;color:#fff}.sobre-panel h3{margin:0 0 10px;font-size:25px}.sobre-panel p{color:#dce9e5;line-height:1.7}.sobre-list{display:grid;gap:12px}.sobre-list div{display:flex;gap:12px;align-items:flex-start;padding:15px 16px;background:#fff;border:1px solid #e1ebe7;border-radius:15px}.sobre-list b{display:block;color:#124e40;margin-bottom:3px}.sobre-list span{font-size:13px;color:#697a74;line-height:1.5}
+    .sobre-contacto{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}.contact-box{background:#fff;border:1px solid #e0e9e5;border-radius:20px;padding:26px}.contact-box h3{color:#073f32;margin:0 0 15px}.contact-line{padding:10px 0;border-bottom:1px solid #edf1ef;color:#556760}.contact-line:last-child{border-bottom:0}.contact-line strong{color:#173e34}.sobre-cta{margin:10px 0 0;padding:30px;border-radius:20px;background:linear-gradient(135deg,#d4af37,#f2d56a);color:#102c24;display:flex;justify-content:space-between;align-items:center;gap:20px}.sobre-cta h3{margin:0 0 5px;font-size:24px}.sobre-cta p{margin:0;color:#34483f}.sobre-cta a{white-space:nowrap;background:#073f32;color:#fff;padding:12px 17px;border-radius:999px;text-decoration:none;font-weight:800}
+    @media(max-width:850px){.sobre-hero,.sobre-modelo,.sobre-contacto{grid-template-columns:1fr}.sobre-hero{padding:34px 24px}.sobre-visual{min-height:230px}.sobre-grid{grid-template-columns:1fr 1fr}.sobre-cta{align-items:flex-start;flex-direction:column}}
+    @media(max-width:520px){.sobre-wrap{padding:14px 10px 0}.sobre-hero{border-radius:18px;padding:28px 19px}.sobre-hero h1{font-size:34px}.sobre-hero p{font-size:14px}.sobre-logo-card{width:190px;padding:24px}.sobre-floating{right:8px}.sobre-section{padding:30px 0}.sobre-section-head h2{font-size:25px}.sobre-grid{grid-template-columns:1fr}.sobre-card{padding:19px}.sobre-cta{padding:22px}.sobre-cta h3{font-size:21px}}
+  </style>
 </head>
-<body>
-    <header class="header-principal" role="banner">
-        <div class="header-top">
-            <a href="index.html" class="logo" aria-label="Voltar para a página inicial">
-                <img src="logo-vora-313.png" alt="Logo VORA 313" />
-                <span class="logo-wordmark">VORA <span>313</span></span>
-            </a>
-            <form class="busca-container" role="search" onsubmit="event.preventDefault();">
-                <input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" />
-                <button type="submit" aria-label="Pesquisar">🔍</button>
-            </form>
-            <div class="header-icones">
-                <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
-                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small>
-                    Conta
-                </button>
-                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
-            </div>
-        </div>
-        <nav class="menu-categorias" aria-label="Categorias">
-            <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
-            </button>
-            <ul id="menuCategorias">
-                <li><a href="index.html">Início</a></li>
-                <li><a href="sobre.html">Contactos</a></li>
-                <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
-                <li><a href="blog.html">📰 Media</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">📂 Categorias ▾</a>
-                    <ul class="submenu">
-                        <li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li>
-                        <li><a href="categoria.html?cat=consolas">Consolas</a></li>
-                        <li><a href="categoria.html?cat=beleza">Beleza</a></li>
-                        <li><a href="categoria.html?cat=cozinha">Cozinha</a></li>
-                        <li><a href="categoria.html?cat=colunas">Colunas</a></li>
-                        <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
-                        <li><a href="categoria.html?cat=casa">Casa</a></li>
-                        <li><a href="categoria.html?cat=feminino">Feminino</a></li>
-                        <li><a href="categoria.html?cat=masculino">Masculino</a></li>
-                        <li><a href="categoria.html?cat=calcados">Sapatos</a></li>
-                        <li><a href="categoria.html?cat=joias">Pulseiras</a></li>
-                        <li><a href="categoria.html?cat=automoveis">Carros</a></li>
-                        <li><a href="categoria.html?cat=papelaria">Papelaria</a></li>
-                        <li><a href="categoria.html?cat=jardinagem">Jardinagem</a></li>
-                        <li><a href="categoria.html?cat=energia-solar">Energia Solar</a></li>
-                        <li><a href="categoria.html?cat=seguranca">Segurança</a></li>
-                        <li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li>
-                        <li><a href="categoria.html?cat=relogios">Relógios</a></li>
-                        <li><a href="categoria.html?cat=oculos">Óculos</a></li>
-                        <li><a href="categoria.html?cat=malas-mochilas">Malas e Mochilas</a></li>
-                        <li><a href="categoria.html?cat=instrumentos">Instrumentos Musicais</a></li>
-                        <li><a href="categoria.html?cat=artesanato">Artesanato</a></li>
-                        <li><a href="categoria.html?cat=festas">Festas</a></li>
-                        <li><a href="categoria.html?cat=automotivo">Automotivo</a></li>
-                        <li><a href="categoria.html?cat=construcao">Construção</a></li>
-                        <li><a href="categoria.html?cat=limpeza">Limpeza</a></li>
-                        <li><a href="categoria.html?cat=saude">Saúde e Bem-estar</a></li>
-                        <li><a href="categoria.html?cat=eletrodomesticos">Eletrodomésticos</a></li>
-                        <li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li>
-                        <li><a href="categoria.html?cat=fotografia">Fotografia</a></li>
-                        <li><a href="categoria.html?cat=utensilios-cozinha">Utensílios de Cozinha</a></li>
-                        <li><a href="categoria.html?cat=viagem">Viagem</a></li>
-                    </ul>
-                </li>
-                <li><a href="sobre.html">↩️ Retornos</a></li>
-                <li><a href="sobre.html">🏷️ Vender</a></li>
-                <li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <div style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
-        <h1 style="color:var(--cor-esmeralda);">🏬 Sobre a VORA 313</h1>
-        <p style="font-size:16px; color:#444; line-height:1.8;">A <strong>VORA 313</strong> é um marketplace angolano com curadoria premium. Nossa missão é levar os melhores produtos (eletrônicos, moda, ferramentas, imóveis e automóveis) até a sua casa com qualidade, segurança e rapidez.</p>
-        <div style="margin-top:20px;">
-            <h3 style="color:var(--cor-esmeralda);">📍 Onde estamos:</h3>
-            <p>Luanda, Angola - Rua da Ende, s/n</p>
-            <h3 style="color:var(--cor-esmeralda); margin-top:10px;">📞 Contacto Direto:</h3>
-            <p><strong>WhatsApp:</strong> +244 933 677 628</p>
-            <p><strong>Email:</strong> contacto@aurorarte.ao</p>
-            <p style="margin-top:20px;">Atendemos de Segunda a Sábado, das 9h às 18h.</p>
-        </div>
-        <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--cor-esmeralda); font-weight:600;">← Voltar à loja</a>
+<body class="sobre-page">
+  <header class="header-principal" role="banner">
+    <div class="header-top">
+      <a href="index.html" class="logo" aria-label="Voltar para a página inicial"><img src="logo-vora-313.png" alt="Logo VORA 313" /><span class="logo-wordmark">VORA <span>313</span></span></a>
+      <form class="busca-container" role="search" onsubmit="event.preventDefault();"><input type="search" id="campoBusca" placeholder="Buscar produtos..." class="busca-input" aria-label="Buscar produtos" /><button type="submit" aria-label="Pesquisar">🔍</button></form>
+      <div class="header-icones"><button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro">🌙</button><button class="btn-entrar" id="btnEntrar"><small>Olá, faça seu login</small>Conta</button><button id="badgePontos" style="background:#D4AF37;color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer;">⭐ 0 pts</button><button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">🛒 <span id="badgeContador">0</span></button></div>
     </div>
+    <nav class="menu-categorias" aria-label="Navegação principal"><button id="menuToggle" aria-label="Abrir menu"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button><ul id="menuCategorias"><li><a href="index.html">Início</a></li><li><a href="sobre.html">Sobre nós</a></li><li><a href="https://wa.me/244933677628" target="_blank">💬 WhatsApp</a></li><li><a href="blog.html">📰 Media</a></li><li class="dropdown"><a href="#" class="dropdown-toggle">📂 Categorias ▾</a><ul class="submenu"><li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li><li><a href="categoria.html?cat=consolas">Consolas</a></li><li><a href="categoria.html?cat=beleza">Beleza</a></li><li><a href="categoria.html?cat=casa">Casa</a></li><li><a href="categoria.html?cat=moda">Moda</a></li><li><a href="categoria.html?cat=automotivo">Automotivo</a></li><li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li><li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li></ul></li><li><a href="rastreio.html">📦 Rastrear Pedido</a></li><li><a href="sobre.html#vender">🏷️ Vender</a></li></ul></nav>
+  </header>
 
-    <footer class="rodape-profissional">
-        <div class="rodape-grid">
-            <div class="rodape-coluna">
-                <h3>VORA 313</h3>
-                <p>Marketplace angolano com curadoria premium.</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Contacto</h4>
-                <p>📞 +244 933 677 628</p>
-                <p>✉️ contacto@aurorarte.ao</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Institucional</h4>
-                <ul>
-                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
-                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
-                    <li><a href="blog.html">📖 Blog</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="rodape-copyright">&copy; 2026 VORA 313.</div>
-    </footer>
+  <main class="sobre-wrap">
+    <section class="sobre-hero">
+      <div>
+        <div class="sobre-kicker">VORA 313 · Marketplace angolano</div>
+        <h1>Mais do que compras,<br><span>uma conexão.</span></h1>
+        <p>A VORA 313 nasce com uma ideia simples: tornar o comércio online mais próximo, organizado e confiável. Reunimos produtos de diferentes categorias num só lugar e criamos uma experiência pensada para quem compra e para quem quer vender.</p>
+        <div class="sobre-actions"><a class="sobre-primary" href="index.html">Explorar a loja</a><a class="sobre-secondary" href="#vender">Quero vender</a></div>
+      </div>
+      <div class="sobre-visual"><div class="sobre-logo-card"><img src="logo-vora-313.png" alt="Símbolo da VORA 313" /></div><div class="sobre-floating"><strong>Compra · Vende · Conecta</strong>Uma plataforma feita para aproximar pessoas.</div></div>
+    </section>
 
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20Aurora%20Comercial." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+    <section class="sobre-section">
+      <div class="sobre-section-head"><div class="eyebrow">O que nos move</div><h2>Uma nova forma de viver o comércio online</h2><p>Queremos que encontrar um produto, comparar opções, fazer um pedido ou apresentar uma oportunidade de venda seja uma experiência clara e agradável.</p></div>
+      <div class="sobre-grid">
+        <article class="sobre-card"><div class="icon">🛍️</div><h3>Curadoria</h3><p>Organizamos categorias e produtos para ajudar o cliente a encontrar o que procura sem complicação.</p></article>
+        <article class="sobre-card"><div class="icon">🛡️</div><h3>Confiança</h3><p>Informação clara, contacto acessível e uma experiência pensada para dar mais segurança durante a compra.</p></article>
+        <article class="sobre-card"><div class="icon">🚚</div><h3>Conveniência</h3><p>Do catálogo ao acompanhamento do pedido, a ideia é colocar as principais etapas numa experiência simples.</p></article>
+      </div>
+    </section>
 
-    <script type="module" src="js/app.js?v=5"></script>
-    <script type="module" src="js/carrinho.js?v=7"></script>
-    <script type="module" src="js/fidelidade.js?v=5"></script>
-    <script type="module" src="js/menu.js?v=5"></script>
+    <section class="sobre-section sobre-modelo">
+      <div class="sobre-panel"><div class="sobre-kicker">A nossa visão</div><h3>Ser uma ponte entre quem procura e quem tem algo para oferecer.</h3><p>A VORA 313 pode aproximar clientes, vendedores e marcas, criando espaço para descoberta, compra e novas oportunidades no mercado angolano.</p></div>
+      <div class="sobre-list">
+        <div><span>01</span><div><b>Para quem compra</b><span>Mais variedade, categorias organizadas e uma jornada de compra fácil de entender.</span></div></div>
+        <div><span>02</span><div><b>Para quem vende</b><span>Um espaço para apresentar produtos, alcançar novos clientes e crescer a presença online.</span></div></div>
+        <div><span>03</span><div><b>Para o mercado</b><span>Uma experiência digital que valoriza comércio, descoberta e conexão entre pessoas.</span></div></div>
+      </div>
+    </section>
+
+    <section class="sobre-section" id="vender">
+      <div class="sobre-section-head"><div class="eyebrow">VORA 313</div><h2>O que queremos construir</h2><p>A nossa visão é evoluir continuamente a plataforma, ouvindo clientes e vendedores e melhorando a forma como produtos, pedidos e oportunidades são apresentados.</p></div>
+      <div class="sobre-contacto">
+        <div class="contact-box"><h3>Fale diretamente connosco</h3><div class="contact-line"><strong>📍 Localização:</strong> Luanda, Angola</div><div class="contact-line"><strong>📞 WhatsApp:</strong> +244 933 677 628</div><div class="contact-line"><strong>✉️ Email:</strong> contacto@aurorarte.ao</div><div class="contact-line"><strong>🕘 Atendimento:</strong> Segunda a Sábado, das 9h às 18h</div></div>
+        <div class="contact-box"><h3>Quer vender na VORA 313?</h3><p style="color:#667872;line-height:1.7">Entre em contacto connosco para saber como apresentar os seus produtos e fazer parte da evolução do marketplace.</p><a href="https://wa.me/244933677628?text=Ol%C3%A1!%20Tenho%20interesse%20em%20vender%20na%20VORA%20313." target="_blank" style="display:inline-flex;background:#075946;color:#fff;padding:11px 16px;border-radius:999px;text-decoration:none;font-weight:800">Falar no WhatsApp →</a></div>
+      </div>
+      <div class="sobre-cta"><div><h3>Pronto para conhecer a VORA 313?</h3><p>Explore produtos, descubra categorias e faça parte desta nova experiência de comércio.</p></div><a href="index.html">Ir para a loja</a></div>
+    </section>
+  </main>
+
+  <footer class="rodape-profissional"><div class="rodape-grid"><div class="rodape-coluna"><h3>VORA 313</h3><p>Marketplace angolano com curadoria premium.</p></div><div class="rodape-coluna"><h4>Contacto</h4><p>📞 +244 933 677 628</p><p>✉️ contacto@aurorarte.ao</p></div><div class="rodape-coluna"><h4>Institucional</h4><ul><li><a href="sobre.html">🏬 Sobre Nós</a></li><li><a href="politica.html">📜 Política de Privacidade</a></li><li><a href="blog.html">📖 Blog</a></li></ul></div></div><div class="rodape-copyright">&copy; 2026 VORA 313.</div></footer>
+  <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20VORA%20313." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+  <script type="module" src="js/app.js?v=6"></script><script type="module" src="js/carrinho.js?v=7"></script><script type="module" src="js/fidelidade.js?v=6"></script><script type="module" src="js/menu.js?v=6"></script>
 </body>
 </html>
