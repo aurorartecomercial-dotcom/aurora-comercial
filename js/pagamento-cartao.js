@@ -1,4 +1,4 @@
-// Pagamento com cartão — Aurora Comercial
+// Pagamento com cartão — VORA 313
 //
 // IMPORTANTE: este módulo nunca contém a chave secreta do Stripe.
 // A criação/verificação do pagamento deve ocorrer numa Cloud Function.
@@ -13,7 +13,7 @@ export async function iniciarPagamentoCartao(valor, referencia, descricao, email
     const resposta = await criarPagamento({
         valor: Number(valor),
         referencia: String(referencia || ''),
-        descricao: String(descricao || 'Pedido Aurora Comercial'),
+        descricao: String(descricao || 'Pedido VORA 313'),
         email: String(emailCliente || '')
     });
     return resposta.data;
@@ -30,7 +30,7 @@ export async function processarCheckoutCartao(valorTotal, dadosCliente) {
     return iniciarPagamentoCartao(
         valorTotal,
         dadosCliente?.referencia || '',
-        dadosCliente?.descricao || 'Pedido Aurora Comercial',
+        dadosCliente?.descricao || 'Pedido VORA 313',
         dadosCliente?.email || ''
     );
 }

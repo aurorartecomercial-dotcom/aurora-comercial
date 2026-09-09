@@ -214,8 +214,8 @@ function adicionarQuantidadeAoCarrinho(prod) {
 function partilharProduto(prod) {
     const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
     const link = `${baseUrl}/detalhe.html?id=${encodeURIComponent(prod.id)}`;
-    const texto = `Olha só este produto da Aurora Comercial!\n\n${prod.nome}\nPreço: ${prod.preco}\n${link}`;
-    if (navigator.share) navigator.share({ title: prod.nome, text: `Confira ${prod.nome} na Aurora Comercial.`, url: link }).catch(() => {});
+    const texto = `Olha só este produto da VORA 313!\n\n${prod.nome}\nPreço: ${prod.preco}\n${link}`;
+    if (navigator.share) navigator.share({ title: prod.nome, text: `Confira ${prod.nome} na VORA 313.`, url: link }).catch(() => {});
     else window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank', 'noopener,noreferrer');
 }
 

@@ -1157,7 +1157,7 @@ function exportarPDF(tipo) {
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.setTextColor(0, 90, 76);
-    doc.text('Relatório de Vendas - Aurora Comercial', 14, 20);
+    doc.text('Relatório de Vendas - VORA 313', 14, 20);
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 26);
@@ -1364,7 +1364,7 @@ window.imprimirFatura = async function(codigoRastreio) {
 </style>
 </head>
 <body>
-<h1>AURORA COMERCIAL</h1>
+<h1>VORA 313</h1>
 <h2>Contribuinte: 5000048151 | Tel: +244 933 677 628</h2>
 <hr>
 <p><strong>Fatura Nº:</strong> ${codigoRastreio}</p>

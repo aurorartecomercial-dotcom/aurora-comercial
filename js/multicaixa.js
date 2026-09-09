@@ -1,4 +1,4 @@
-// Multicaixa Express — Aurora Comercial
+// Multicaixa Express — VORA 313
 //
 // As credenciais e chamadas ao provedor devem ficar no servidor.
 // Este módulo é apenas uma interface segura para Cloud Functions.
@@ -13,7 +13,7 @@ export async function gerarReferenciaMulticaixa(valor, referencia, descricao) {
     const resposta = await iniciar({
         valor: Number(valor),
         referencia: String(referencia || ''),
-        descricao: String(descricao || 'Pedido Aurora Comercial')
+        descricao: String(descricao || 'Pedido VORA 313')
     });
     return resposta.data;
 }
