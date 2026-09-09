@@ -1,5 +1,5 @@
 // ============================================================
-// INTEGRAÇÃO COM TRANSPORTADORAS - AURORA COMERCIAL
+// INTEGRAÇÃO COM TRANSPORTADORAS - VORA 313
 // ============================================================
 
 const TRANSPORTADORAS = {

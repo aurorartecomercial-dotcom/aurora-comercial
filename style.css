@@ -997,3 +997,87 @@ body.modo-escuro .detalhe-caracteristica { border-color:#333; }
     .detalhe-entrega .entrega-grid { grid-template-columns:1fr; }
     .detalhe-destaques { padding-left:26px; }
 }
+
+
+/* ============================================================
+   VORA 313 — IDENTIDADE VISUAL E TEMAS
+   ============================================================ */
+:root {
+    --cor-ouro: #D4AF37;
+    --cor-ouro-escuro: #A98216;
+    --cor-ouro-claro: #FFF4C7;
+    --cor-esmeralda: #111111;
+    --cor-esmeralda-escuro: #070707;
+    --cor-esmeralda-claro: #FFF9E8;
+    --cor-fundo: #F7F7F7;
+    --cor-fundo-card: #FFFFFF;
+    --cor-texto: #171717;
+    --cor-borda: #D4AF37;
+}
+.logo-numero { color: var(--cor-ouro); }
+.logo img { object-fit: contain; }
+
+/* Seletor de temas */
+#vora-theme-trigger {
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    border: 2px solid var(--cor-ouro); background: transparent; color: var(--cor-ouro);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: .2s; flex: 0 0 auto;
+}
+#vora-theme-trigger:hover { background: var(--cor-ouro); color: #000; transform: translateY(-1px); }
+#vora-theme-panel {
+    position: fixed; top: 76px; right: 18px; width: 300px; z-index: 11000;
+    background: var(--cor-fundo-card); color: var(--cor-texto); border: 1px solid var(--cor-ouro);
+    border-radius: 18px; padding: 16px; box-shadow: 0 18px 55px rgba(0,0,0,.24);
+    display: none; animation: voraThemeIn .18s ease-out;
+}
+#vora-theme-panel.aberto { display: block; }
+#vora-theme-panel h3 { margin: 0 0 4px; font-size: 16px; }
+#vora-theme-panel p { margin: 0 0 14px; color: var(--cor-texto-claro); font-size: 12px; }
+.vora-theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+.vora-theme-option {
+    border: 1px solid #ddd; background: var(--cor-fundo-card); color: var(--cor-texto);
+    border-radius: 12px; padding: 9px; cursor: pointer; text-align: left;
+    font: inherit; transition: .2s; display: flex; align-items: center; gap: 9px;
+}
+.vora-theme-option:hover, .vora-theme-option.ativo { border-color: var(--cor-ouro); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cor-ouro) 18%, transparent); }
+.vora-theme-swatch { width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px; border: 2px solid rgba(0,0,0,.08); }
+.vora-theme-name { font-size: 12px; font-weight: 700; }
+.vora-theme-close { margin-top: 12px; width: 100%; border: 0; border-radius: 10px; padding: 9px; cursor: pointer; background: var(--cor-esmeralda); color: #fff; font-weight: 700; }
+@keyframes voraThemeIn { from { opacity:0; transform:translateY(-6px) scale(.98); } to { opacity:1; transform:none; } }
+
+/* Temas de cor */
+body[data-vora-theme="gold"] { --cor-ouro:#D4AF37; --cor-ouro-escuro:#A98216; --cor-ouro-claro:#FFF4C7; --cor-esmeralda:#111111; --cor-esmeralda-escuro:#070707; --cor-esmeralda-claro:#FFF9E8; }
+body[data-vora-theme="blue"] { --cor-ouro:#2563EB; --cor-ouro-escuro:#1747B3; --cor-ouro-claro:#DBEAFE; --cor-esmeralda:#0F172A; --cor-esmeralda-escuro:#020617; --cor-esmeralda-claro:#EFF6FF; }
+body[data-vora-theme="green"] { --cor-ouro:#10B981; --cor-ouro-escuro:#087F5B; --cor-ouro-claro:#D1FAE5; --cor-esmeralda:#064E3B; --cor-esmeralda-escuro:#022C22; --cor-esmeralda-claro:#ECFDF5; }
+body[data-vora-theme="purple"] { --cor-ouro:#8B5CF6; --cor-ouro-escuro:#6536C9; --cor-ouro-claro:#EDE9FE; --cor-esmeralda:#24103D; --cor-esmeralda-escuro:#130720; --cor-esmeralda-claro:#F5F3FF; }
+body[data-vora-theme="dark"] { --cor-ouro:#D4AF37; --cor-ouro-escuro:#A98216; --cor-ouro-claro:#3A3013; --cor-esmeralda:#050505; --cor-esmeralda-escuro:#000000; --cor-esmeralda-claro:#1B1B1B; --cor-fundo:#101010; --cor-fundo-card:#191919; --cor-texto:#F2F2F2; --cor-texto-claro:#AAAAAA; }
+
+/* Reforço dos elementos que usam cores fixas no projeto */
+body[data-vora-theme="blue"] .busca-container button,
+body[data-vora-theme="green"] .busca-container button,
+body[data-vora-theme="purple"] .busca-container button,
+body[data-vora-theme="dark"] .busca-container button { background: var(--cor-ouro) !important; color:#fff !important; }
+body[data-vora-theme="blue"] #badgePontos,
+body[data-vora-theme="green"] #badgePontos,
+body[data-vora-theme="purple"] #badgePontos,
+body[data-vora-theme="dark"] #badgePontos { background:var(--cor-ouro) !important; color:#fff !important; }
+body[data-vora-theme="blue"] .btn-slide,
+body[data-vora-theme="green"] .btn-slide,
+body[data-vora-theme="purple"] .btn-slide,
+body[data-vora-theme="dark"] .btn-slide { background:var(--cor-ouro) !important; border-color:var(--cor-ouro) !important; color:#fff !important; }
+body[data-vora-theme="blue"] .produto-card:hover,
+body[data-vora-theme="green"] .produto-card:hover,
+body[data-vora-theme="purple"] .produto-card:hover { border-color:var(--cor-ouro); }
+body[data-vora-theme="dark"] .produto-card,
+body[data-vora-theme="dark"] .filtros-sidebar { background:var(--cor-fundo-card); color:var(--cor-texto); }
+body[data-vora-theme="dark"] .filtros-sidebar h3,
+body[data-vora-theme="dark"] .filtros-sidebar label,
+body[data-vora-theme="dark"] .produto-info h3 { color:var(--cor-texto); }
+body[data-vora-theme="dark"] .busca-input { background:#191919; color:#fff; }
+body[data-vora-theme="dark"] .vora-theme-option { border-color:#333; }
+
+@media (max-width: 700px) {
+    #vora-theme-panel { top: 68px; right: 10px; left: 10px; width: auto; }
+    #vora-theme-trigger { width:34px; height:34px; }
+}

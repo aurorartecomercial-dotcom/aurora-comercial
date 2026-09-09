@@ -18,8 +18,8 @@ messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        icon: '/logo auro.png',
-        badge: '/logo auro.png'
+        icon: '/logo-vora-313.png',
+        badge: '/logo-vora-313.png'
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
