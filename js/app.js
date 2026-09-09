@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.__carrinhoInicializado = true;
     }
     initMobileMenu();
+    initVoraThemePicker();
     initFidelidade();
     initFavoritos();
     initAfiliados();
@@ -210,6 +211,39 @@ async function renderizarMaisComprados() {
     grid.appendChild(fragment);
 }
 
+export function initVoraThemePicker() {
+    if (document.getElementById('vora-theme-picker')) return;
+    const themes = [
+        { id:'gold', name:'Dourado', primary:'#D4AF37', dark:'#111111', bg:'#F5F5F5' },
+        { id:'blue', name:'Azul', primary:'#2563EB', dark:'#0F172A', bg:'#F4F7FB' },
+        { id:'green', name:'Verde', primary:'#0F8A63', dark:'#073B2A', bg:'#F3F8F5' },
+        { id:'purple', name:'Roxo', primary:'#7C3AED', dark:'#24113D', bg:'#F7F4FC' },
+        { id:'dark', name:'Escuro', primary:'#D4AF37', dark:'#050505', bg:'#0D0D0D' }
+    ];
+    const saved = localStorage.getItem('vora313_tema') || 'gold';
+    document.body.dataset.voraTheme = saved;
+    const picker = document.createElement('div');
+    picker.id='vora-theme-picker';
+    picker.innerHTML = `
+      <button class="vora-theme-trigger" type="button" aria-label="Escolher cores" title="Escolher cores">🎨</button>
+      <div class="vora-theme-panel" role="dialog" aria-label="Personalizar cores">
+        <div class="vora-theme-title">Cores da VORA 313</div>
+        <div class="vora-theme-options">
+          ${themes.map(t=>`<button type="button" class="vora-theme-option" data-theme="${t.id}" title="${t.name}"><i style="background:${t.primary}"></i><span>${t.name}</span></button>`).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(picker);
+    const panel=picker.querySelector('.vora-theme-panel');
+    picker.querySelector('.vora-theme-trigger').addEventListener('click',()=>panel.classList.toggle('aberto'));
+    picker.querySelectorAll('.vora-theme-option').forEach(btn=>btn.addEventListener('click',()=>{
+        const theme=btn.dataset.theme;
+        document.body.dataset.voraTheme=theme;
+        localStorage.setItem('vora313_tema',theme);
+        panel.classList.remove('aberto');
+    }));
+    document.addEventListener('click',(e)=>{ if(!picker.contains(e.target)) panel.classList.remove('aberto'); });
+}
+
 export function initDarkMode() {
     const btnModoEscuro = document.getElementById('btnModoEscuro');
     if (!btnModoEscuro) return;
@@ -350,6 +384,6 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
 });
 
 window.shareProduct = function(nome, preco, link) {
-    const texto = `Olha só este produto incrível da VORA 313!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
+    const texto = `Olha só este produto incrível da Aurora Comercial!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
 };

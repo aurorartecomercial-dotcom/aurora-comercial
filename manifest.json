@@ -4,7 +4,7 @@
   "description": "Marketplace angolano com curadoria premium",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0B0B0B",
+  "background_color": "#005A4C",
   "theme_color": "#D4AF37",
   "icons": [
     {

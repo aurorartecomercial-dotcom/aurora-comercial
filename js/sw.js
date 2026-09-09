@@ -8,7 +8,7 @@ const urlsToCache = [
     '/rastreio.html',
     '/perfil.html',
     '/style.css',
-    '/logo-vora-313.png',
+    '/logo auro.png',
     '/manifest.json',
     '/js/app.js',
     '/js/carrinho.js',
@@ -74,7 +74,7 @@ self.addEventListener('fetch', event => {
                     const copy = response.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
                     return response;
-                }).catch(() => caches.match('/logo-vora-313.png')))
+                }).catch(() => caches.match('/logo auro.png')))
         );
     }
     else {
