@@ -2,7 +2,9 @@
 // CHATBOT WHATSAPP - VORA 313
 // ============================================================
 
-const NUMERO_WHATSAPP = '244933677628';
+import { CONFIG } from './config.js';
+
+const NUMERO_WHATSAPP = CONFIG.NUMERO_WHATSAPP;
 
 export function initChatbot() {
     // Se o menu flutuante existir

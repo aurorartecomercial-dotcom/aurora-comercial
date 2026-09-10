@@ -25,8 +25,10 @@ export const functions = getFunctions(app, 'us-central1');
 
 // ⚠️ NÃO ESQUEÇA DE EXPORTAR O CONFIG!
 export const CONFIG = {
-    CACHE_KEY: 'aurora_catalogo_cache',
+    CACHE_KEY: 'vora313_catalogo_cache',
     CACHE_TTL: 30 * 60 * 1000, // 30 minutos (reduzido de 1h)
     NUMERO_WHATSAPP: '244933677628',
+    MARCA: 'VORA 313',
+    RASTREIO_PREFIXO: 'VORA',
     FUNCTIONS_REGION: 'us-central1'
 };

@@ -1,4 +1,4 @@
-import { db } from './config.js';
+import { db, CONFIG } from './config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 let map;
@@ -31,7 +31,9 @@ async function buscarPedido(codigo) {
   erro.style.display = 'none';
   resultado.style.display = 'none';
   mapa.style.display = 'none';
-  if (!/^AURORA-[A-F0-9]{20}$/.test(codigo)) {
+  const prefixo = String(CONFIG.RASTREIO_PREFIXO || 'VORA').replace(/[^A-Z0-9]/g, '');
+  const regexRastreio = new RegExp(`^${prefixo}-[A-F0-9]{20}$`);
+  if (!regexRastreio.test(codigo)) {
     erro.textContent = '❌ Código de rastreio inválido.';
     erro.style.display = 'block';
     return;

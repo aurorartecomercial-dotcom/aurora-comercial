@@ -4,33 +4,33 @@
 
 const TRANSPORTADORAS = {
     'luanda': {
-        nome: 'Aurora Express',
+        nome: 'VORA Express',
         taxaBase: 1000,
-        taxaPorKg: 500,
+        taxaPorKg: 0,
         prazo: '24-48 horas'
     },
     'viana': {
-        nome: 'Aurora Express',
-        taxaBase: 2500,
-        taxaPorKg: 500,
+        nome: 'VORA Express',
+        taxaBase: 3500,
+        taxaPorKg: 0,
         prazo: '48 horas'
     },
     'talatona': {
-        nome: 'Aurora Premium',
-        taxaBase: 3000,
-        taxaPorKg: 700,
+        nome: 'VORA Premium',
+        taxaBase: 4000,
+        taxaPorKg: 0,
         prazo: '24 horas'
     },
     'kilamba': {
-        nome: 'Aurora Premium',
-        taxaBase: 3500,
-        taxaPorKg: 700,
+        nome: 'VORA Premium',
+        taxaBase: 4500,
+        taxaPorKg: 0,
         prazo: '24-48 horas'
     },
     'outro': {
-        nome: 'Aurora Nacional',
+        nome: 'VORA Nacional',
         taxaBase: 5000,
-        taxaPorKg: 1000,
+        taxaPorKg: 0,
         prazo: '3-5 dias'
     }
 };

@@ -150,7 +150,7 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
   const codigoCupom = texto(input.cupom, 'Cupom', 60, false).toUpperCase();
   const cupomRef = await buscarCupom(codigoCupom);
   const pedidoRef = db.collection('vendas').doc();
-  const codigoRastreio = codigo('AURORA');
+  const codigoRastreio = codigo('VORA');
   const rastreioRef = db.collection('rastreiosPublicos').doc(codigoRastreio);
   const numeroFatura = codigo('FR');
   const agora = Timestamp.now();
