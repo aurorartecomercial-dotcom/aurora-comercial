@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-cache-v10'; // ⬆️ Versão aumentada
+const CACHE_NAME = 'vora313-cache-v11'; // ⬆️ Versão aumentada
 const urlsToCache = [
     '/',
     '/index.html',

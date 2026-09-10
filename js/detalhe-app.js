@@ -131,7 +131,7 @@ function renderizarDetalhes(prod) {
                 <div class="detalhe-beneficios">
                     <div class="detalhe-beneficio">🔒<br><strong>Compra segura</strong></div>
                     <div class="detalhe-beneficio">🚚<br><strong>Entrega em Angola</strong></div>
-                    <div class="detalhe-beneficio">💬<br><strong>Suporte Aurora</strong></div>
+                    <div class="detalhe-beneficio">💬<br><strong>Suporte VORA 313</strong></div>
                 </div>
             </div>
         </div>
@@ -238,7 +238,7 @@ function renderizarRecomendacoes(prod) {
     };
 
     const html1 = criarSecao('Produtos relacionados', 'Mais opções da mesma categoria', secao1);
-    const html2 = criarSecao('Também podes gostar', 'Sugestões para continuar a explorar a Aurora', secao2);
+    const html2 = criarSecao('Também podes gostar', 'Sugestões para continuar a explorar a VORA 313', secao2);
     const wrapper = document.createElement('div');
     wrapper.innerHTML = html1 + html2;
     const secoes = [...wrapper.children];

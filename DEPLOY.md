@@ -1,4 +1,4 @@
-# Aurora Comercial — checklist de produção
+# VORA 313 — checklist de produção
 
 ## 1. Firebase
 

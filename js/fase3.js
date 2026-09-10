@@ -79,13 +79,13 @@ export function initAfiliados() {
     if (uid) {
         codigoAfiliado = uid.substring(0, 8).toUpperCase();
     } else {
-        codigoAfiliado = 'AURORA' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        codigoAfiliado = 'VORA' + Math.random().toString(36).substring(2, 6).toUpperCase();
     }
     localStorage.setItem('aurora_codigo_afiliado', codigoAfiliado);
 }
 
 export function obterLinkAfiliado(linkProduto) {
-    const codigo = localStorage.getItem('aurora_codigo_afiliado') || 'AURORA0000';
+    const codigo = localStorage.getItem('aurora_codigo_afiliado') || 'VORA0000';
     return linkProduto.includes('?') ? `${linkProduto}&ref=${codigo}` : `${linkProduto}?ref=${codigo}`;
 }
 

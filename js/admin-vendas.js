@@ -1350,7 +1350,7 @@ window.imprimirFatura = async function(codigoRastreio) {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Fatura ${codigoRastreio} - Aurora</title>
+<title>Fatura ${codigoRastreio} - VORA 313</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 30px; }
   h1 { color: #005A4C; text-align: center; }

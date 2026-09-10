@@ -13,11 +13,11 @@ export async function iniciarPagamentoCartao() {
 
 // --- 2. TRANSPORTADORAS ---
 const TRANSPORTADORAS = {
-    'luanda': { nome: 'Aurora Express', taxaBase: 1000, taxaPorKg: 500, prazo: '24-48h' },
-    'viana': { nome: 'Aurora Express', taxaBase: 2500, taxaPorKg: 500, prazo: '48h' },
-    'talatona': { nome: 'Aurora Premium', taxaBase: 3000, taxaPorKg: 700, prazo: '24h' },
-    'kilamba': { nome: 'Aurora Premium', taxaBase: 3500, taxaPorKg: 700, prazo: '24-48h' },
-    'outro': { nome: 'Aurora Nacional', taxaBase: 5000, taxaPorKg: 1000, prazo: '3-5 dias' }
+    'luanda': { nome: 'VORA Express', taxaBase: 1000, taxaPorKg: 500, prazo: '24-48h' },
+    'viana': { nome: 'VORA Express', taxaBase: 2500, taxaPorKg: 500, prazo: '48h' },
+    'talatona': { nome: 'VORA Premium', taxaBase: 3000, taxaPorKg: 700, prazo: '24h' },
+    'kilamba': { nome: 'VORA Premium', taxaBase: 3500, taxaPorKg: 700, prazo: '24-48h' },
+    'outro': { nome: 'VORA Nacional', taxaBase: 5000, taxaPorKg: 1000, prazo: '3-5 dias' }
 };
 
 export function calcularFrete(bairro, pesoTotal) {
@@ -67,7 +67,7 @@ export async function exportarBackupCompleto() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Aurora_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `VORA313_Backup_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
         mostrarToast('Backup exportado com sucesso!', 'sucesso');

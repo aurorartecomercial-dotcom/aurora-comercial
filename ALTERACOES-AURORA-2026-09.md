@@ -1,4 +1,4 @@
-# Evolução da experiência de produtos — Aurora Comercial
+# Evolução da experiência de produtos — VORA 313
 
 ## Mantido
 - Cores e identidade visual existentes.

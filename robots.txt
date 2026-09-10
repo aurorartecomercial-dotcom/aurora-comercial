@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /admin.html
 Disallow: /js/
 Allow: /
-Sitemap: https://aurorartecomercial-dotcom.github.io/aurora-comercial/sitemap.xml
+Sitemap: https://aurorartecomercial-dotcom.github.io/VORA313/sitemap.xml

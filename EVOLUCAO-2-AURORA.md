@@ -1,4 +1,4 @@
-# Aurora Comercial — Evolução 2
+# VORA 313 — Evolução 2
 
 Esta evolução foi feita sobre o projeto anterior, mantendo as cores e identidade visual.
 
