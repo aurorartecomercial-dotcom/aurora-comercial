@@ -364,6 +364,17 @@ window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
 
+let temporizadorCarrossel = null;
+
+function iniciarCarrosselAutomatico() {
+    clearInterval(temporizadorCarrossel);
+    temporizadorCarrossel = setInterval(() => window.mudarSlide(1), 4000);
+}
+
+function pausarCarrosselAutomatico() {
+    clearInterval(temporizadorCarrossel);
+}
+
 window.mudarSlide = function(direcao) {
     const slides = document.querySelectorAll('.slide');
     const indicadores = document.querySelectorAll('.indicador');
@@ -389,17 +400,14 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
     });
 });
 
-// Avanço automático do carrossel VORA 313
-let intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
-const carrosselEl = document.querySelector('.carrossel-ofertas');
-if (carrosselEl) {
-    carrosselEl.addEventListener('mouseenter', () => clearInterval(intervaloCarrossel));
-    carrosselEl.addEventListener('mouseleave', () => {
-        clearInterval(intervaloCarrossel);
-        intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
-    });
+const areaCarrossel = document.querySelector('.carrossel-ofertas');
+if (areaCarrossel) {
+    areaCarrossel.addEventListener('mouseenter', pausarCarrosselAutomatico);
+    areaCarrossel.addEventListener('mouseleave', iniciarCarrosselAutomatico);
+    areaCarrossel.addEventListener('touchstart', pausarCarrosselAutomatico, { passive: true });
+    areaCarrossel.addEventListener('touchend', iniciarCarrosselAutomatico, { passive: true });
 }
-
+iniciarCarrosselAutomatico();
 
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da VORA 313!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;

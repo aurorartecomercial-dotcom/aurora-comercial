@@ -1355,23 +1355,3 @@ body.sobre-page .rodape-profissional, body.media-page .rodape-profissional{margi
   body.sobre-page .busca-container, body.media-page .busca-container{min-width:0}
   body.sobre-page .logo-wordmark, body.media-page .logo-wordmark{font-size:16px}
 }
-
-/* Novos banners publicitários VORA 313 no carrossel */
-.slide-publicidade {
-  background: #fff;
-  justify-content: center;
-  overflow: hidden;
-}
-.slide-publicidade img {
-  opacity: 1 !important;
-  filter: none !important;
-  object-fit: cover;
-  object-position: center;
-  transform: none !important;
-}
-.slide-publicidade::after {
-  display: none !important;
-}
-@media (max-width: 700px) {
-  .slide-publicidade img { object-position: center; }
-}
