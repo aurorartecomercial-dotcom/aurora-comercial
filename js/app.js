@@ -389,6 +389,18 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
     });
 });
 
+// Avanço automático do carrossel VORA 313
+let intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
+const carrosselEl = document.querySelector('.carrossel-ofertas');
+if (carrosselEl) {
+    carrosselEl.addEventListener('mouseenter', () => clearInterval(intervaloCarrossel));
+    carrosselEl.addEventListener('mouseleave', () => {
+        clearInterval(intervaloCarrossel);
+        intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
+    });
+}
+
+
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da VORA 313!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
