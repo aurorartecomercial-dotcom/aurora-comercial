@@ -1355,33 +1355,3 @@ body.sobre-page .rodape-profissional, body.media-page .rodape-profissional{margi
   body.sobre-page .busca-container, body.media-page .busca-container{min-width:0}
   body.sobre-page .logo-wordmark, body.media-page .logo-wordmark{font-size:16px}
 }
-
-
-/* VORA 313 — CARROSSEL CORRIGIDO: imagens visíveis e sem sobreposição */
-.carrossel-ofertas { overflow: hidden !important; }
-.carrossel-container { min-height: 0 !important; height: auto !important; aspect-ratio: 16 / 7 !important; background: #fff !important; }
-.carrossel-slides { height: 100% !important; min-height: 0 !important; }
-.slide { height: 100% !important; min-height: 0 !important; background: #fff !important; }
-.slide img { width: 100% !important; height: 100% !important; object-fit: cover !important; opacity: 1 !important; filter: none !important; transform: none !important; }
-.slide.ativo img { opacity: 1 !important; transform: none !important; }
-.slide::after { display: none !important; }
-.slide-imagem { justify-content: center !important; align-items: center !important; }
-.slide-imagem img { object-fit: contain !important; background: #fff !important; }
-.vora-hero-marca, .vora-hero-glow { display: none !important; }
-.slide-texto { z-index: 5 !important; }
-.carrossel-btn { z-index: 20 !important; }
-.carrossel-indicadores { z-index: 21 !important; }
-.indicador { width: 9px !important; height: 9px !important; }
-@media (max-width: 768px) {
-  .carrossel-container { aspect-ratio: 16 / 9 !important; }
-  .slide-texto { left: 14px !important; right: 14px !important; bottom: 22px !important; max-width: 70% !important; text-align: left !important; }
-  .slide-texto h2 { font-size: 15px !important; }
-  .slide-texto p { font-size: 9px !important; }
-  .slide-texto .btn-slide { font-size: 9px !important; padding: 7px 11px !important; }
-  .carrossel-btn { padding: 8px 10px !important; font-size: 15px !important; }
-  .carrossel-indicadores { bottom: 8px !important; gap: 7px !important; }
-}
-@media (max-width: 420px) {
-  .carrossel-container { aspect-ratio: 16 / 9 !important; }
-  .indicador { width: 7px !important; height: 7px !important; }
-}

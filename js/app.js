@@ -364,61 +364,30 @@ window.filtrarPorCategoria = function(categoria) {
     window.location.href = `categoria.html?cat=${categoria}`;
 };
 
-let temporizadorCarrossel = null;
-let indiceCarrossel = 0;
-let inicioToqueX = 0;
-
-function obterSlidesCarrossel() { return Array.from(document.querySelectorAll('.carrossel-slides .slide')); }
-function obterIndicadoresCarrossel() { return Array.from(document.querySelectorAll('#carrosselIndicadores .indicador')); }
-
-function mostrarSlide(index) {
-    const slides = obterSlidesCarrossel();
-    const indicadores = obterIndicadoresCarrossel();
-    if (!slides.length) return;
-    indiceCarrossel = (index + slides.length) % slides.length;
-    slides.forEach((slide, i) => slide.classList.toggle('ativo', i === indiceCarrossel));
-    indicadores.forEach((ind, i) => {
-        ind.classList.toggle('ativo', i === indiceCarrossel);
-        ind.setAttribute('aria-current', i === indiceCarrossel ? 'true' : 'false');
-    });
-}
-
 window.mudarSlide = function(direcao) {
-    mostrarSlide(indiceCarrossel + direcao);
-    iniciarCarrosselAutomatico();
+    const slides = document.querySelectorAll('.slide');
+    const indicadores = document.querySelectorAll('.indicador');
+    let indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+    if (indexAtual === -1) return;
+    slides[indexAtual].classList.remove('ativo');
+    indicadores[indexAtual].classList.remove('ativo');
+    indexAtual = (indexAtual + direcao + slides.length) % slides.length;
+    slides[indexAtual].classList.add('ativo');
+    indicadores[indexAtual].classList.add('ativo');
 };
 
-function iniciarCarrosselAutomatico() {
-    clearInterval(temporizadorCarrossel);
-    temporizadorCarrossel = setInterval(() => mostrarSlide(indiceCarrossel + 1), 4000);
-}
-function pausarCarrosselAutomatico() { clearInterval(temporizadorCarrossel); }
-
-document.querySelectorAll('#carrosselIndicadores .indicador').forEach((ind, i) => {
-    ind.addEventListener('click', () => { mostrarSlide(i); iniciarCarrosselAutomatico(); });
-    ind.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mostrarSlide(i); iniciarCarrosselAutomatico(); }
+document.querySelectorAll('.indicador').forEach((ind, i) => {
+    ind.addEventListener('click', () => {
+        const slides = document.querySelectorAll('.slide');
+        const indicadores = document.querySelectorAll('.indicador');
+        const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
+        if (indexAtual === -1) return;
+        slides[indexAtual].classList.remove('ativo');
+        indicadores[indexAtual].classList.remove('ativo');
+        slides[i].classList.add('ativo');
+        indicadores[i].classList.add('ativo');
     });
 });
-
-const areaCarrossel = document.querySelector('.carrossel-ofertas');
-if (areaCarrossel) {
-    areaCarrossel.addEventListener('mouseenter', pausarCarrosselAutomatico);
-    areaCarrossel.addEventListener('mouseleave', iniciarCarrosselAutomatico);
-    areaCarrossel.addEventListener('touchstart', (e) => {
-        inicioToqueX = e.changedTouches[0].clientX;
-        pausarCarrosselAutomatico();
-    }, { passive: true });
-    areaCarrossel.addEventListener('touchend', (e) => {
-        const fimX = e.changedTouches[0].clientX;
-        const distancia = fimX - inicioToqueX;
-        if (Math.abs(distancia) > 40) mostrarSlide(indiceCarrossel + (distancia < 0 ? 1 : -1));
-        iniciarCarrosselAutomatico();
-    }, { passive: true });
-}
-
-mostrarSlide(0);
-iniciarCarrosselAutomatico();
 
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da VORA 313!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
