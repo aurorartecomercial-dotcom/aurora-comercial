@@ -1,7 +1,7 @@
-const CACHE_NAME = 'vora313-cache-v12';
+const CACHE_NAME = 'vora313-cache-v13';
 const APP_SHELL = [
   './','./index.html','./detalhe.html','./blog.html','./categoria.html','./rastreio.html','./perfil.html',
-  './style.css','./logo-vora-313.png','./manifest.json','./js/app.js','./js/carrinho.js','./js/catalogo.js','./js/config.js',
+  './style.css','./logo-vora-313.png','./carousel-placeholder.png','./manifest.json','./js/app.js','./js/carrinho.js','./js/catalogo.js','./js/config.js',
   './js/utils.js','./js/menu.js','./js/avaliacoes.js','./js/blog.js','./js/post.js','./js/detalhe-app.js',
   './js/categoria.js','./js/fidelidade.js','./js/favoritos.js','./js/chatbot.js','./js/perfil.js','./js/fase3.js','./firebase-messaging-sw.js'
 ];
