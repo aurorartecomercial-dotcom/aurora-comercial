@@ -124,8 +124,9 @@ export function criarCardProduto(produto) {
   favorito.setAttribute('aria-label', 'Adicionar aos favoritos');
   card.append(favorito);
 
-  const acoes = elemento('div', null, 'acoes-produto');
-  const adicionar = elemento('button', '🛒 Adicionar ao carrinho', 'btn-add-carrinho-card');
+  const acoes = elemento('div');
+  acoes.style.cssText = 'margin-top:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;';
+  const adicionar = elemento('button', '🛒 Adicionar', 'btn-add-carrinho-card');
   adicionar.type = 'button';
   adicionar.dataset.produtoId = prod.id;
   adicionar.setAttribute('aria-label', `Adicionar ${prod.nome || 'produto'} ao carrinho`);
