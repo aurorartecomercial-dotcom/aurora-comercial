@@ -1407,72 +1407,108 @@ body.sobre-page .rodape-profissional, body.media-page .rodape-profissional{margi
     }
 }
 
+
 /* =========================================================
-   VORA 313 — ÍCONES SOCIAIS DO RODAPÉ
-   CSS isolado: não interfere no carrossel, produtos,
-   carrinho, filtros ou restantes componentes.
+   VORA 313 — ÍCONES SOCIAIS / ATENDIMENTO
+   Ícones locais para evitar dependência de bibliotecas externas.
    ========================================================= */
-.vora-social-icons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  min-height: 44px;
+.rodape-social {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
 }
 
-.vora-social-icon {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  padding: 0;
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  text-decoration: none;
-  cursor: pointer;
-  line-height: 0;
-  overflow: hidden;
-  box-sizing: border-box;
-  transition: transform .18s ease, opacity .18s ease;
+.rodape-social .social-link {
+    width: 58px;
+    min-width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
-.vora-social-icon img {
-  display: block;
-  width: 42px;
-  height: 42px;
-  max-width: 42px;
-  max-height: 42px;
-  object-fit: contain;
-  border: 0;
-  box-shadow: none;
+.rodape-social .social-link img {
+    display: block;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 50%;
+    transition: transform .2s ease;
 }
 
-.vora-social-icon:hover {
-  transform: translateY(-2px);
-  opacity: .92;
+.rodape-social .social-link span {
+    position: absolute;
+    left: 50%;
+    bottom: -28px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: #fff;
+    color: var(--cor-esmeralda-escuro);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    transition: opacity .2s ease, bottom .2s ease;
+    z-index: 4;
 }
 
-.vora-social-icon:focus-visible {
-  outline: 2px solid var(--cor-ouro, #D4AF37);
-  outline-offset: 3px;
+.rodape-social .social-link:hover,
+.rodape-social .social-link:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--cor-ouro);
+    background: rgba(212, 175, 55, 0.12);
+    box-shadow: 0 8px 20px rgba(0,0,0,.18);
+    outline: none;
+}
+
+.rodape-social .social-link:hover img,
+.rodape-social .social-link:focus-visible img {
+    transform: scale(1.05);
+}
+
+.rodape-social .social-link:hover span,
+.rodape-social .social-link:focus-visible span {
+    opacity: 1;
+    bottom: 62px;
+}
+
+/* Não deixa o tooltip interferir no layout do rodapé. */
+.rodape-social .social-link-facebook {
+    cursor: pointer;
 }
 
 @media (max-width: 600px) {
-  .vora-social-icons {
-    gap: 8px;
-    margin-top: 10px;
-  }
+    .rodape-social {
+        gap: 10px;
+    }
 
-  .vora-social-icon,
-  .vora-social-icon img {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    max-width: 36px;
-    max-height: 36px;
-  }
+    .rodape-social .social-link {
+        width: 52px;
+        min-width: 52px;
+        height: 52px;
+        border-radius: 14px;
+    }
+
+    .rodape-social .social-link img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .rodape-social .social-link span {
+        display: none;
+    }
 }

@@ -1,0 +1,15 @@
+VORA 313 — versão 10
+
+Melhorias realizadas:
+- Organização dos ícones sociais no rodapé.
+- Ícones fornecidos pelo cliente guardados localmente em assets/social/.
+- WhatsApp ligado ao contacto da VORA 313.
+- Ícone de atendimento ligado ao atendimento existente da página inicial.
+- Facebook preparado sem inventar um endereço de página: basta colocar o link oficial.
+- CSS dos ícones isolado para não interferir com carrossel, carrinho, filtros ou produtos.
+- Ajuste para desktop e mobile.
+- Atualização do parâmetro de cache do style.css para v=9.
+- Mantida a estrutura existente do projeto.
+
+IMPORTANTE:
+O histórico .git e node_modules não entram neste ZIP. O código da aplicação e os restantes ficheiros do projeto foram mantidos.
