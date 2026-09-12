@@ -145,30 +145,46 @@
     </header>
 
     <main id="conteudo-principal" role="main">
-        <!-- CARROSSEL -->
+        <!-- CARROSSEL DE OFERTAS — 8 imagens enviadas pelo administrador -->
         <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
                 <div class="carrossel-slides" id="carrosselSlides">
-                    <div class="slide ativo"><img src="./carousel-vora-casa.png" alt="VORA 313 — Casa e Utilidades" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-tecnologia.png" alt="VORA 313 — Tecnologia em oferta" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-moda.png" alt="VORA 313 — Moda e Estilo" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-games.png" alt="VORA 313 — Games e Consolas" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-smartphones.png" alt="VORA 313 — Smartphones e Acessórios" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-beleza.png" alt="VORA 313 — Beleza e Cuidados" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-oferta-semana.png" alt="VORA 313 — Oferta da Semana" loading="eager" /></div>
-                    <div class="slide"><img src="./carousel-vora-casa-2.png" alt="VORA 313 — Casa e Utilidades" loading="eager" /></div>
+                    <div class="slide ativo">
+                        <img src="oferta-1-tecnologia.png" alt="Oferta 1" loading="eager" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-2-moda.png" alt="Oferta 2" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-3-games.png" alt="Oferta 3" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-4-smartphones.png" alt="Oferta 4" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-5-beleza.png" alt="Oferta 5" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-6-semana.png" alt="Oferta 6" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-7-casa.png" alt="Oferta 7" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="slide">
+                        <img src="oferta-8-casa.png" alt="Oferta 8" loading="lazy" decoding="async" />
+                    </div>
                 </div>
                 <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)" aria-label="Slide anterior">❮</button>
                 <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)" aria-label="Próximo slide">❯</button>
-                <div class="carrossel-indicadores" id="carrosselIndicadores">
-                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0" aria-label="Ir para o slide 1"></span>
-                    <span class="indicador" data-slide="1" role="button" tabindex="0" aria-label="Ir para o slide 2"></span>
-                    <span class="indicador" data-slide="2" role="button" tabindex="0" aria-label="Ir para o slide 3"></span>
-                    <span class="indicador" data-slide="3" role="button" tabindex="0" aria-label="Ir para o slide 4"></span>
-                    <span class="indicador" data-slide="4" role="button" tabindex="0" aria-label="Ir para o slide 5"></span>
-                    <span class="indicador" data-slide="5" role="button" tabindex="0" aria-label="Ir para o slide 6"></span>
-                    <span class="indicador" data-slide="6" role="button" tabindex="0" aria-label="Ir para o slide 7"></span>
-                    <span class="indicador" data-slide="7" role="button" tabindex="0" aria-label="Ir para o slide 8"></span>
+                <div class="carrossel-indicadores" id="carrosselIndicadores" aria-label="Selecionar oferta">
+                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0" aria-label="Ir para a Oferta 1"></span>
+                    <span class="indicador" data-slide="1" role="button" tabindex="0" aria-label="Ir para a Oferta 2"></span>
+                    <span class="indicador" data-slide="2" role="button" tabindex="0" aria-label="Ir para a Oferta 3"></span>
+                    <span class="indicador" data-slide="3" role="button" tabindex="0" aria-label="Ir para a Oferta 4"></span>
+                    <span class="indicador" data-slide="4" role="button" tabindex="0" aria-label="Ir para a Oferta 5"></span>
+                    <span class="indicador" data-slide="5" role="button" tabindex="0" aria-label="Ir para a Oferta 6"></span>
+                    <span class="indicador" data-slide="6" role="button" tabindex="0" aria-label="Ir para a Oferta 7"></span>
+                    <span class="indicador" data-slide="7" role="button" tabindex="0" aria-label="Ir para a Oferta 8"></span>
                 </div>
             </div>
         </section>
