@@ -389,8 +389,16 @@ document.querySelectorAll('.indicador').forEach((ind, i) => {
     });
 });
 
-// Avanço automático do carrossel VORA 313 — não pausa ao passar o rato
-const intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
+// Avanço automático do carrossel VORA 313
+let intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
+const carrosselEl = document.querySelector('.carrossel-ofertas');
+if (carrosselEl) {
+    carrosselEl.addEventListener('mouseenter', () => clearInterval(intervaloCarrossel));
+    carrosselEl.addEventListener('mouseleave', () => {
+        clearInterval(intervaloCarrossel);
+        intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
+    });
+}
 
 
 window.shareProduct = function(nome, preco, link) {

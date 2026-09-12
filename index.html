@@ -145,46 +145,67 @@
     </header>
 
     <main id="conteudo-principal" role="main">
-        <!-- CARROSSEL DE OFERTAS — 8 imagens enviadas pelo administrador -->
+        <!-- CARROSSEL -->
         <section class="carrossel-ofertas" aria-label="Ofertas em destaque">
             <div class="carrossel-container">
+                <div class="vora-hero-marca" aria-label="VORA 313 — identidade da marca">
+                    <div class="vora-hero-logo-wrap">
+                        <img src="logo-vora-313.png" alt="VORA 313" class="vora-hero-logo" />
+                        <div class="vora-hero-wordmark">VORA <strong>313</strong></div>
+                    </div>
+                    <p class="vora-hero-kicker">COMPRA <span>•</span> VENDE <span>•</span> CONECTA</p>
+                    <h1>Mais do que compras,<br><em>uma conexão.</em></h1>
+                    <p class="vora-hero-copy">Um marketplace feito para encontrar, vender e receber com confiança em Angola.</p>
+                    <div class="vora-hero-actions">
+                        <a href="#secao-categorias" class="vora-hero-primary">Explorar categorias</a>
+                        <a href="#gradeProdutos" class="vora-hero-secondary">Ver produtos</a>
+                    </div>
+                </div>
+                <div class="vora-hero-glow" aria-hidden="true"></div>
                 <div class="carrossel-slides" id="carrosselSlides">
                     <div class="slide ativo">
-                        <img src="oferta-1-tecnologia.png" alt="Oferta 1" loading="eager" decoding="async" />
+                        <img src="https://i.ibb.co/YBNxxZTT/Chat-GPT-Image-Sep-12-2026-12-22-55-AM.png" alt="Oferta 1" loading="eager" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
+                        <div class="slide-texto">
+                            <h2>🔥 Ofertas que valem a pena</h2>
+                            <p>Produtos selecionados com preços especiais e entrega em Angola.</p>
+                            <a href="#" class="btn-slide">Aproveitar Oferta</a>
+                        </div>
                     </div>
                     <div class="slide">
-                        <img src="oferta-2-moda.png" alt="Oferta 2" loading="lazy" decoding="async" />
+                        <img src="https://i.ibb.co/LDxfxVGm/Chat-GPT-Image-Sep-12-2026-12-28-34-AM.png" alt="Oferta 2" loading="lazy" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
+                        <div class="slide-texto">
+                            <h2>⚡ Sinta a Ação</h2>
+                            <p>Equipa-te com os melhores acessórios para as tuas consolas favoritas</p>
+                            <a href="#" class="btn-slide">Comprar Agora</a>
+                        </div>
                     </div>
                     <div class="slide">
-                        <img src="oferta-3-games.png" alt="Oferta 3" loading="lazy" decoding="async" />
+                        <img src="https://i.ibb.co/vxNR6bYb/Chat-GPT-Image-Sep-12-2026-12-33-44-AM.png" alt="Oferta 3" loading="lazy" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
+                        <div class="slide-texto">
+                            <h2>💅 📱 Eleve o seu Estilo</h2>
+                            <p>A melhor tecnologia para o seu dia a dia</p>
+                            <a href="#" class="btn-slide">Aproveitar Agora</a>
+                        </div>
                     </div>
-                    <div class="slide">
-                        <img src="oferta-4-smartphones.png" alt="Oferta 4" loading="lazy" decoding="async" />
+                    <div class="slide slide-publicidade">
+                        <img src="https://i.ibb.co/jvjvHK7n/Imagem-do-Codex-9-de-set-de-2026-09-55-53.png" alt="VORA 313 — várias categorias de produtos" loading="lazy" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
                     </div>
-                    <div class="slide">
-                        <img src="oferta-5-beleza.png" alt="Oferta 5" loading="lazy" decoding="async" />
+                    <div class="slide slide-publicidade">
+                        <img src="banner-vora-camisa.png" alt="VORA 313 — camisa oficial da marca" loading="lazy" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
                     </div>
-                    <div class="slide">
-                        <img src="oferta-6-semana.png" alt="Oferta 6" loading="lazy" decoding="async" />
-                    </div>
-                    <div class="slide">
-                        <img src="oferta-7-casa.png" alt="Oferta 7" loading="lazy" decoding="async" />
-                    </div>
-                    <div class="slide">
-                        <img src="oferta-8-casa.png" alt="Oferta 8" loading="lazy" decoding="async" />
+                    <div class="slide slide-publicidade">
+                        <img src="banner-vora-medicamentos.png" alt="VORA 313 — medicamentos e produtos de saúde" loading="lazy" onerror="this.onerror=null;this.src='logo-vora-313.png';" />
                     </div>
                 </div>
                 <button class="carrossel-btn anterior" onclick="window.mudarSlide(-1)" aria-label="Slide anterior">❮</button>
                 <button class="carrossel-btn proximo" onclick="window.mudarSlide(1)" aria-label="Próximo slide">❯</button>
-                <div class="carrossel-indicadores" id="carrosselIndicadores" aria-label="Selecionar oferta">
-                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0" aria-label="Ir para a Oferta 1"></span>
-                    <span class="indicador" data-slide="1" role="button" tabindex="0" aria-label="Ir para a Oferta 2"></span>
-                    <span class="indicador" data-slide="2" role="button" tabindex="0" aria-label="Ir para a Oferta 3"></span>
-                    <span class="indicador" data-slide="3" role="button" tabindex="0" aria-label="Ir para a Oferta 4"></span>
-                    <span class="indicador" data-slide="4" role="button" tabindex="0" aria-label="Ir para a Oferta 5"></span>
-                    <span class="indicador" data-slide="5" role="button" tabindex="0" aria-label="Ir para a Oferta 6"></span>
-                    <span class="indicador" data-slide="6" role="button" tabindex="0" aria-label="Ir para a Oferta 7"></span>
-                    <span class="indicador" data-slide="7" role="button" tabindex="0" aria-label="Ir para a Oferta 8"></span>
+                <div class="carrossel-indicadores" id="carrosselIndicadores">
+                    <span class="indicador ativo" data-slide="0" role="button" tabindex="0" aria-label="Ir para o slide 1"></span>
+                    <span class="indicador" data-slide="1" role="button" tabindex="0" aria-label="Ir para o slide 2"></span>
+                    <span class="indicador" data-slide="2" role="button" tabindex="0" aria-label="Ir para o slide 3"></span>
+                    <span class="indicador" data-slide="3" role="button" tabindex="0" aria-label="Ir para o slide 4"></span>
+                    <span class="indicador" data-slide="4" role="button" tabindex="0" aria-label="Ir para o slide 5"></span>
+                    <span class="indicador" data-slide="5" role="button" tabindex="0" aria-label="Ir para o slide 6"></span>
                 </div>
             </div>
         </section>
