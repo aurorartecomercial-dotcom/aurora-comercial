@@ -389,9 +389,8 @@ document.querySelectorAll('#carrosselIndicadores .indicador').forEach((ind, i) =
     });
 });
 
-// Avanço automático sem pausa por hover.
-const intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
-
+// Avanço automático contínuo: não pausa ao passar o rato.
+setInterval(() => window.mudarSlide(1), 6000);
 
 window.shareProduct = function(nome, preco, link) {
     const texto = `Olha só este produto incrível da VORA 313!\n\n🔹 *${nome}*\n💰 Preço: ${preco}\n🔗 Confira aqui: ${link}`;
