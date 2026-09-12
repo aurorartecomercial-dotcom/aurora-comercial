@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=9" />
+    <link rel="stylesheet" href="style.css?v=7" />
     <link rel="icon" type="image/png" href="logo-vora-313.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="logo-vora-313.png" />
@@ -478,25 +478,12 @@
             <div class="rodape-coluna">
                 <h3>VORA 313</h3>
                 <p>Marketplace angolano com curadoria premium em eletrônicos, moda, acessórios, automóveis e muito mais.</p>
-                <div class="rodape-social" aria-label="Redes e atendimento">
-    <button type="button" class="social-link social-link-chat" id="btnSocialChat" aria-label="Abrir atendimento" title="Abrir atendimento">
-        <img src="assets/social/icon-mensagens.png" alt="" loading="lazy" decoding="async">
-        <span>Atendimento</span>
-    </button>
-    <a class="social-link social-link-whatsapp"
-       href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20VORA%20313."
-       target="_blank" rel="noopener noreferrer"
-       aria-label="Falar com a VORA 313 no WhatsApp" title="WhatsApp">
-        <img src="assets/social/icon-whatsapp.png" alt="" loading="lazy" decoding="async">
-        <span>WhatsApp</span>
-    </a>
-    <a class="social-link social-link-facebook"
-       href="#" data-facebook-link
-       aria-label="Facebook da VORA 313" title="Facebook">
-        <img src="assets/social/icon-facebook.png" alt="" loading="lazy" decoding="async">
-        <span>Facebook</span>
-    </a>
-</div>
+                <div class="rodape-social">
+                    <a href="#" aria-label="Facebook">f</a>
+                    <a href="#" aria-label="Instagram">◎</a>
+                    <a href="#" aria-label="YouTube">▶</a>
+                    <a href="https://wa.me/244933677628" target="_blank" rel="noopener" aria-label="WhatsApp">◉</a>
+                </div>
             </div>
             <div class="rodape-coluna">
                 <h4>Links úteis</h4>
@@ -557,35 +544,6 @@
         </div>
     </div>
 
-
-<script>
-    // Interações dos ícones sociais — sem interferir no carrinho ou carrosséis.
-    document.addEventListener('click', function (event) {
-        const chatSocial = event.target.closest('#btnSocialChat');
-        if (chatSocial) {
-            event.preventDefault();
-            const chatBtn = document.getElementById('chatBtn');
-            if (chatBtn) {
-                chatBtn.click();
-            } else {
-                const contacto = document.getElementById('sobre-empresa');
-                if (contacto) contacto.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-            return;
-        }
-
-        const facebook = event.target.closest('[data-facebook-link]');
-        if (facebook) {
-            event.preventDefault();
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Adicione o link oficial do Facebook da VORA 313.', 'info');
-            } else {
-                alert('Adicione o link oficial do Facebook da VORA 313.');
-            }
-        }
-    });
-</script>
-
     <!-- CONTROLES DOS CARROSSÉIS -->
     <script>
         document.addEventListener('click', (event) => {
@@ -599,7 +557,8 @@
     </script>
 
     <!-- SCRIPTS PRINCIPAIS -->
-    <script type="module" src="js/app.js?v=8"></script>
+    <script type="module" src="js/app.js?v=9"></script>
+    <script type="module" src="js/menu.js?v=10"></script>
     <script type="module" src="js/carrinho.js?v=7"></script>
     <script type="module" src="js/fidelidade.js?v=6"></script>
     <script type="module" src="js/favoritos.js?v=6"></script>

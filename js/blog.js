@@ -23,9 +23,11 @@ function renderizarPosts(posts) {
     const imagemDiv = document.createElement('div');
     imagemDiv.className = 'media-card-image';
     const imagem = document.createElement('img');
-    imagem.src = urlSegura(post.imagem, IMAGEM_FALLBACK);
+    imagem.src = urlSegura(new URL(String(post.imagem || ''), document.baseURI).href, IMAGEM_FALLBACK);
     imagem.alt = String(post.titulo || 'Artigo VORA 313');
-    imagem.loading = index < 2 ? 'eager' : 'lazy';
+    imagem.loading = 'eager';
+    imagem.decoding = 'async';
+    imagem.width = 418;
     imagem.addEventListener('error', () => { imagem.src = IMAGEM_FALLBACK; }, { once: true });
     imagemDiv.append(imagem);
 

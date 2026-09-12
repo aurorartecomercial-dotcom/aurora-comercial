@@ -28,7 +28,7 @@ function renderizarPost(container, post) {
   data.textContent = String(post.data || '');
   data.style.cssText = 'color:#888;font-size:14px;margin-bottom:10px;';
   const imagem = document.createElement('img');
-  imagem.src = urlSegura(post.imagem, IMAGEM_FALLBACK);
+  imagem.src = urlSegura(new URL(String(post.imagem || ''), document.baseURI).href, IMAGEM_FALLBACK);
   imagem.alt = String(post.titulo || 'Artigo');
   imagem.style.cssText = 'width:100%;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:16px;';
   imagem.addEventListener('error', () => { imagem.src = IMAGEM_FALLBACK; }, { once: true });
