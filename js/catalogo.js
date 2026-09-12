@@ -4,6 +4,7 @@ import { extrairValorNumerico, IMAGEM_FALLBACK, urlSegura } from './utils.js';
 import { obterAvaliacao } from './avaliacoes.js';
 import { verificarFavorito } from './favoritos.js';
 import { obterLinkAfiliado } from './fase3.js';
+import { ordenarProdutosMonetizados } from './monetizacao.js';
 
 let cacheMemoria = null;
 let catalogoPromise = null;
@@ -20,14 +21,14 @@ export async function carregarCatalogo() {
     try {
       const cache = JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY) || 'null');
       if (Array.isArray(cache?.data) && cache.data.length) {
-        cacheMemoria = cache.data;
+        cacheMemoria = ordenarProdutosMonetizados(cache.data);
         atualizarDoFirebase();
         return cacheMemoria;
       }
     } catch (_) {}
     try {
       const snapshot = await getDocs(collection(db, 'produtos'));
-      cacheMemoria = snapshot.docs.map(normalizarProduto);
+      cacheMemoria = ordenarProdutosMonetizados(snapshot.docs.map(normalizarProduto));
       salvarCache(cacheMemoria);
       return cacheMemoria;
     } catch (error) {
@@ -45,7 +46,7 @@ function salvarCache(produtos) {
 async function atualizarDoFirebase() {
   try {
     const snapshot = await getDocs(collection(db, 'produtos'));
-    cacheMemoria = snapshot.docs.map(normalizarProduto);
+    cacheMemoria = ordenarProdutosMonetizados(snapshot.docs.map(normalizarProduto));
     salvarCache(cacheMemoria);
   } catch (_) {}
 }

@@ -82,6 +82,23 @@ function moeda(centavos) {
   return Number((centavos / 100).toFixed(2));
 }
 
+const COMISSAO_PADRAO_PERCENTUAL = 7;
+const COMISSAO_MAXIMA_PERCENTUAL = 30;
+
+function percentualComissao(produto) {
+  const valor = Number(produto?.monetizacao?.percentualComissao ?? produto?.percentualComissao ?? COMISSAO_PADRAO_PERCENTUAL);
+  if (!Number.isFinite(valor) || valor < 0 || valor > COMISSAO_MAXIMA_PERCENTUAL) {
+    erro('failed-precondition', `Comissão inválida para ${produto?.nome || 'produto'}.`);
+  }
+  return valor;
+}
+
+function vendedorDoProduto(produto) {
+  const id = typeof produto?.vendedorId === 'string' && produto.vendedorId.trim() ? produto.vendedorId.trim() : 'vora313';
+  const nome = typeof produto?.vendedorNome === 'string' && produto.vendedorNome.trim() ? produto.vendedorNome.trim() : 'VORA 313';
+  return { id: id.slice(0, 128), nome: nome.slice(0, 160) };
+}
+
 function codigo(prefix) {
   return `${prefix}-${randomBytes(10).toString('hex').toUpperCase()}`;
 }
@@ -182,12 +199,22 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
       if (precoCentavos <= 0) erro('failed-precondition', 'Um produto tem preço inválido.');
 
       subtotalCentavos += precoCentavos * quantidade;
+      const comissaoPercentual = percentualComissao(produto);
+      const vendedor = vendedorDoProduto(produto);
+      const brutoItemCentavos = precoCentavos * quantidade;
+      const comissaoItemCentavos = Math.round(brutoItemCentavos * (comissaoPercentual / 100));
       itens.push({
         produtoId: snapshot.id,
         nome: texto(produto.nome, 'Nome do produto', 160),
         quantidade,
         preco: moeda(precoCentavos),
-        observacao: ''
+        observacao: '',
+        vendedorId: vendedor.id,
+        vendedorNome: vendedor.nome,
+        comissaoPercentual,
+        valorBruto: moeda(brutoItemCentavos),
+        comissaoVora: moeda(comissaoItemCentavos),
+        valorVendedor: moeda(brutoItemCentavos - comissaoItemCentavos)
       });
     });
 
@@ -207,6 +234,9 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
 
     const freteCentavos = Math.round(FRETES[cliente.bairro] * 100);
     const totalCentavos = subtotalCentavos - descontoCentavos + freteCentavos;
+    const comissaoProdutosCentavos = itens.reduce((total, item) => total + Math.round(Number(item.comissaoVora || 0) * 100), 0);
+    const receitaVoraCentavos = comissaoProdutosCentavos + freteCentavos;
+    const valorVendedoresCentavos = Math.max(0, subtotalCentavos - comissaoProdutosCentavos);
     const venda = {
       codigoRastreio,
       numeroFatura,
@@ -227,6 +257,13 @@ exports.criarPedido = onCall({ region: 'us-central1' }, async (request) => {
       valorDesconto: moeda(descontoCentavos),
       valorTotal: moeda(totalCentavos),
       cupomAplicado,
+      monetizacao: {
+        modelo: 'comissao_por_venda',
+        comissaoProdutos: moeda(comissaoProdutosCentavos),
+        receitaVora: moeda(receitaVoraCentavos),
+        valorVendedores: moeda(valorVendedoresCentavos),
+        comissaoGerada: false
+      },
       criadoEm: agora,
       atualizadoEm: agora,
       dataHora: agora.toDate().toLocaleString('pt-AO', { timeZone: 'Africa/Luanda' }),
@@ -325,6 +362,26 @@ exports.atualizarEstadoPedido = onCall({ region: 'us-central1' }, async (request
       }
 
       const pontos = Math.floor(Number(pedido.valorTotal || 0) / 1000);
+      const comissaoRef = db.collection('comissoes').doc(pedidoRef.id);
+      transaction.set(comissaoRef, {
+        pedidoId: pedidoRef.id,
+        codigoRastreio: pedido.codigoRastreio,
+        numeroFatura: pedido.numeroFatura,
+        uidCliente: pedido.uidCliente,
+        modelo: 'comissao_por_venda',
+        valorVendaProdutos: Number(pedido.subtotal || 0),
+        comissaoVora: Number(pedido.monetizacao?.comissaoProdutos || 0),
+        receitaFreteVora: Number(pedido.frete || 0),
+        receitaTotalVora: Number(pedido.monetizacao?.receitaVora || 0),
+        status: 'gerada',
+        criadoEm: agora
+      }, { merge: true });
+
+      transaction.update(pedidoRef, {
+        'monetizacao.comissaoGerada': true,
+        'monetizacao.comissaoGeradaEm': agora
+      });
+
       if (pontos > 0 && pedido.uidCliente) {
         const clienteRef = db.collection('clientes').doc(pedido.uidCliente);
         transaction.set(clienteRef, {

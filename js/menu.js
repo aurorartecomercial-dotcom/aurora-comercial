@@ -5,8 +5,8 @@ export function initMobileMenu() {
 
     menuToggle.dataset.menuReady = '1';
     const menuContainer = menuToggle.closest('.menu-categorias');
-    const dropdowns = Array.from(menuLista.children).filter((item) => item.classList.contains('dropdown'));
-    const dropdownToggles = dropdowns.map((item) => item.querySelector('.dropdown-toggle')).filter(Boolean);
+    const dropdowns = menuLista.querySelectorAll(':scope > li.dropdown');
+    const dropdownToggles = menuLista.querySelectorAll(':scope > li.dropdown > .dropdown-toggle');
 
     const closeAll = () => {
         menuLista.classList.remove('menu-aberto');
