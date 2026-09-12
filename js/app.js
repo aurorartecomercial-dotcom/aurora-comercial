@@ -365,40 +365,32 @@ window.filtrarPorCategoria = function(categoria) {
 };
 
 window.mudarSlide = function(direcao) {
-    const slides = document.querySelectorAll('.slide');
-    const indicadores = document.querySelectorAll('.indicador');
-    let indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
-    if (indexAtual === -1) return;
+    const slides = Array.from(document.querySelectorAll('#carrosselSlides .slide'));
+    const indicadores = Array.from(document.querySelectorAll('#carrosselIndicadores .indicador'));
+    if (!slides.length) return;
+    let indexAtual = slides.findIndex(s => s.classList.contains('ativo'));
+    if (indexAtual < 0) indexAtual = 0;
     slides[indexAtual].classList.remove('ativo');
-    indicadores[indexAtual].classList.remove('ativo');
+    if (indicadores[indexAtual]) indicadores[indexAtual].classList.remove('ativo');
     indexAtual = (indexAtual + direcao + slides.length) % slides.length;
     slides[indexAtual].classList.add('ativo');
-    indicadores[indexAtual].classList.add('ativo');
+    if (indicadores[indexAtual]) indicadores[indexAtual].classList.add('ativo');
 };
 
-document.querySelectorAll('.indicador').forEach((ind, i) => {
+document.querySelectorAll('#carrosselIndicadores .indicador').forEach((ind, i) => {
     ind.addEventListener('click', () => {
-        const slides = document.querySelectorAll('.slide');
-        const indicadores = document.querySelectorAll('.indicador');
-        const indexAtual = Array.from(slides).findIndex(s => s.classList.contains('ativo'));
-        if (indexAtual === -1) return;
-        slides[indexAtual].classList.remove('ativo');
-        indicadores[indexAtual].classList.remove('ativo');
+        const slides = Array.from(document.querySelectorAll('#carrosselSlides .slide'));
+        const indicadores = Array.from(document.querySelectorAll('#carrosselIndicadores .indicador'));
+        if (!slides[i]) return;
+        slides.forEach(s => s.classList.remove('ativo'));
+        indicadores.forEach(x => x.classList.remove('ativo'));
         slides[i].classList.add('ativo');
-        indicadores[i].classList.add('ativo');
+        if (indicadores[i]) indicadores[i].classList.add('ativo');
     });
 });
 
-// Avanço automático do carrossel VORA 313
-let intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
-const carrosselEl = document.querySelector('.carrossel-ofertas');
-if (carrosselEl) {
-    carrosselEl.addEventListener('mouseenter', () => clearInterval(intervaloCarrossel));
-    carrosselEl.addEventListener('mouseleave', () => {
-        clearInterval(intervaloCarrossel);
-        intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
-    });
-}
+// Avanço automático sem pausa por hover.
+const intervaloCarrossel = setInterval(() => window.mudarSlide(1), 6000);
 
 
 window.shareProduct = function(nome, preco, link) {

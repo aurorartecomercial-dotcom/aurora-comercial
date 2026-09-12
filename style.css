@@ -1375,3 +1375,15 @@ body.sobre-page .rodape-profissional, body.media-page .rodape-profissional{margi
 @media (max-width: 700px) {
   .slide-publicidade img { object-position: center; }
 }
+
+
+/* VORA 313 — banners do carrossel */
+.carrossel-ofertas .carrossel-container{background:#fff}
+.carrossel-ofertas .carrossel-slides{height:auto}
+.carrossel-ofertas .slide{display:none;width:100%;height:auto;min-height:0;background:#fff}
+.carrossel-ofertas .slide.ativo{display:block}
+.carrossel-ofertas .slide img{display:block;width:100%;height:auto;aspect-ratio:1670 / 941;object-fit:cover;object-position:center;opacity:1!important;filter:none!important;transform:none!important}
+.carrossel-ofertas .slide::after,.carrossel-ofertas .slide-texto{display:none!important}
+.carrossel-ofertas .carrossel-btn,.carrossel-ofertas .indicador{transition:none!important}
+.carrossel-ofertas .carrossel-btn:hover{background:rgba(4,63,50,.8)!important;color:var(--cor-ouro)!important}
+@media(max-width:700px){.carrossel-ofertas{margin:10px 8px 0;border-radius:12px}.carrossel-ofertas .carrossel-btn{width:34px;height:34px;padding:0;font-size:17px}.carrossel-ofertas .carrossel-indicadores{bottom:8px;gap:6px}.carrossel-ofertas .indicador{width:9px;height:9px}}
