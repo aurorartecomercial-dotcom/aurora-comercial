@@ -5,18 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Política de Privacidade - VORA 313</title>
     <link rel="icon" type="image/png" href="logo-vora-313.png" />
-    <meta name="description" content="Política de privacidade da VORA 313. Saiba como protegemos os seus dados." />
-    <meta name="keywords" content="VORA 313, marketplace, Angola, compras online, privacidade" />
+    <meta name="description" content="Política de Privacidade da VORA 313. Saiba como recolhemos, utilizamos e protegemos os seus dados pessoais." />
+    <meta name="keywords" content="VORA 313, política de privacidade, dados pessoais, Angola, marketplace" />
     <meta property="og:title" content="Política de Privacidade - VORA 313" />
-    <meta property="og:description" content="Política de privacidade da VORA 313." />
-    <meta property="og:image" content="https://i.ibb.co/5g8cSd4j/IPHONE-ROSA.jpg" />
-    <meta property="og:url" content="https://aurorartecomercial-dotcom.github.io/VORA313/politica.html" />
+    <meta property="og:description" content="Conheça as práticas da VORA 313 relativamente à privacidade e proteção de dados pessoais." />
     <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=5" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=16" />
     <link rel="manifest" href="manifest.json" />
+    <style>
+        .politica-wrap{max-width:1180px;margin:32px auto 60px;padding:0 20px}
+        .politica-hero{background:linear-gradient(135deg,#003d32,#005a4c);color:#fff;border-radius:18px;padding:34px 36px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+        .politica-hero h1{margin:0 0 10px;font-size:clamp(28px,4vw,42px);line-height:1.1}
+        .politica-hero p{margin:0;color:#eef7f4;line-height:1.7;max-width:850px}
+        .politica-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+        .politica-meta span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 12px;font-size:13px}
+        .politica-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:22px;align-items:start}
+        .politica-nav{position:sticky;top:90px;background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:18px;box-shadow:0 6px 22px rgba(0,0,0,.05)}
+        .politica-nav strong{display:block;color:#003d32;margin-bottom:12px}
+        .politica-nav a{display:block;color:#555;text-decoration:none;padding:8px 0;font-size:14px;line-height:1.35}
+        .politica-nav a:hover{color:#b8960f}
+        .politica-content{background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:30px 34px;box-shadow:0 6px 22px rgba(0,0,0,.05)}
+        .politica-content section{padding:4px 0 25px;margin-bottom:25px;border-bottom:1px solid #ededed;scroll-margin-top:90px}
+        .politica-content section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+        .politica-content h2{font-size:21px;color:#003d32;margin:0 0 12px}
+        .politica-content h3{font-size:16px;color:#333;margin:18px 0 8px}
+        .politica-content p,.politica-content li{color:#4c4c4c;line-height:1.75;font-size:15px}
+        .politica-content p{margin:8px 0}
+        .politica-content ul{padding-left:22px;margin:8px 0}
+        .politica-content li{margin:5px 0}
+        .politica-note{background:#fff9e6;border-left:4px solid #d4af37;padding:15px 17px;border-radius:8px;margin:15px 0;color:#4b430f}
+        .politica-contact{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+        .politica-contact div{background:#f7f7f7;border-radius:12px;padding:15px}
+        .politica-contact strong{display:block;color:#003d32;margin-bottom:5px}
+        .politica-contact a{color:#005a4c;text-decoration:none}
+        .politica-back{display:inline-flex;margin-top:24px;color:#005a4c;font-weight:700;text-decoration:none}
+        @media(max-width:850px){.politica-layout{grid-template-columns:1fr}.politica-nav{position:static}.politica-contact{grid-template-columns:1fr}.politica-content{padding:24px 20px}.politica-hero{padding:27px 22px}}
+    </style>
 </head>
 <body>
     <header class="header-principal" role="banner">
@@ -31,114 +58,89 @@
             </form>
             <div class="header-icones">
                 <button id="btnModoEscuro" class="btn-modo-escuro" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
-                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta">
-                    <small>Olá, faça seu login</small>
-                    Conta
-                </button>
-                <button id="badgePontos" style="background:#D4AF37; color:#000; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;">⭐ 0 pts</button>
-                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">
-                    🛒 <span id="badgeContador">0</span>
-                </button>
+                <button class="btn-entrar" id="btnEntrar" aria-label="Entrar na conta"><small>Olá, faça seu login</small>Conta</button>
+                <button id="badgePontos" style="background:#D4AF37;color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer;">⭐ 0 pts</button>
+                <button id="abrirCarrinhoFlutuante" class="carrinho-icone" aria-label="Abrir sacola">🛒 <span id="badgeContador">0</span></button>
             </div>
         </div>
         <nav class="menu-categorias" aria-label="Categorias">
             <button id="menuToggle" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-                    <rect x="4" y="4" width="6" height="6" rx="1" />
-                    <rect x="14" y="4" width="6" height="6" rx="1" />
-                    <rect x="4" y="14" width="6" height="6" rx="1" />
-                    <rect x="14" y="14" width="6" height="6" rx="1" />
-                </svg>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
             </button>
             <ul id="menuCategorias">
                 <li><a href="index.html">Início</a></li>
                 <li><a href="sobre.html">Contactos</a></li>
-                <li><a href="https://wa.me/244933677628" target="_blank">💬 Siga-nos no WhatsApp</a></li>
+                <li><a href="https://wa.me/244933677628" target="_blank" rel="noopener">💬 Siga-nos no WhatsApp</a></li>
                 <li><a href="blog.html">📰 Media</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">📂 Categorias ▾</a>
-                    <ul class="submenu">
-                        <li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li>
-                        <li><a href="categoria.html?cat=consolas">Consolas</a></li>
-                        <li><a href="categoria.html?cat=beleza">Beleza</a></li>
-                        <li><a href="categoria.html?cat=cozinha">Cozinha</a></li>
-                        <li><a href="categoria.html?cat=colunas">Colunas</a></li>
-                        <li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li>
-                        <li><a href="categoria.html?cat=casa">Casa</a></li>
-                        <li><a href="categoria.html?cat=feminino">Feminino</a></li>
-                        <li><a href="categoria.html?cat=masculino">Masculino</a></li>
-                        <li><a href="categoria.html?cat=calcados">Sapatos</a></li>
-                        <li><a href="categoria.html?cat=joias">Pulseiras</a></li>
-                        <li><a href="categoria.html?cat=automoveis">Carros</a></li>
-                        <li><a href="categoria.html?cat=papelaria">Papelaria</a></li>
-                        <li><a href="categoria.html?cat=jardinagem">Jardinagem</a></li>
-                        <li><a href="categoria.html?cat=energia-solar">Energia Solar</a></li>
-                        <li><a href="categoria.html?cat=seguranca">Segurança</a></li>
-                        <li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li>
-                        <li><a href="categoria.html?cat=relogios">Relógios</a></li>
-                        <li><a href="categoria.html?cat=oculos">Óculos</a></li>
-                        <li><a href="categoria.html?cat=malas-mochilas">Malas e Mochilas</a></li>
-                        <li><a href="categoria.html?cat=instrumentos">Instrumentos Musicais</a></li>
-                        <li><a href="categoria.html?cat=artesanato">Artesanato</a></li>
-                        <li><a href="categoria.html?cat=festas">Festas</a></li>
-                        <li><a href="categoria.html?cat=automotivo">Automotivo</a></li>
-                        <li><a href="categoria.html?cat=construcao">Construção</a></li>
-                        <li><a href="categoria.html?cat=limpeza">Limpeza</a></li>
-                        <li><a href="categoria.html?cat=saude">Saúde e Bem-estar</a></li>
-                        <li><a href="categoria.html?cat=eletrodomesticos">Eletrodomésticos</a></li>
-                        <li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li>
-                        <li><a href="categoria.html?cat=fotografia">Fotografia</a></li>
-                        <li><a href="categoria.html?cat=utensilios-cozinha">Utensílios de Cozinha</a></li>
-                        <li><a href="categoria.html?cat=viagem">Viagem</a></li>
-                    </ul>
-                </li>
-                <li><a href="sobre.html">↩️ Retornos</a></li>
-                <li><a href="sobre.html">🏷️ Vender</a></li>
-                <li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
+                <li class="dropdown"><a href="#" class="dropdown-toggle">📂 Categorias ▾</a><ul class="submenu">
+                    <li><a href="categoria.html?cat=eletronicos">Eletrónicos</a></li><li><a href="categoria.html?cat=consolas">Consolas</a></li><li><a href="categoria.html?cat=beleza">Beleza</a></li><li><a href="categoria.html?cat=cozinha">Cozinha</a></li><li><a href="categoria.html?cat=colunas">Colunas</a></li><li><a href="categoria.html?cat=ferramentas">Ferramentas</a></li><li><a href="categoria.html?cat=casa">Casa</a></li><li><a href="categoria.html?cat=feminino">Feminino</a></li><li><a href="categoria.html?cat=masculino">Masculino</a></li><li><a href="categoria.html?cat=calcados">Sapatos</a></li><li><a href="categoria.html?cat=joias">Pulseiras</a></li><li><a href="categoria.html?cat=automoveis">Carros</a></li><li><a href="categoria.html?cat=papelaria">Papelaria</a></li><li><a href="categoria.html?cat=jardinagem">Jardinagem</a></li><li><a href="categoria.html?cat=energia-solar">Energia Solar</a></li><li><a href="categoria.html?cat=seguranca">Segurança</a></li><li><a href="categoria.html?cat=perfumaria">Perfumaria</a></li><li><a href="categoria.html?cat=relogios">Relógios</a></li><li><a href="categoria.html?cat=oculos">Óculos</a></li><li><a href="categoria.html?cat=malas-mochilas">Malas e Mochilas</a></li><li><a href="categoria.html?cat=instrumentos">Instrumentos Musicais</a></li><li><a href="categoria.html?cat=artesanato">Artesanato</a></li><li><a href="categoria.html?cat=festas">Festas</a></li><li><a href="categoria.html?cat=automotivo">Automotivo</a></li><li><a href="categoria.html?cat=construcao">Construção</a></li><li><a href="categoria.html?cat=limpeza">Limpeza</a></li><li><a href="categoria.html?cat=saude">Saúde e Bem-estar</a></li><li><a href="categoria.html?cat=eletrodomesticos">Eletrodomésticos</a></li><li><a href="categoria.html?cat=gamer">Acessórios Gamer</a></li><li><a href="categoria.html?cat=fotografia">Fotografia</a></li><li><a href="categoria.html?cat=utensilios-cozinha">Utensílios de Cozinha</a></li><li><a href="categoria.html?cat=viagem">Viagem</a></li>
+                </ul></li>
+                <li><a href="sobre.html">↩️ Retornos</a></li><li><a href="sobre.html">🏷️ Vender</a></li><li><a href="rastreio.html">📦 Rastrear Pedido</a></li>
             </ul>
         </nav>
     </header>
 
-    <div style="max-width:1480px; margin: 20px auto; padding: 0 24px;">
-        <h1 style="color:var(--cor-esmeralda);">📜 Política de Privacidade</h1>
-        <p style="color:#666;">A sua privacidade é importante para nós. A VORA 313 respeita os seus dados pessoais.</p>
-        <ul style="margin-top:20px; line-height:1.8;">
-            <li><strong>📞 Contacto:</strong> +244 933 677 628</li>
-            <li><strong>✉️ Email:</strong> contacto@aurorarte.ao</li>
-            <li><strong>📍 Endereço:</strong> Luanda, Angola</li>
-        </ul>
-        <p style="margin-top:20px; color:#444;">Os dados recolhidos (Nome, Telefone, NIF e Morada) são utilizados exclusivamente para a finalização do pedido, emissão da fatura e entrega da encomenda. Não partilhamos os seus dados com terceiros.</p>
-        <a href="index.html" style="color:var(--cor-esmeralda); font-weight:600;">← Voltar à loja</a>
-    </div>
+    <main class="politica-wrap">
+        <div class="politica-hero">
+            <h1>Política de Privacidade</h1>
+            <p>A VORA 313 valoriza a confiança dos seus clientes. Esta política explica, de forma clara, como os dados pessoais podem ser recolhidos, utilizados, conservados e protegidos quando utiliza a nossa plataforma.</p>
+            <div class="politica-meta"><span>VORA 313</span><span>Luanda, Angola</span><span>Última atualização: 13/09/2026</span></div>
+        </div>
+
+        <div class="politica-layout">
+            <aside class="politica-nav" aria-label="Índice da política">
+                <strong>Nesta política</strong>
+                <a href="#responsavel">1. Quem somos</a><a href="#dados">2. Dados recolhidos</a><a href="#finalidades">3. Para que usamos</a><a href="#base">4. Fundamento do tratamento</a><a href="#partilha">5. Partilha de dados</a><a href="#pagamentos">6. Pagamentos</a><a href="#whatsapp">7. WhatsApp</a><a href="#seguranca">8. Segurança</a><a href="#conservacao">9. Conservação</a><a href="#direitos">10. Direitos</a><a href="#cookies">11. Cookies e tecnologias</a><a href="#menores">12. Menores</a><a href="#alteracoes">13. Alterações</a><a href="#contacto">14. Contacto</a>
+            </aside>
+
+            <article class="politica-content">
+                <section id="responsavel"><h2>1. Quem somos</h2><p>A <strong>VORA 313</strong> é uma plataforma de comércio eletrónico/marketplace destinada a facilitar a descoberta, compra e venda de produtos em Angola.</p><p>Para efeitos desta política, a VORA 313 é considerada responsável pelo tratamento dos dados pessoais que recolhe diretamente através dos seus canais, na medida aplicável a cada operação.</p><div class="politica-note"><strong>Importante:</strong> alguns serviços utilizados para pagamentos, comunicação, alojamento, tecnologia ou entrega podem tratar determinados dados por conta própria ou como prestadores de serviços. Quando necessário, a partilha é limitada ao que for adequado para a finalidade em causa.</div></section>
+
+                <section id="dados"><h2>2. Que dados pessoais podemos recolher</h2><p>Dependendo da utilização da plataforma, podemos recolher apenas os dados necessários para a finalidade correspondente, incluindo:</p><ul><li>nome e apelido;</li><li>número de telefone e, quando fornecido, endereço de e-mail;</li><li>morada e informações necessárias para entrega;</li><li>NIF ou outros dados necessários para faturação, quando aplicável;</li><li>informações relacionadas com produtos, pedidos, pagamentos e entregas;</li><li>dados fornecidos voluntariamente ao contactar o suporte ou enviar uma reclamação;</li><li>informações técnicas necessárias para segurança e funcionamento do site, como sessão, preferências e determinados registos técnicos.</li></ul><p>A VORA 313 procura limitar a recolha aos dados adequados, pertinentes e necessários para as finalidades informadas.</p></section>
+
+                <section id="finalidades"><h2>3. Para que utilizamos os seus dados</h2><ul><li>criar, processar e acompanhar pedidos e encomendas;</li><li>contactar o cliente sobre uma compra, entrega, pagamento ou suporte;</li><li>confirmar informações necessárias à encomenda;</li><li>emitir faturas ou outros documentos quando aplicável;</li><li>organizar a entrega e o acompanhamento do pedido;</li><li>detetar, prevenir e investigar fraude, abuso e utilização indevida da plataforma;</li><li>manter a segurança e o funcionamento técnico do site;</li><li>cumprir obrigações legais, fiscais ou determinações de autoridades competentes;</li><li>melhorar os serviços e a experiência de utilização, dentro dos limites permitidos pela legislação aplicável;</li><li>enviar comunicações comerciais quando houver base legal adequada e, quando exigido, autorização do titular.</li></ul></section>
+
+                <section id="base"><h2>4. Fundamento do tratamento</h2><p>O tratamento dos dados pessoais será realizado de acordo com a finalidade aplicável e com a legislação angolana de proteção de dados. Em determinadas situações, o tratamento pode ser necessário para executar uma compra ou pedido solicitado pelo cliente; noutras, pode decorrer de uma obrigação legal, de medidas de segurança ou de consentimento quando este for exigido.</p><p>A Lei n.º 22/11, de 17 de Junho, estabelece regras para o tratamento de dados pessoais em Angola, e a Agência de Protecção de Dados destaca a necessidade de tratamento transparente e respeitador da privacidade.</p></section>
+
+                <section id="partilha"><h2>5. Com quem podemos partilhar dados</h2><p>A VORA 313 não comercializa os dados pessoais dos seus clientes. No entanto, para prestar determinados serviços, alguns dados podem ser comunicados de forma limitada a categorias de destinatários necessárias, tais como:</p><ul><li>prestadores de serviços de entrega e logística;</li><li>prestadores ou operadores de serviços de pagamento;</li><li>prestadores de alojamento, bases de dados, segurança e infraestrutura tecnológica;</li><li>prestadores de suporte e comunicação, quando necessários;</li><li>autoridades públicas, judiciais, fiscais ou reguladoras quando existir obrigação legal ou ordem válida;</li><li>outros intervenientes do marketplace apenas quando a comunicação for necessária para executar a transação ou prestar o serviço solicitado.</li></ul><p>Quando a utilização de um serviço exigir tratamento por terceiros, procuraremos limitar a informação partilhada ao necessário para a finalidade correspondente.</p></section>
+
+                <section id="pagamentos"><h2>6. Pagamentos e comprovativos</h2><p>Os pagamentos podem utilizar os métodos disponibilizados pela VORA 313 no momento da compra. Quando o procedimento exigir confirmação manual, o cliente poderá enviar um comprovativo pelos canais indicados pela plataforma.</p><p>A VORA 313 não deverá solicitar por mensagem, telefone ou WhatsApp a palavra-passe, PIN, código secreto ou código de autenticação bancária do cliente. <strong>Nunca envie esses códigos a terceiros.</strong></p><p>Quando um pagamento for processado por um prestador externo, o tratamento dos dados necessários ao pagamento poderá também estar sujeito às regras desse prestador.</p></section>
+
+                <section id="whatsapp"><h2>7. WhatsApp e outros canais de comunicação</h2><p>A VORA 313 pode disponibilizar o WhatsApp para atendimento, confirmação de pedidos, suporte e, quando aplicável, envio de comprovativos de pagamento. Ao iniciar uma conversa por esse canal, o cliente fornece voluntariamente as informações que decidir enviar.</p><p>O WhatsApp é um serviço de terceiros e possui as suas próprias condições e políticas de privacidade. O cliente deve evitar enviar informações desnecessárias ou dados de autenticação, cartões, PINs e palavras-passe.</p></section>
+
+                <section id="seguranca"><h2>8. Segurança dos dados</h2><p>A VORA 313 adota medidas técnicas e organizativas destinadas a proteger os dados pessoais contra acesso não autorizado, perda, alteração, divulgação ou destruição indevida, tendo em conta a natureza dos dados e os riscos envolvidos.</p><p>Apesar dessas medidas, nenhum sistema ligado à internet pode ser considerado absolutamente imune a incidentes. A proteção dos dados exige também que o cliente mantenha seguras as suas credenciais e não partilhe códigos de acesso.</p><p>A proteção adequada dos dados pessoais e a adoção de medidas técnicas e organizativas são obrigações relevantes no quadro da Lei n.º 22/11.</p></section>
+
+                <section id="conservacao"><h2>9. Durante quanto tempo conservamos os dados</h2><p>Os dados são conservados pelo período necessário para cumprir a finalidade para a qual foram recolhidos, gerir a relação com o cliente, resolver reclamações e exercer ou defender direitos, bem como pelo período exigido por obrigações legais, fiscais ou contabilísticas aplicáveis.</p><p>Quando os dados deixarem de ser necessários e não existir obrigação ou fundamento legítimo para a sua conservação, serão eliminados, anonimizados ou sujeitos a medidas adequadas de proteção, conforme aplicável.</p></section>
+
+                <section id="direitos"><h2>10. Direitos do titular dos dados</h2><p>Nos termos da legislação aplicável, o titular pode exercer, conforme a situação, direitos relacionados com os seus dados pessoais, incluindo:</p><ul><li>ser informado sobre o tratamento dos seus dados;</li><li>aceder aos dados pessoais tratados;</li><li>pedir a retificação de dados incorretos;</li><li>pedir a atualização de dados desatualizados;</li><li>pedir a eliminação dos dados quando legalmente admissível;</li><li>opor-se a determinados tratamentos, quando aplicável;</li><li>apresentar reclamação à autoridade competente quando considerar que os seus direitos foram violados.</li></ul><p>A APD reconhece, entre outros, direitos de informação, acesso, retificação, atualização, eliminação e oposição.</p><p>Para exercer um direito, o titular deve contactar a VORA 313 através dos canais indicados nesta política. Poderemos solicitar informações razoáveis para confirmar a identidade do solicitante antes de executar determinadas alterações, evitando que os dados sejam entregues a pessoa não autorizada.</p></section>
+
+                <section id="cookies"><h2>11. Cookies e tecnologias utilizadas</h2><p>O site pode utilizar cookies, armazenamento local, sessão e outras tecnologias necessárias ao funcionamento da plataforma, incluindo para manter preferências, carrinho, autenticação, segurança e determinadas funcionalidades.</p><p>Algumas tecnologias podem ser utilizadas por serviços integrados na plataforma. A utilização concreta pode variar à medida que novas funcionalidades forem adicionadas. Não consideramos esta política como autorização para recolher dados que não sejam necessários para as finalidades aplicáveis.</p></section>
+
+                <section id="menores"><h2>12. Dados de menores</h2><p>A VORA 313 não pretende recolher deliberadamente dados pessoais de menores para finalidades incompatíveis com a legislação aplicável. Quando uma compra ou serviço exigir capacidade legal, o responsável legal deverá acompanhar a utilização e fornecer os dados necessários.</p></section>
+
+                <section id="alteracoes"><h2>13. Alterações a esta política</h2><p>Esta Política de Privacidade pode ser atualizada para refletir alterações no funcionamento da plataforma, nos serviços utilizados ou nas exigências legais. A versão publicada nesta página será a versão aplicável a partir da respetiva data de atualização.</p><p>Recomendamos que o cliente consulte esta página periodicamente para conhecer eventuais alterações relevantes.</p></section>
+
+                <section id="contacto"><h2>14. Contacto sobre privacidade</h2><p>Para questões relacionadas com privacidade, proteção de dados ou exercício dos seus direitos, pode utilizar os contactos atualmente disponibilizados pela VORA 313:</p><div class="politica-contact"><div><strong>Telefone</strong><span>+244 933 677 628</span></div><div><strong>E-mail</strong><a href="mailto:contacto@aurorarte.ao">contacto@aurorarte.ao</a></div><div><strong>Localização</strong><span>Luanda, Angola</span></div></div><div class="politica-note"><strong>Nota:</strong> o endereço de e-mail apresentado nesta versão é o contacto atualmente existente no site. Se a VORA 313 passar a utilizar um e-mail oficial diferente, esta página deverá ser atualizada para refletir o novo contacto.</div><p>Esta política procura apresentar de forma clara as práticas de privacidade da plataforma. Ela não substitui aconselhamento jurídico profissional nem uma eventual documentação de conformidade que possa ser exigida à empresa pela legislação ou pela autoridade competente.</p></section>
+
+                <a class="politica-back" href="index.html">← Voltar à loja</a>
+            </article>
+        </div>
+    </main>
 
     <footer class="rodape-profissional">
         <div class="rodape-grid">
-            <div class="rodape-coluna">
-                <h3>VORA 313</h3>
-                <p>Marketplace angolano com curadoria premium.</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Contacto</h4>
-                <p>📞 +244 933 677 628</p>
-                <p>✉️ contacto@aurorarte.ao</p>
-            </div>
-            <div class="rodape-coluna">
-                <h4>Institucional</h4>
-                <ul>
-                    <li><a href="sobre.html">🏬 Sobre Nós</a></li>
-                    <li><a href="politica.html">📜 Política de Privacidade</a></li>
-                    <li><a href="blog.html">📖 Blog</a></li>
-                </ul>
-            </div>
+            <div class="rodape-coluna"><h3>VORA 313</h3><p>Marketplace angolano com curadoria premium.</p></div>
+            <div class="rodape-coluna"><h4>Contacto</h4><p>📞 +244 933 677 628</p><p>✉️ contacto@aurorarte.ao</p></div>
+            <div class="rodape-coluna"><h4>Institucional</h4><ul><li><a href="sobre.html">🏬 Sobre Nós</a></li><li><a href="politica.html">📜 Política de Privacidade</a></li><li><a href="blog.html">📖 Blog</a></li></ul></div>
         </div>
         <div class="rodape-copyright">&copy; 2026 VORA 313.</div>
     </footer>
 
-    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20VORA%20313." target="_blank" class="whatsapp-float">💬 Fale connosco</a>
+    <a href="https://wa.me/244933677628?text=Olá!%20Gostaria%20de%20ajuda%20na%20VORA%20313." target="_blank" rel="noopener" class="whatsapp-float">💬 Fale connosco</a>
 
-    <script type="module" src="js/app.js?v=5"></script>
-    <script type="module" src="js/carrinho.js?v=7"></script>
-    <script type="module" src="js/fidelidade.js?v=5"></script>
-    <script type="module" src="js/menu.js?v=5"></script>
+    <script type="module" src="js/app.js?v=16"></script>
+    <script type="module" src="js/carrinho.js?v=16"></script>
+    <script type="module" src="js/fidelidade.js?v=16"></script>
+    <script type="module" src="js/menu.js?v=16"></script>
 </body>
 </html>
