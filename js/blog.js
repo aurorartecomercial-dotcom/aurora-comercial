@@ -12,6 +12,15 @@ async function carregarBlog() {
   }
 }
 
+function resolverImagemBlog(valor) {
+  if (!valor || typeof valor !== 'string') return IMAGEM_FALLBACK;
+  try {
+    const url = new URL(valor.trim(), document.baseURI);
+    if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+  } catch (_) {}
+  return IMAGEM_FALLBACK;
+}
+
 function renderizarPosts(posts) {
   const grid = document.getElementById('blogGrid');
   grid.replaceChildren();
@@ -23,7 +32,7 @@ function renderizarPosts(posts) {
     const imagemDiv = document.createElement('div');
     imagemDiv.className = 'media-card-image';
     const imagem = document.createElement('img');
-    imagem.src = urlSegura(post.imagem, IMAGEM_FALLBACK);
+    imagem.src = resolverImagemBlog(post.imagem);
     imagem.alt = String(post.titulo || 'Artigo VORA 313');
     imagem.loading = index < 2 ? 'eager' : 'lazy';
     imagem.addEventListener('error', () => { imagem.src = IMAGEM_FALLBACK; }, { once: true });
