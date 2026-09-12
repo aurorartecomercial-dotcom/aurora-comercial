@@ -163,9 +163,9 @@
                 </div>
                 <div class="vora-hero-glow" aria-hidden="true"></div>
                 <div class="carrossel-slides" id="carrosselSlides">
-                    <!-- Substitui o src de cada slide pelo teu link do i.ibb.co quando quiseres. -->
+                    <!-- CARROSSEL: usa links DIRETOS do i.ibb.co. O slide 1 já está configurado com um link confirmado. -->
                     <div class="slide ativo">
-                        <img src="FOTO1.png" alt="Oferta 1 — imagem a adicionar" loading="eager" />
+                        <img src="https://i.ibb.co/zhcZ6mtV/Chat-GPT-Image-Sep-12-2026-12-39-14-AM.png" alt="Oferta 1 — imagem em destaque" loading="eager" decoding="async" />
                         <div class="slide-texto">
                             <h2>🔥 Oferta Especial</h2>
                             <p>Produtos selecionados com preços especiais e entrega em Angola.</p>
@@ -173,7 +173,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/Wvh71Lbd/Chat-GPT-Image-Sep-12-2026-12-26-15-AM.png" alt="Oferta 2 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 2 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>⚡ Tecnologia em Oferta</h2>
                             <p>Encontra acessórios e equipamentos para o teu dia a dia.</p>
@@ -181,7 +181,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/2J2FYKV/Chat-GPT-Image-Sep-12-2026-12-27-00-AM.png" alt="Oferta 3 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 3 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>👟 Moda & Estilo</h2>
                             <p>Novidades e oportunidades para renovar o teu estilo.</p>
@@ -189,7 +189,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/LDxfxVGm/Chat-GPT-Image-Sep-12-2026-12-28-34-AM.png" alt="Oferta 4 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 4 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>🎮 Games & Consolas</h2>
                             <p>Equipamentos e acessórios para aproveitar os teus jogos favoritos.</p>
@@ -197,7 +197,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/vxNR6bYb/Chat-GPT-Image-Sep-12-2026-12-33-44-AM.png" alt="Oferta 5 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 5 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>📱 Smartphones & Acessórios</h2>
                             <p>Opções para deixar o teu telemóvel ainda mais completo.</p>
@@ -205,7 +205,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/C5bJbs0w/Chat-GPT-Image-Sep-12-2026-12-35-30-AM.png" alt="Oferta 6 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 6 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>🏠 Casa & Utilidades</h2>
                             <p>Produtos úteis para facilitar o teu dia a dia em casa.</p>
@@ -213,7 +213,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/4RbVKK5g/Chat-GPT-Image-Sep-12-2026-12-37-25-AM.png" alt="Oferta 7 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 7 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>💄 Beleza & Cuidados</h2>
                             <p>Cuidados pessoais e produtos selecionados em destaque.</p>
@@ -221,7 +221,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://i.ibb.co/zhcZ6mtV/Chat-GPT-Image-Sep-12-2026-12-39-14-AM.png" alt="Oferta 8 — imagem a adicionar" loading="lazy" />
+                        <img src="carousel-placeholder.png" alt="Oferta 8 — imagem a adicionar" loading="eager" />
                         <div class="slide-texto">
                             <h2>🎁 Oferta da Semana</h2>
                             <p>Fica atento às oportunidades e escolhe o teu próximo produto.</p>
@@ -726,5 +726,19 @@
             document.getElementById('ios-guide-modal').style.display = 'none';
         });
     </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('#carrosselSlides img').forEach(function (img) {
+    img.addEventListener('error', function () {
+      if (!img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = 'carousel-placeholder.png';
+      }
+    });
+  });
+});
+</script>
+
 </body>
 </html>
